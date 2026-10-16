@@ -35,7 +35,8 @@ function toast(msg, kind) {
 function openModal(id) {
   $(id).classList.add('open');
   document.body.style.overflow = 'hidden';
-  setTimeout(() => $(id).querySelector('input:not([type=hidden]):not([type=checkbox]), select, textarea')?.focus(), 50);
+  // data-autofocus: dialogs mostly read (client card) focus the close button, so phones do not pop up the keyboard
+  setTimeout(() => ($(id).querySelector('[data-autofocus]') || $(id).querySelector('input:not([type=hidden]):not([type=checkbox]), select, textarea'))?.focus(), 50);
 }
 function closeModal(id) {
   $(id).classList.remove('open');
@@ -57,7 +58,7 @@ function legalHtml(c) {
     <h4>1. Titolare del trattamento</h4>
     <p>Il Titolare è <strong>${esc(c.salonName)}</strong> (${esc(c.ownerName)})${c.address ? `, con sede in <strong>${esc(c.address)}</strong>` : ''}${c.vat ? `, P.IVA <strong>${esc(c.vat)}</strong>` : ''}.${phone}${email}</p>
     <h4>2. Dati trattati e finalità</h4>
-    <p>Nome, telefono e servizi scelti sono trattati per prenotare e gestire gli appuntamenti e per inviarti comunicazioni di servizio (art. 6.1.b GDPR). Le eventuali note su allergie o sensibilità della cute sono annotate in salone solo con il tuo consenso esplicito, per la sicurezza dei trattamenti (art. 9.2.a GDPR).</p>
+    <p>Nome, telefono e servizi scelti sono trattati per prenotare e gestire gli appuntamenti e per inviarti comunicazioni di servizio (art. 6.1.b GDPR). Le eventuali note su allergie o sensibilità della cute sono annotate in salone solo con il tuo consenso esplicito, per la sicurezza dei trattamenti (art. 9.2.a GDPR). Le foto del lavoro (per esempio prima e dopo un colore) sono scattate solo con il tuo consenso, servono a ricordare i trattamenti eseguiti e non vengono pubblicate. Dopo qualche settimana dall'ultima visita potremmo scriverti per proporti un nuovo appuntamento: basta dirci che non vuoi e non lo faremo più.</p>
     <h4>3. Conservazione e fornitori</h4>
     <p>I dati sono conservati per il tempo necessario alla gestione del rapporto e agli obblighi di legge. Sono custoditi su server cloud nell'Unione Europea da fornitori che agiscono come responsabili del trattamento. Non sono venduti né ceduti a terzi per marketing.</p>
     <h4>4. I tuoi diritti</h4>

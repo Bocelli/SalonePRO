@@ -6,6 +6,7 @@ export const COLS = ['config', 'services', 'clients', 'inventory', 'appointments
 export const DEFAULT_CONFIG = {
   salonName: 'Il Mio Salone', ownerName: 'Titolare', address: '', vat: '', email: '', ownerPhone: '',
   openTime: '09:00', closeTime: '19:00', slotMinutes: 30, closedDays: [0, 1],
+  breaks: [], closures: [], recallWeeks: 6,
 };
 
 // Starting price list for a new salon (same folders as salone_pro_v9).
@@ -78,6 +79,9 @@ export function withEnd(a, services = []) {
 }
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+export const DAY = /^\d{4}-\d{2}-\d{2}$/;
+// Closure covering a YYYY-MM-DD date, if any (string compare works on ISO dates).
+export const closureOn = (config, date) => (config.closures || []).find((x) => date >= x.from && date <= x.to);
 // Config reaches the public page, so it is validated here (it can also arrive from a restored backup file).
 export function checkConfig(c) {
   if (!HHMM.test(c.openTime) || !HHMM.test(c.closeTime) || c.openTime >= c.closeTime
@@ -86,6 +90,14 @@ export function checkConfig(c) {
     || (c.serviceFolders !== undefined && (!Array.isArray(c.serviceFolders) || c.serviceFolders.length > 100
       || c.serviceFolders.some((f) => typeof f !== 'string' || !f.trim() || f.length > 60)))) {
     fail(400, 'Impostazioni non valide (orari, intervallo, giorni di chiusura o cartelle)');
+  }
+  // Daily breaks (e.g. lunch) and closures (holidays) block online bookings; recallWeeks drives the "Da richiamare" list.
+  const list = (v, max) => v === undefined || (Array.isArray(v) && v.length <= max);
+  if (!list(c.breaks, 5) || (c.breaks || []).some((b) => !HHMM.test(b?.from) || !HHMM.test(b?.to) || b.from >= b.to)
+    || !list(c.closures, 100) || (c.closures || []).some((x) => !DAY.test(x?.from) || !DAY.test(x?.to) || x.from > x.to
+      || (x.note !== undefined && (typeof x.note !== 'string' || x.note.length > 60)))
+    || (c.recallWeeks !== undefined && (!Number.isInteger(c.recallWeeks) || c.recallWeeks < 0 || c.recallWeeks > 52))) {
+    fail(400, 'Impostazioni non valide (pause, chiusure o richiami)');
   }
   return c;
 }

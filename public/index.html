@@ -108,11 +108,49 @@
   .seg button { font: inherit; font-size: .86rem; font-weight: 600; padding: 6px 12px; border: 0; border-radius: 7px; background: none; color: var(--muted); cursor: pointer; }
   .seg button.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgb(24 24 27 / .1); }
 
+  /* Breaks and closures */
+  .appt.brk { padding-top: 10px; padding-bottom: 10px; background: var(--surface-2); }
+  .brk-label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 550; }
+  .week-day.closed:not(.today), .m-cell.closed:not(.today) { background: var(--surface-2); }
+  .m-cell.closed .m-num { color: var(--muted); }
+  .ranges { display: grid; gap: 8px; margin: 2px 0 6px; }
+  .ranges:empty { display: none; }
+  .range { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .range input[type="time"], .range input[type="date"] { width: auto; min-height: 40px; padding: 6px 10px; }
+  .range input[type="text"] { flex: 1; min-width: 160px; min-height: 40px; padding: 6px 10px; }
+
   /* Reminders */
   .rem-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .rem-title .ph { color: var(--warn); font-size: 1.2rem; }
   .rem.done { opacity: .6; }
   .rem-empty { padding: 14px 20px; }
+  #recall .rem-title .ph { color: var(--accent); }
+
+  /* Client card */
+  button.link { all: unset; cursor: pointer; font-weight: 650; }
+  button.link:hover { color: var(--accent-text); text-decoration: underline; }
+  button.link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .card-who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .card-who h2 { overflow-wrap: anywhere; }
+  .card-stats { margin-bottom: 18px; }
+  .card-stats > * { padding: 12px 14px; }
+  .card-stats .metric-val { font-size: 1.15rem; }
+  .card-h { display: flex; align-items: baseline; gap: 8px; margin: 22px 0 10px; font-size: 1rem; }
+  .card-h .ph { align-self: center; color: var(--muted); }
+  .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .photo { position: relative; aspect-ratio: 3 / 4; border-radius: var(--r-control); overflow: hidden; background: var(--surface-2); border: 1px solid var(--border); padding: 0; cursor: pointer; }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo span { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 6px 4px; font-size: .72rem; color: #fdfdfd; background: linear-gradient(transparent, rgb(0 0 0 / .6)); text-align: left; }
+  .photo.add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-style: dashed; border-color: var(--border-strong); color: var(--muted); font-size: .84rem; }
+  .photo.add .ph { font-size: 1.5rem; }
+  .photo.add:hover, .photo.add:focus-within { color: var(--accent-text); border-color: var(--accent); }
+  .photo.add input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .photo-view img { width: 100%; max-height: 62dvh; object-fit: contain; border-radius: var(--r-control); background: var(--surface-2); }
+  .visit { display: grid; grid-template-columns: 92px 1fr auto; gap: 4px 12px; padding: 10px 0; font-size: .9rem; }
+  .visit + .visit { border-top: 1px solid var(--border); }
+  .visit .note { grid-column: 2 / -1; }
+  .visit.next { color: var(--accent-text); }
+  .foot-gap { flex: 1; }
 
   /* Week */
   .week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
@@ -438,6 +476,13 @@
             <button class="btn btn-primary" onclick="addClient()"><i class="ph ph-user-plus"></i>Registra cliente</button>
           </div>
         </details>
+        <div class="panel" id="recall" hidden>
+          <div class="panel-head">
+            <h3 class="rem-title"><i class="ph ph-clock-counter-clockwise"></i>Da richiamare <span class="badge badge-warn" id="recall-count"></span></h3>
+            <span class="muted small" id="recall-hint"></span>
+          </div>
+          <div id="recall-list"></div>
+        </div>
         <div class="panel">
           <div class="panel-head">
             <h3 id="cli-count">Archivio clienti</h3>
@@ -537,6 +582,9 @@
             <div class="field"><label for="cfg-slot">Intervallo orari online</label>
               <select id="cfg-slot"><option value="15">Ogni 15 minuti</option><option value="20">Ogni 20 minuti</option><option value="30">Ogni 30 minuti</option><option value="45">Ogni 45 minuti</option><option value="60">Ogni ora</option></select>
             </div>
+            <div class="field"><label for="cfg-recall">Richiama le clienti dopo</label>
+              <select id="cfg-recall"><option value="4">4 settimane</option><option value="5">5 settimane</option><option value="6">6 settimane</option><option value="8">8 settimane</option><option value="10">10 settimane</option><option value="12">12 settimane</option><option value="0">Mai (lista disattivata)</option></select>
+            </div>
           </div>
           <div class="field" style="margin-top:18px">
             <span class="label">Giorni di chiusura</span>
@@ -547,6 +595,22 @@
             <button class="btn btn-primary" onclick="saveConfig()"><i class="ph ph-floppy-disk"></i>Salva impostazioni</button>
             <button class="btn btn-ghost" onclick="openOnboarding()"><i class="ph ph-magic-wand"></i>Configurazione guidata</button>
           </div>
+        </div>
+
+        <div class="panel pad">
+          <h3>Ferie, festivi e pause</h3>
+          <p class="muted">In questi momenti le clienti non possono prenotare online. In agenda li vedi segnati.</p>
+          <div class="field" style="margin-top:18px">
+            <span class="label">Pause di ogni giorno (es. pranzo)</span>
+            <div class="ranges" id="cfg-breaks"></div>
+            <button class="btn btn-ghost btn-sm" onclick="addRange('breaks')"><i class="ph ph-plus"></i>Aggiungi pausa</button>
+          </div>
+          <div class="field" style="margin-top:14px">
+            <span class="label">Chiusure (ferie, festivi, corsi)</span>
+            <div class="ranges" id="cfg-closures"></div>
+            <button class="btn btn-ghost btn-sm" onclick="addRange('closures')"><i class="ph ph-plus"></i>Aggiungi chiusura</button>
+          </div>
+          <div class="row-wrap"><button class="btn btn-primary" onclick="saveClosures()"><i class="ph ph-floppy-disk"></i>Salva ferie e pause</button></div>
         </div>
 
         <div class="panel pad">
@@ -689,6 +753,8 @@
       <div class="form-grid">
         <div class="field"><label for="ob-open">Apertura</label><input type="time" id="ob-open"></div>
         <div class="field"><label for="ob-close">Chiusura</label><input type="time" id="ob-close"></div>
+        <div class="field"><label for="ob-break-from">Pausa pranzo dalle (facoltativa)</label><input type="time" id="ob-break-from"></div>
+        <div class="field"><label for="ob-break-to">alle</label><input type="time" id="ob-break-to"></div>
         <div class="field span-2"><label for="ob-slot">Intervallo degli orari online</label>
           <select id="ob-slot"><option value="15">Ogni 15 minuti</option><option value="20">Ogni 20 minuti</option><option value="30">Ogni 30 minuti</option><option value="45">Ogni 45 minuti</option><option value="60">Ogni ora</option></select>
         </div>
@@ -789,6 +855,56 @@
   </div>
 </div>
 
+<!-- Client card: details, photos, visit history -->
+<div class="modal-backdrop" id="cli-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cm-title">
+    <div class="modal-head">
+      <div class="card-who"><span class="avatar" id="cm-avatar" aria-hidden="true"></span><div><h2 id="cm-title"></h2><p class="muted small" id="cm-since"></p></div></div>
+      <button class="btn-icon" onclick="closeModal('cli-modal')" aria-label="Chiudi" data-autofocus><i class="ph ph-x"></i></button>
+    </div>
+    <input type="hidden" id="cm-id">
+    <div class="metrics card-stats" id="cm-stats"></div>
+    <div class="form-grid">
+      <div class="field"><label for="cm-name">Nome e cognome</label><input type="text" id="cm-name" autocomplete="off"></div>
+      <div class="field"><label for="cm-phone">Telefono (WhatsApp / SMS)</label><input type="tel" id="cm-phone" autocomplete="off"></div>
+      <div class="field span-2"><label for="cm-allergy">Allergie / note cute</label><input type="text" id="cm-allergy" placeholder="Nessuna"></div>
+      <div class="field span-2"><label for="cm-formula">Formula colore / note tecniche</label><textarea id="cm-formula" rows="2" placeholder="Es. 40g 6.0 + 20g 6.35 Ox 20 vol (35 min)"></textarea></div>
+      <div class="field span-2"><label for="cm-notes">Note sulla cliente</label><textarea id="cm-notes" rows="2" placeholder="Preferenze, abitudini, cose da ricordare"></textarea></div>
+    </div>
+    <div class="consent" style="margin-top:14px">
+      <label><input type="checkbox" id="cm-gdpr"><span><strong>Consenso GDPR base:</strong> gestione appuntamenti e notifiche di servizio.</span></label>
+      <label><input type="checkbox" id="cm-health"><span><strong>Consenso allergie/cute (art. 9 GDPR):</strong> necessario per annotare allergie e sensibilità.</span></label>
+    </div>
+    <h3 class="card-h"><i class="ph ph-images"></i>Foto <span class="muted small" id="cm-photo-info"></span></h3>
+    <div class="photos" id="cm-photos"></div>
+    <h3 class="card-h"><i class="ph ph-clock-counter-clockwise"></i>Storico visite</h3>
+    <div id="cm-history"></div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" onclick="deleteClient(Number($('cm-id').value))"><i class="ph ph-trash"></i>Elimina scheda</button>
+      <span class="foot-gap"></span>
+      <button class="btn btn-outline" onclick="closeModal('cli-modal')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveClientCard()"><i class="ph ph-check"></i>Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- One client photo, full size -->
+<div class="modal-backdrop" id="photo-modal">
+  <div class="modal photo-view" role="dialog" aria-modal="true" aria-labelledby="pv-date">
+    <div class="modal-head">
+      <h2 id="pv-date"></h2>
+      <button class="btn-icon" onclick="closePhoto()" aria-label="Chiudi" data-autofocus><i class="ph ph-x"></i></button>
+    </div>
+    <img id="pv-img" alt="Foto della cliente">
+    <div class="field" style="margin-top:14px"><label for="pv-note">Nota sulla foto</label><input type="text" id="pv-note" maxlength="120" placeholder="Es. prima del balayage" onchange="savePhotoNote()"></div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" onclick="deletePhoto()"><i class="ph ph-trash"></i>Elimina foto</button>
+      <span class="foot-gap"></span>
+      <button class="btn btn-primary" onclick="closePhoto()"><i class="ph ph-check"></i>Fatto</button>
+    </div>
+  </div>
+</div>
+
 <!-- Edit a service -->
 <div class="modal-backdrop" id="srv-modal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="srv-modal-title" style="max-width:540px">
@@ -863,6 +979,7 @@
 
 <script src="/common.js"></script>
 <script src="/offline.js"></script>
+<script src="/history.js"></script>
 <script>
   let db = { config: {}, services: [], clients: [], inventory: [], appointments: [] };
   let loaded = false;
@@ -1004,6 +1121,12 @@
   // ---------- Novità ----------
   // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
   const NEWS = [
+    { v: '1.6', date: '16 ottobre 2026', title: 'Scheda cliente, foto e richiami', items: [
+      ['ph-identification-card', 'Tocca il nome di una cliente (anche in agenda) per aprire la sua scheda: dati, formula, note, quanto ha speso e lo storico delle visite.'],
+      ['ph-camera-plus', 'Allega foto alla scheda (prima e dopo, colore): vengono ridotte a 480p sul dispositivo, quindi occupano pochissimo. Le foto non sono incluse nel file di backup.'],
+      ['ph-clock-counter-clockwise', 'In Schede clienti la lista "Da richiamare" mostra chi non viene da qualche settimana e non ha appuntamenti: un tocco e le scrivi su WhatsApp.'],
+      ['ph-coffee', 'In Impostazioni imposta pausa pranzo, ferie e festivi: la pagina di prenotazione li blocca da sola e l\'agenda li mostra.'],
+    ] },
     { v: '1.5', date: '16 ottobre 2026', title: 'Ogni sezione ha il suo indirizzo', items: [
       ['ph-link', 'Agenda, clienti, listino e le altre sezioni hanno un indirizzo proprio (es. /clienti): aggiornando la pagina resti dove sei, Indietro funziona e puoi salvarle nei preferiti.'],
       ['ph-lock-simple', "All'apertura il gestionale resta nascosto finché l'accesso non è verificato."],
@@ -1151,6 +1274,7 @@
     closeModal('more-sheet');
     window.scrollTo(0, 0);
     if (tab === 'webbooking') $('preview-frame').src = '/prenota';
+    if (tab === 'clienti') renderRecall(); // appointments may have changed since the last render
   }
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-tab]');
@@ -1204,10 +1328,11 @@
     const sel = $('agenda-date').value || todayStr();
     const days = view === 'day' ? [sel] : view === 'week' ? weekDays(sel) : null;
     const period = db.appointments.filter((a) => (days ? days.includes(a.date) : (a.date || '').startsWith(sel.slice(0, 7))));
-    const closed = (db.config.closedDays || []).includes(new Date(sel + 'T12:00').getDay());
+    const closure = closureOn(sel), closed = isClosedDay(sel);
+    const closedText = closure ? `chiuso${closure.note ? ` (${closure.note})` : ''}` : 'giorno di chiusura';
     if (view === 'day') {
       $('agenda-day').textContent = cap(dayLabel(sel));
-      $('agenda-sub').textContent = ({ [todayStr()]: 'Oggi', [todayStr(1)]: 'Domani', [todayStr(-1)]: 'Ieri' }[sel] || dayLabel(sel, { year: 'numeric' })) + (closed ? ' · giorno di chiusura' : '');
+      $('agenda-sub').textContent = ({ [todayStr()]: 'Oggi', [todayStr(1)]: 'Domani', [todayStr(-1)]: 'Ieri' }[sel] || dayLabel(sel, { year: 'numeric' })) + (closed ? ` · ${closedText}` : '');
     } else if (view === 'week') {
       $('agenda-day').textContent = `${dayLabel(days[0], { day: 'numeric', month: 'short' })} - ${dayLabel(days[6], { day: 'numeric', month: 'short' })}`;
       $('agenda-sub').textContent = `Settimana, ${days[0].slice(0, 4)}`;
@@ -1229,12 +1354,19 @@
 
     const list = apptsOn(sel);
     if (!list.length) {
-      $('agenda-list').innerHTML = empty('ph-calendar-blank', 'Nessun appuntamento', closed ? 'Il salone è chiuso in questo giorno.' : 'La giornata è libera. Aggiungi un appuntamento o condividi il link di prenotazione.',
+      $('agenda-list').innerHTML = empty('ph-calendar-blank', 'Nessun appuntamento', closed ? `Il salone è ${closedText} in questo giorno.` : 'La giornata è libera. Aggiungi un appuntamento o condividi il link di prenotazione.',
         '<button class="btn btn-primary btn-sm" onclick="openApptModal()"><i class="ph ph-plus"></i>Nuovo appuntamento</button>');
       return;
     }
 
-    $('agenda-list').innerHTML = list.map((a) => {
+    // Daily breaks sit between the appointments, in time order.
+    const breaks = closed ? [] : (db.config.breaks || []).map((b) => ({ brk: true, time: b.from, end: b.to }));
+    $('agenda-list').innerHTML = [...list, ...breaks].sort((a, b) => a.time.localeCompare(b.time)).map((a) => {
+      if (a.brk) return `
+      <div class="appt brk">
+        <div class="appt-time num"><strong>${esc(a.time)}</strong><span>${esc(a.end)}</span></div>
+        <p class="brk-label"><i class="ph ph-coffee"></i>Pausa</p>
+      </div>`;
       const c = findClient(a);
       const allergy = c && c.allergy && c.allergy.toLowerCase() !== 'nessuna' ? `<span class="badge badge-danger"><i class="ph ph-warning"></i>${esc(c.allergy)}</span>` : '';
       const msg = encodeURIComponent(`Ciao ${a.clientName}! Ti confermiamo l'appuntamento presso ${db.config.salonName} per ${dayLabel(a.date)} alle ore ${a.time} (${(a.services || []).join(', ')}). A presto!`);
@@ -1246,7 +1378,7 @@
         <div class="appt-time num"><strong>${esc(a.time)}</strong><span>${addMin(a.time, a.duration || 30)}</span></div>
         <div class="appt-body">
           <div class="appt-head">
-            <h3>${esc(a.clientName)}</h3>
+            <h3>${c ? `<button class="link" onclick="openClientCard(${c.id})">${esc(a.clientName)}</button>` : esc(a.clientName)}</h3>
             ${a.source === 'web' ? '<span class="badge badge-accent"><i class="ph ph-globe-simple"></i>Web</span>' : ''}
             ${a.reminderSent ? '<span class="badge badge-ok"><i class="ph ph-bell"></i>Avvisata</span>' : ''}
             ${clashes(list, a).length ? '<span class="badge badge-danger"><i class="ph ph-warning-octagon"></i>Sovrapposto</span>' : ''}
@@ -1270,12 +1402,12 @@
 
   function renderWeek(days) {
     $('agenda-list').innerHTML = `<div class="week">${days.map((ds, i) => {
-      const list = apptsOn(ds);
+      const list = apptsOn(ds), closed = isClosedDay(ds);
       return `
-      <div class="week-day${ds === todayStr() ? ' today' : ''}">
+      <div class="week-day${ds === todayStr() ? ' today' : ''}${closed ? ' closed' : ''}">
         <button class="week-head" onclick="openDay('${ds}')" aria-label="Apri ${dayLabel(ds)}">
           <strong>${WEEKDAYS[i]} ${Number(ds.slice(8))}</strong>
-          <span class="muted small num">${list.length ? `${list.length} app. · ${euro(revenue(list))}` : 'Libero'}</span>
+          <span class="muted small num">${list.length ? `${list.length} app. · ${euro(revenue(list))}` : closed ? esc(closureOn(ds)?.note || 'Chiuso') : 'Libero'}</span>
         </button>
         ${list.map((a) => `
           <button class="mini${clashes(list, a).length ? ' clash' : ''}" onclick="openApptModal(${a.id})">
@@ -1293,8 +1425,9 @@
     for (let d = 1; d <= new Date(y, m + 1, 0).getDate(); d++) {
       const ds = `${y}-${pad(m + 1)}-${pad(d)}`, list = apptsOn(ds);
       html += `
-      <button class="m-cell${ds === todayStr() ? ' today' : ''}" onclick="openDay('${ds}')" aria-label="${dayLabel(ds)}, ${list.length} appuntamenti">
+      <button class="m-cell${ds === todayStr() ? ' today' : ''}${isClosedDay(ds) ? ' closed' : ''}" onclick="openDay('${ds}')" aria-label="${dayLabel(ds)}, ${list.length} appuntamenti">
         <span class="m-num"><span>${d}</span>${list.length ? `<span class="badge badge-accent">${list.length}</span>` : ''}</span>
+        ${closureOn(ds) && !list.length ? `<span class="m-pill">${esc(closureOn(ds).note || 'Chiuso')}</span>` : ''}
         ${list.slice(0, 3).map((a) => `<span class="m-pill">${esc(a.time)} ${esc(a.clientName)}</span>`).join('')}
         ${list.length > 3 ? `<span class="m-more">+${list.length - 3} altri</span>` : ''}
       </button>`;
@@ -1354,21 +1487,23 @@
   function toggleNotified() { showNotified = !showNotified; renderReminders(); }
 
   // ---------- Avvisa / Scrivi alla cliente ----------
-  let contactPhone = '', contactApptId = null;
-  function openContact(clientId, apptId) {
+  let contactPhone = '', contactApptId = null, contactRecallId = null;
+  function openContact(clientId, apptId, recall = false) {
     const a = db.appointments.find((x) => x.id === apptId);
     const c = db.clients.find((x) => x.id === clientId);
     const name = a ? a.clientName : c?.name, phone = a ? a.phone : c?.phone;
     if (!phone) return toast('Questa cliente non ha un numero di telefono salvato', 'error');
     contactPhone = waNumber(phone);
     contactApptId = a ? a.id : null;
+    contactRecallId = recall ? clientId : null;
     $('contact-who').textContent = `${name}, ${phone}`;
-    $('contact-msg').value = a ? reminderText(a) : `Ciao ${name}! Ti scriviamo da ${db.config.salonName}: `;
+    $('contact-msg').value = a ? reminderText(a) : recall ? recallText(c) : `Ciao ${name}! Ti scriviamo da ${db.config.salonName}: `;
     openModal('contact-modal');
   }
   function sendContact(channel) {
     const msg = encodeURIComponent($('contact-msg').value.trim());
     if (contactApptId) markAttempt(contactApptId, channel === 'wa' ? 'WhatsApp' : 'SMS');
+    if (contactRecallId) markRecalled(contactRecallId);
     if (channel === 'wa') window.open(`https://wa.me/${contactPhone}?text=${msg}`, '_blank', 'noopener');
     else location.href = `sms:+${contactPhone}?body=${msg}`;
     closeModal('contact-modal');
@@ -1620,7 +1755,7 @@
       <div class="row client">
         <span class="avatar" aria-hidden="true">${esc(initials(c.name))}</span>
         <div class="row-main">
-          <div class="row-title"><strong>${esc(c.name)}</strong>${c.phone ? `<a class="muted num" href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : ''}</div>
+          <div class="row-title"><button class="link" onclick="openClientCard(${c.id})">${esc(c.name)}</button>${c.phone ? `<a class="muted num" href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : ''}</div>
           <div class="badges">
             ${allergy ? `<span class="badge badge-danger"><i class="ph ph-warning"></i>${esc(c.allergy)}</span>` : ''}
             ${c.gdprConsent ? `<span class="badge badge-ok"><i class="ph ph-shield-check"></i>GDPR ${esc(fmtDate(c.gdprDate))}</span>` : '<span class="badge badge-warn"><i class="ph ph-shield-warning"></i>Consenso GDPR mancante</span>'}
@@ -1630,12 +1765,12 @@
         </div>
         <div class="row-actions">
           ${c.phone ? `<button class="btn btn-outline btn-sm" onclick="openContact(${c.id})"><i class="ph ph-megaphone"></i>Scrivi</button>` : ''}
-          <button class="btn btn-outline btn-sm" onclick="editFormula(${c.id})"><i class="ph ph-pencil-simple"></i>Formula</button>
-          <button class="btn-icon danger" onclick="deleteClient(${c.id})" aria-label="Elimina ${esc(c.name)}"><i class="ph ph-trash"></i></button>
+          <button class="btn btn-outline btn-sm" onclick="openClientCard(${c.id})"><i class="ph ph-identification-card"></i>Scheda</button>
         </div>
       </div>`;
     }).join('') || (q ? empty('ph-magnifying-glass', 'Nessun risultato', `Nessuna cliente corrisponde a "${esc(q)}".`)
                       : empty('ph-users', 'Archivio vuoto', 'Registra la prima cliente qui sopra. Le clienti che prenotano online vengono aggiunte da sole.'));
+    renderRecall();
   }
 
   function addClient() {
@@ -1655,24 +1790,181 @@
     renderGdpr();
   }
 
-  function editFormula(id) {
+  function deleteClient(id) {
     const c = db.clients.find((x) => x.id === id);
-    if (!c) return;
-    const f = prompt(`Scheda tecnica di ${c.name}:`, c.formula || '');
-    if (f === null) return;
-    c.formula = f.trim();
-    persist('clients', c).then((r) => r && toast('Formula aggiornata'));
+    if (!c || !confirm(`Eliminare la scheda di ${c.name} e le sue foto? Gli appuntamenti restano in agenda.`)) return;
+    db.clients = db.clients.filter((x) => x.id !== id);
+    drop('clients', id); // the server deletes the client's photos too
+    closeModal('cli-modal');
     renderClients();
+    renderGdpr();
     renderAgenda();
   }
 
-  function deleteClient(id) {
+  // ---------- Da richiamare ----------
+  const weeksAgo = (ds) => Math.round((new Date(todayStr() + 'T12:00:00Z') - new Date(ds + 'T12:00:00Z')) / 6048e5);
+  const recallText = (c) => `Ciao ${c.name.split(' ')[0]}! È passato un po' di tempo dalla tua ultima visita da ${db.config.salonName}. Quando vuoi, puoi prenotare qui: ${location.origin}/prenota`;
+
+  function renderRecall() {
+    const weeks = Number(db.config.recallWeeks ?? 6);
+    const list = recallList(db.clients, db.appointments, todayStr(), weeks);
+    $('recall').hidden = !list.length;
+    $('recall-count').textContent = list.length;
+    $('recall-hint').textContent = `Ultima visita da più di ${weeks} settimane e niente in agenda`;
+    $('recall-list').innerHTML = list.map(({ client: c, last }) => `
+      <div class="row rem">
+        <span class="avatar" aria-hidden="true">${esc(initials(c.name))}</span>
+        <div class="row-main">
+          <div class="row-title"><button class="link" onclick="openClientCard(${c.id})">${esc(c.name)}</button></div>
+          <span class="row-sub">Ultima visita ${esc(fmtDate(last.date))}, ${weeksAgo(last.date)} settimane fa${last.services?.length ? `: ${esc(last.services.join(' + '))}` : ''}</span>
+        </div>
+        <div class="row-actions">
+          ${c.phone ? `<button class="btn btn-outline btn-sm" onclick="openContact(${c.id}, null, true)"><i class="ph ph-whatsapp-logo"></i>Scrivi</button>` : ''}
+          <button class="btn btn-ghost btn-sm" onclick="markRecalled(${c.id})"><i class="ph ph-check"></i>Richiamata</button>
+        </div>
+      </div>`).join('');
+  }
+  // Hides the client from the list for another `recallWeeks` weeks (or until she books again).
+  function markRecalled(id) {
     const c = db.clients.find((x) => x.id === id);
-    if (!c || !confirm(`Eliminare la scheda di ${c.name}? Gli appuntamenti restano in agenda.`)) return;
-    db.clients = db.clients.filter((x) => x.id !== id);
-    drop('clients', id);
+    if (!c) return;
+    c.recalledAt = todayStr();
+    persist('clients', c);
+    renderRecall();
+  }
+
+  // ---------- Scheda cliente ----------
+  let cardPhotos = [], openPhotoItem = null;
+  const cardId = () => Number($('cm-id').value);
+
+  function openClientCard(id) {
+    const c = db.clients.find((x) => x.id === id);
+    if (!c) return;
+    const today = todayStr(), visits = visitsByClient(db.appointments, db.clients).get(id) || [];
+    const past = visits.filter((a) => a.date < today), next = visits.filter((a) => a.date >= today).reverse();
+    $('cm-id').value = id;
+    $('cm-title').textContent = c.name;
+    $('cm-avatar').textContent = initials(c.name);
+    $('cm-since').textContent = c.gdprDate ? `Cliente dal ${fmtDate(c.gdprDate)}` : '';
+    $('cm-stats').innerHTML = `
+      <div><span class="metric-val num">${past.length}</span><span class="metric-lbl">${past.length === 1 ? 'visita' : 'visite'}</span></div>
+      <div><span class="metric-val num">${euro(past.reduce((s, a) => s + (Number(a.price) || 0), 0))}</span><span class="metric-lbl">spesi in salone</span></div>
+      <div><span class="metric-val num">${past[0] ? esc(fmtDate(past[0].date).slice(0, 6) + past[0].date.slice(2, 4)) : 'Mai'}</span><span class="metric-lbl">ultima visita</span></div>`;
+    $('cm-name').value = c.name;
+    $('cm-phone').value = c.phone || '';
+    $('cm-allergy').value = c.allergy && c.allergy.toLowerCase() !== 'nessuna' ? c.allergy : '';
+    $('cm-formula').value = c.formula || '';
+    $('cm-notes').value = c.notes || '';
+    $('cm-gdpr').checked = !!c.gdprConsent;
+    $('cm-health').checked = !!c.healthConsent;
+    const visit = (a, upcoming) => `
+      <div class="visit${upcoming ? ' next' : ''}">
+        <span class="num">${esc(fmtDate(a.date))}</span>
+        <span>${upcoming ? `<span class="badge badge-accent">In agenda, ore ${esc(a.time)}</span> ` : ''}${esc((a.services || []).join(' + ') || 'Appuntamento')}</span>
+        <span class="num">${euro(a.price)}</span>
+        ${a.notes ? `<p class="note"><i class="ph ph-note"></i><span>${esc(a.notes)}</span></p>` : ''}
+      </div>`;
+    $('cm-history').innerHTML = [...next.map((a) => visit(a, true)), ...past.map((a) => visit(a))].join('')
+      || '<p class="muted small">Ancora nessuna visita registrata.</p>';
+    // Photos are fetched only when the card opens, so the main load stays light.
+    cardPhotos = [];
+    renderPhotos('caricamento...');
+    openModal('cli-modal');
+    api('GET', `/api/data?photos=${id}`)
+      .then((r) => { if (cardId() === id) { cardPhotos = r.photos; renderPhotos(); } })
+      .catch((e) => { if (cardId() === id) renderPhotos(isNetwork(e) ? 'visibili solo con la connessione' : e.message); });
+  }
+
+  function saveClientCard() {
+    const c = db.clients.find((x) => x.id === cardId());
+    const name = $('cm-name').value.trim(), allergy = $('cm-allergy').value.trim(), gdpr = $('cm-gdpr').checked;
+    if (!c) return;
+    if (!name) return toast('Inserisci il nome della cliente', 'error');
+    if (allergy && !$('cm-health').checked) return toast('Per annotare allergie serve il consenso art. 9', 'error');
+    Object.assign(c, {
+      name, phone: $('cm-phone').value.trim(), allergy: allergy || 'Nessuna', formula: $('cm-formula').value.trim(), notes: $('cm-notes').value.trim(),
+      gdprConsent: gdpr, healthConsent: $('cm-health').checked, gdprDate: gdpr && !c.gdprConsent ? todayStr() : c.gdprDate,
+    });
+    persist('clients', c).then((r) => r && toast('Scheda salvata'));
+    closeModal('cli-modal');
     renderClients();
     renderGdpr();
+    renderAgenda();
+  }
+
+  // `status`: text shown instead of the photos (loading, offline, error).
+  function renderPhotos(status) {
+    $('cm-photo-info').textContent = status || `${cardPhotos.length ? cardPhotos.length + ' foto, ' : ''}ridotte a 480p per occupare poco spazio`;
+    $('cm-photos').innerHTML = status ? '' : `
+      <label class="photo add"><input type="file" accept="image/*" multiple onchange="addPhotos(this)"><i class="ph ph-camera-plus"></i>Aggiungi</label>`
+      + cardPhotos.map((p, i) => `
+      <button class="photo" onclick="openPhoto(${i})" aria-label="Foto del ${esc(fmtDate(p.date))}${p.note ? ', ' + esc(p.note) : ''}"><img src="${esc(p.img)}" alt="" loading="lazy"><span>${esc(p.note || fmtDate(p.date))}</span></button>`).join('');
+  }
+
+  // Shrinks a photo on the device to 480p JPEG (usually 40-80 KB), so it costs little in Neon and Vercel traffic.
+  async function shrink(file) {
+    let bmp;
+    try { bmp = await createImageBitmap(file); } catch { throw new Error('Formato non supportato, scegli una foto JPEG o PNG'); }
+    const k = Math.min(1, 480 / Math.min(bmp.width, bmp.height), 854 / Math.max(bmp.width, bmp.height));
+    const cv = Object.assign(document.createElement('canvas'), { width: Math.round(bmp.width * k), height: Math.round(bmp.height * k) });
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#fff'; // transparent PNGs would turn black in JPEG
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(bmp, 0, 0, cv.width, cv.height);
+    bmp.close();
+    for (const q of [0.75, 0.6, 0.45]) {
+      const url = cv.toDataURL('image/jpeg', q);
+      if (url.length <= 200000) return url; // the server accepts up to 220000 characters
+    }
+    throw new Error('Foto troppo pesante anche dopo la riduzione');
+  }
+
+  // Photos go straight to the server, never into the offline queue: they would fill the device storage.
+  async function addPhotos(input) {
+    const id = cardId(), files = [...input.files];
+    input.value = '';
+    for (const f of files) {
+      try {
+        const p = { id: newId(), clientId: id, date: todayStr(), note: '', img: await shrink(f) };
+        await api('PUT', '/api/data', { col: 'photos', item: p });
+        if (cardId() === id) { cardPhotos.unshift(p); renderPhotos(); }
+      } catch (e) {
+        return toast(isNetwork(e) ? 'Serve la connessione per caricare le foto' : e.message, 'error');
+      }
+    }
+    if (files.length) toast(files.length === 1 ? 'Foto aggiunta' : `${files.length} foto aggiunte`);
+  }
+
+  function openPhoto(i) {
+    openPhotoItem = cardPhotos[i];
+    $('pv-img').src = openPhotoItem.img;
+    $('pv-date').textContent = `Foto del ${fmtDate(openPhotoItem.date)}`;
+    $('pv-note').value = openPhotoItem.note || '';
+    openModal('photo-modal');
+  }
+  function closePhoto() {
+    savePhotoNote();
+    closeModal('photo-modal');
+  }
+  function savePhotoNote() {
+    const p = openPhotoItem, note = $('pv-note').value.trim();
+    if (!p || note === p.note) return;
+    p.note = note;
+    renderPhotos();
+    api('PUT', '/api/data', { col: 'photos', item: p }).catch((e) => toast('Nota non salvata: ' + (isNetwork(e) ? 'manca la connessione' : e.message), 'error'));
+  }
+  function deletePhoto() {
+    const p = openPhotoItem;
+    if (!p || !confirm('Eliminare questa foto?')) return;
+    api('DELETE', `/api/data?col=photos&id=${p.id}`)
+      .then(() => {
+        cardPhotos = cardPhotos.filter((x) => x !== p);
+        openPhotoItem = null;
+        closeModal('photo-modal');
+        renderPhotos();
+        toast('Foto eliminata');
+      })
+      .catch((e) => toast(isNetwork(e) ? 'Serve la connessione per eliminare le foto' : e.message, 'error'));
   }
 
   // ---------- Magazzino ----------
@@ -1787,6 +2079,9 @@
     $('cfg-open').value = c.openTime || '09:00';
     $('cfg-close').value = c.closeTime || '19:00';
     $('cfg-slot').value = String(c.slotMinutes || 30);
+    $('cfg-recall').value = String(c.recallWeeks ?? 6);
+    $('cfg-breaks').innerHTML = (c.breaks || []).map(rangeRow.breaks).join('');
+    $('cfg-closures').innerHTML = (c.closures || []).filter((x) => x.to >= todayStr()).map(rangeRow.closures).join(''); // past closures drop out
     $('cfg-closed').innerHTML = DAYS.map(([d, l]) => `<label class="chip"><input type="checkbox" value="${d}" ${(c.closedDays || []).includes(d) ? 'checked' : ''}>${l}</label>`).join('');
     $('brand-salon').textContent = c.salonName || '';
   }
@@ -1803,6 +2098,7 @@
       ownerPhone: $('cfg-phone').value.trim(),
       openTime, closeTime,
       slotMinutes: Number($('cfg-slot').value),
+      recallWeeks: Number($('cfg-recall').value),
       closedDays: [...document.querySelectorAll('#cfg-closed input:checked')].map((i) => Number(i.value)),
     });
     persist('config', { ...db.config, id: 1 }).then((r) => r && toast('Impostazioni salvate'));
@@ -1825,6 +2121,8 @@
     $('ob-open').value = c.openTime || '09:00';
     $('ob-close').value = c.closeTime || '19:00';
     $('ob-slot').value = String(c.slotMinutes || 30);
+    $('ob-break-from').value = c.breaks?.[0]?.from || '';
+    $('ob-break-to').value = c.breaks?.[0]?.to || '';
     $('ob-closed').innerHTML = DAYS.map(([d, l]) => `<label class="chip"><input type="checkbox" value="${d}" ${(c.closedDays || []).includes(d) ? 'checked' : ''}>${l}</label>`).join('');
     obShow(0);
     openModal('ob-modal');
@@ -1857,6 +2155,9 @@
     if (dir > 0 && obStep === 1 && !$('ob-name').value.trim()) return toast('Scrivi il nome del salone', 'error');
     if (dir > 0 && obStep === 2) {
       if (($('ob-open').value || '09:00') >= ($('ob-close').value || '19:00')) return toast("La chiusura deve essere dopo l'apertura", 'error');
+      const bFrom = $('ob-break-from').value, bTo = $('ob-break-to').value;
+      if ((bFrom || bTo) && !(bFrom && bTo && bFrom < bTo)) return toast('Pausa pranzo: indica inizio e fine, con la fine dopo l’inizio', 'error');
+      db.config.breaks = bFrom ? [{ from: bFrom, to: bTo }, ...(db.config.breaks || []).slice(1)] : (db.config.breaks || []).slice(1);
       Object.assign(db.config, {
         salonName: $('ob-name').value.trim(),
         ownerName: $('ob-owner').value.trim() || 'Titolare',
@@ -1884,6 +2185,43 @@
     toast(skipped ? 'Puoi riprendere la configurazione guidata da Impostazioni' : 'Tutto pronto, buon lavoro!');
     if (!skipped) maybeInstallBanner();
   }
+
+  // ---------- Ferie, festivi e pause ----------
+  // The rows on screen are the draft: "Aggiungi" adds a row, the bin removes it, "Salva" reads them all back.
+  const rangeRow = {
+    breaks: (x = { from: '13:00', to: '15:00' }) => `
+      <div class="range" data-kind="breaks">
+        <input type="time" data-k="from" value="${esc(x.from)}" aria-label="Inizio pausa">
+        <span class="muted">alle</span>
+        <input type="time" data-k="to" value="${esc(x.to)}" aria-label="Fine pausa">
+        <button class="btn-icon danger" onclick="this.closest('.range').remove()" aria-label="Togli pausa"><i class="ph ph-trash"></i></button>
+      </div>`,
+    closures: (x = { from: todayStr(), to: todayStr(), note: '' }) => `
+      <div class="range" data-kind="closures">
+        <input type="date" data-k="from" value="${esc(x.from)}" aria-label="Chiuso dal">
+        <span class="muted">al</span>
+        <input type="date" data-k="to" value="${esc(x.to)}" aria-label="Chiuso fino al">
+        <input type="text" data-k="note" value="${esc(x.note || '')}" placeholder="Es. Ferie estive" maxlength="60" aria-label="Nota">
+        <button class="btn-icon danger" onclick="this.closest('.range').remove()" aria-label="Togli chiusura"><i class="ph ph-trash"></i></button>
+      </div>`,
+  };
+  const readRanges = (kind) => [...document.querySelectorAll(`#cfg-${kind} .range`)]
+    .map((row) => Object.fromEntries([...row.querySelectorAll('[data-k]')].map((i) => [i.dataset.k, i.value.trim()])));
+  function addRange(kind) {
+    $(`cfg-${kind}`).insertAdjacentHTML('beforeend', rangeRow[kind]());
+  }
+  function saveClosures() {
+    const breaks = readRanges('breaks');
+    const closures = readRanges('closures').map((x) => ({ from: x.from, to: x.to || x.from, ...(x.note && { note: x.note }) }));
+    if (breaks.some((b) => !b.from || !b.to || b.from >= b.to)) return toast('Controlla le pause: la fine deve essere dopo l’inizio', 'error');
+    if (closures.some((x) => !x.from || x.from > x.to)) return toast('Controlla le chiusure: la data di fine deve essere dopo quella di inizio', 'error');
+    Object.assign(db.config, { breaks, closures: closures.sort((a, b) => a.from.localeCompare(b.from)) });
+    persist('config', { ...db.config, id: 1 }).then((r) => r && toast('Ferie e pause salvate'));
+    loadConfigUI();
+    renderAll();
+  }
+  const closureOn = (ds) => (db.config.closures || []).find((x) => ds >= x.from && ds <= x.to);
+  const isClosedDay = (ds) => (db.config.closedDays || []).includes(new Date(ds + 'T12:00').getDay()) || !!closureOn(ds);
 
   function exportBackup() {
     const a = document.createElement('a');

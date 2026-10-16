@@ -39,15 +39,18 @@ Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel 
 - Vista Giorno, Settimana e Mese, con numero di appuntamenti e incasso del periodo.
 - Promemoria delle clienti di oggi, domani e dopodomani da avvisare, con stato "Avvisata".
 - Durata dei servizi, orari di fine calcolati e avviso degli appuntamenti sovrapposti.
+- Pausa pranzo, ferie e festivi visibili in agenda e bloccati sulla pagina di prenotazione.
 
 **Clienti e listino**
-- Schede clienti con formule colore, allergie (con consenso art. 9 GDPR) e consenso privacy.
+- Scheda cliente con formule colore, note, allergie (con consenso art. 9 GDPR), consenso privacy, spesa totale e storico delle visite.
+- Foto nella scheda (prima e dopo, colore), ridotte a 480p sul dispositivo: circa 50 KB l'una.
+- Lista "Da richiamare": chi non viene da N settimane e non ha appuntamenti, con messaggio WhatsApp già scritto.
 - Listino a cartelle (PIEGA, TAGLIO, COLORE...) da creare, rinominare ed eliminare; servizi modificabili.
 - Magazzino con soglia minima e avviso dei prodotti da riordinare.
 
 **Prenotazione online**
 - Le clienti scelgono servizi, giorno e orario: gli orari occupati sono bloccati in base alla durata.
-- Giorni di chiusura, orari e intervallo degli slot si impostano dal gestionale.
+- Giorni di chiusura, pausa pranzo, ferie, orari e intervallo degli slot si impostano dal gestionale.
 - Ogni prenotazione arriva subito in agenda con il badge "Web"; due clienti non possono prendere lo stesso orario.
 
 **WhatsApp senza API**
@@ -103,9 +106,10 @@ flowchart LR
 public/            gestionale (index.html), prenotazione (prenota.html), stili, icone, service worker
   common.js        funzioni condivise (date, euro, WhatsApp, informativa privacy)
   offline.js       logica offline: coda delle modifiche e sovrapposizioni
+  history.js       storico visite e lista "Da richiamare"
   sw.js            service worker: pagine dalla rete, cache come riserva
 api/               funzioni serverless (sessione, dati del gestionale, prenotazioni pubbliche)
-test/              test delle API e della logica offline (npm test)
+test/              test delle API, della logica offline e dello storico (npm test)
 docs/screenshots/  immagini di questo README
 legacy/            la versione originale in un solo file HTML (v6)
 ```
@@ -151,6 +155,7 @@ Il gestionale funziona anche senza internet, se su quel dispositivo è già stat
 - Dopo ogni caricamento i dati vengono copiati sul dispositivo (`localStorage`, chiave `sp_cache`).
 - Le modifiche fatte senza rete, o con la sessione scaduta, finiscono in una coda (`sp_outbox`) e partono in ordine al ritorno della rete.
 - Dopo l'invio, gli appuntamenti inseriti offline che si sovrappongono ad altri vengono segnalati e marcati "Sovrapposto".
+- Le foto delle clienti non vengono salvate sul dispositivo: si vedono e si caricano solo con la rete.
 - "Esci" cancella copia e coda dal dispositivo; una sessione scaduta o revocata cancella la copia appena il dispositivo torna online.
 
 ## App installabile
@@ -165,13 +170,14 @@ Al primo accesso dopo un aggiornamento il gestionale mostra **Novità di Salone 
 
 ## Portare i dati dalla versione originale
 
-La versione originale (`legacy/salone_pro_v6.html`, e la successiva v9) salvava tutto nel browser del tablet. Aprila su quel dispositivo, usa **Impostazioni & Dati > Scarica Backup**, poi nel nuovo gestionale **Impostazioni & dati > Ripristina da backup**. Il ripristino sostituisce tutti i dati attuali e porta con sé anche le cartelle del listino e lo stato dei promemoria.
+La versione originale (`legacy/salone_pro_v6.html`, e la successiva v9) salvava tutto nel browser del tablet. Aprila su quel dispositivo, usa **Impostazioni & Dati > Scarica Backup**, poi nel nuovo gestionale **Impostazioni & dati > Ripristina da backup**. Il ripristino sostituisce tutti i dati attuali e porta con sé anche le cartelle del listino e lo stato dei promemoria. Le foto delle clienti restano nel database e non sono incluse nel file di backup.
 
 ## Limiti noti
 
 - Il gestionale si aggiorna ogni 2 minuti e quando torni sulla scheda: una prenotazione web compare entro quel tempo.
 - Offline, due dispositivi che modificano la stessa voce si sovrascrivono: vale l'ultima modifica inviata.
 - Le icone sono ridotte a quelle usate: aggiungendo una nuova icona (`ph-...`) va rigenerato `public/vendor/phosphor.*`.
+- Le foto non sono nel file di backup: restano solo nel database Neon (0,5 GB gratuiti, qualche migliaio di foto).
 - L'informativa privacy è un modello generico: va fatta verificare prima di affidarcisi.
 - Il piano Hobby di Vercel è per uso non commerciale: per un'attività serve il piano Pro.
 

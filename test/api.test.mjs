@@ -170,3 +170,52 @@ test('missing Vercel setup returns a hint, not a crash', async () => {
   assert.equal((await call(login, { method: 'POST', ip: '5.5.5.5', body: { password: 'corta' } })).body.setup, 'password');
   process.env.ADMIN_PASSWORD = pw;
 });
+
+test('daily breaks and closures block online bookings', async () => {
+  const fresh = (await call(login, { method: 'POST', ip: '9.9.9.7', body: { password: process.env.ADMIN_PASSWORD } })).headers['set-cookie'].split(';')[0];
+  const config = (await call(data, { cookie: fresh })).body.config;
+  assert.equal(config.recallWeeks, 6); // default for salons created before this setting existed
+  const put = (item) => call(data, { method: 'PUT', cookie: fresh, body: { col: 'config', item } });
+  assert.equal((await put({ ...config, breaks: [{ from: '15:00', to: '13:00' }] })).status, 400);
+  assert.equal((await put({ ...config, closures: [{ from: '2026-08-20', to: '2026-08-10' }] })).status, 400);
+  assert.equal((await put({ ...config, recallWeeks: 99 })).status, 400);
+
+  const thu = nextWeekday(4);
+  assert.equal((await put({ ...config, breaks: [{ from: '13:00', to: '15:00' }], closures: [{ from: thu, to: thu, note: 'Ferie' }] })).status, 200);
+  const day = await call(pub, { query: { date: wed } });
+  assert.ok(day.body.busy.some((b) => b.time === '13:00' && b.end === '15:00'), 'break sent as busy time');
+  assert.equal(day.body.config.closures[0].note, 'Ferie');
+
+  assert.equal((await book({ time: '12:45' })).status, 400); // 12:45-13:15 runs into the break
+  const closed = await book({ time: '10:00', date: thu });
+  assert.equal(closed.status, 400);
+  assert.match(closed.body.error, /Ferie/);
+  assert.equal((await book({ time: '15:00' })).status, 200); // right after the break
+});
+
+test('client photos: private, validated, outside the main load and the backup', async () => {
+  const fresh = (await call(login, { method: 'POST', ip: '9.9.9.6', body: { password: process.env.ADMIN_PASSWORD } })).headers['set-cookie'].split(';')[0];
+  const img = 'data:image/jpeg;base64,' + 'A'.repeat(1000);
+  const put = (item) => call(data, { method: 'PUT', cookie: fresh, body: { col: 'photos', item: { id: 1, clientId: 101, date: wed, img, ...item } } });
+  assert.equal((await put({ img: 'data:image/svg+xml;base64,PHN2Zz4=' })).status, 400); // only JPEG
+  assert.equal((await put({ img: 'data:image/jpeg;base64,' + 'A'.repeat(300000) })).status, 400); // too big
+  assert.equal((await put({ clientId: 'x' })).status, 400);
+  assert.equal((await put({ note: 'Prima del colore' })).status, 200);
+  assert.equal((await put({ id: 2 })).status, 200);
+  assert.equal((await call(data, { query: { photos: '101' } })).status, 401);
+
+  const got = (await call(data, { cookie: fresh, query: { photos: '101' } })).body.photos;
+  assert.deepEqual(got.map((p) => p.id), [2, 1]); // newest first
+  assert.equal(got[1].note, 'Prima del colore');
+  const all = (await call(data, { cookie: fresh })).body;
+  assert.ok(!JSON.stringify(all).includes(img), 'photos stay out of the main load');
+
+  assert.equal((await call(data, { method: 'POST', cookie: fresh, body: all })).status, 200);
+  assert.equal((await call(data, { cookie: fresh, query: { photos: '101' } })).body.photos.length, 2, 'restore keeps photos');
+  assert.equal((await call(data, { method: 'DELETE', cookie: fresh, query: { col: 'photos', id: '2' } })).status, 200);
+  assert.equal((await call(data, { cookie: fresh, query: { photos: '101' } })).body.photos.length, 1);
+  assert.equal((await call(data, { method: 'DELETE', cookie: fresh, query: { col: 'clients', id: '999' } })).status, 200); // other client
+  assert.equal((await call(data, { cookie: fresh, query: { photos: '101' } })).body.photos.length, 1);
+  assert.equal((await call(data, { method: 'DELETE', cookie: fresh, query: { col: 'clients', id: '101' } })).status, 200);
+  assert.equal((await call(data, { cookie: fresh, query: { photos: '101' } })).body.photos.length, 0, 'deleting the client deletes the photos');
+});

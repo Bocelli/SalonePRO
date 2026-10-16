@@ -1,8 +1,7 @@
-import { handle, fail, db, addMin, romeNow, limit, hit, clientIp, DEFAULT_CONFIG } from './_lib.js';
+import { handle, fail, db, addMin, romeNow, limit, hit, clientIp, closureOn, DAY, DEFAULT_CONFIG } from './_lib.js';
 
-const PUBLIC_CONFIG = ['salonName', 'ownerName', 'address', 'vat', 'email', 'ownerPhone', 'openTime', 'closeTime', 'slotMinutes', 'closedDays', 'serviceFolders'];
+const PUBLIC_CONFIG = ['salonName', 'ownerName', 'address', 'vat', 'email', 'ownerPhone', 'openTime', 'closeTime', 'slotMinutes', 'closedDays', 'serviceFolders', 'breaks', 'closures'];
 const pick = (o, keys) => Object.fromEntries(keys.map((k) => [k, o[k]]));
-const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 async function loadSalon(sql) {
   const rows = await sql`SELECT col, data FROM docs WHERE col IN ('config', 'services') ORDER BY id`;
@@ -20,9 +19,11 @@ export default handle(async (req, res) => {
 
   if (req.method === 'GET') {
     const date = String(req.query.date || '');
+    // Daily breaks are sent as busy intervals, so the booking page needs no extra logic for them.
     const busy = DAY.test(date)
-      ? await sql`SELECT data->>'time' AS time, data->>'end' AS "end" FROM docs
-                  WHERE col = 'appointments' AND data->>'date' = ${date} AND data->>'end' IS NOT NULL`
+      ? [...await sql`SELECT data->>'time' AS time, data->>'end' AS "end" FROM docs
+                  WHERE col = 'appointments' AND data->>'date' = ${date} AND data->>'end' IS NOT NULL`,
+        ...config.breaks.map((x) => ({ time: x.from, end: x.to }))]
       : [];
     res.setHeader('Cache-Control', 'no-store');
     return res.json({ config: pick(config, PUBLIC_CONFIG), services, busy, now });
@@ -55,10 +56,13 @@ export default handle(async (req, res) => {
     fail(400, 'Questa data non è prenotabile');
   }
   if ((config.closedDays || []).includes(d.getUTCDay())) fail(400, 'Il salone è chiuso in questo giorno');
+  const closure = closureOn(config, date);
+  if (closure) fail(400, `Il salone è chiuso in questo periodo${closure.note ? ` (${closure.note})` : ''}`);
 
   const duration = chosen.reduce((s, x) => s + (Number(x.duration) || 0), 0) || Number(config.slotMinutes) || 30;
   const end = addMin(time, duration);
   if (time < config.openTime || end > config.closeTime) fail(400, "L'orario scelto è fuori dall'apertura del salone");
+  if (config.breaks.some((x) => time < x.to && x.from < end)) fail(400, "L'orario scelto cade nella pausa del salone");
 
   const [existing] = await sql`SELECT data->'id' AS id FROM docs
     WHERE col = 'clients' AND right(regexp_replace(data->>'phone', '[^0-9]', '', 'g'), 10) = ${digits.slice(-10)} LIMIT 1`;

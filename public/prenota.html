@@ -33,6 +33,7 @@
   .hero h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); letter-spacing: -.03em; font-weight: 700; }
   .meta { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; color: var(--muted); font-size: .92rem; }
   .meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .meta .closure-note { color: var(--warn); font-weight: 600; }
 
   .layout { display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 20px; align-items: start; padding-bottom: 40px; }
   .col { display: grid; gap: 20px; }
@@ -225,7 +226,8 @@
   const chosen = () => services.filter((s) => picked.has(s.id));
   const step = () => Number(cfg.slotMinutes) || 30;
   const duration = () => chosen().reduce((s, x) => s + (Number(x.duration) || 0), 0) || step();
-  const isClosed = (ds) => (cfg.closedDays || []).includes(new Date(ds + 'T12:00').getDay());
+  const closureOn = (ds) => (cfg.closures || []).find((x) => ds >= x.from && ds <= x.to);
+  const isClosed = (ds) => (cfg.closedDays || []).includes(new Date(ds + 'T12:00').getDay()) || !!closureOn(ds);
   const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
 
   async function fetchDay(date) {
@@ -252,7 +254,8 @@
     const closed = (cfg.closedDays || []).map((d) => names[d]);
     $('salon-meta').innerHTML = [
       cfg.address && `<span><i class="ph ph-map-pin"></i>${esc(cfg.address)}</span>`,
-      `<span><i class="ph ph-clock"></i>${esc(cfg.openTime)} - ${esc(cfg.closeTime)}${closed.length ? `, chiuso ${esc(closed.join(' e '))}` : ''}</span>`,
+      `<span><i class="ph ph-clock"></i>${esc(cfg.openTime)} - ${esc(cfg.closeTime)}${(cfg.breaks || []).map((b) => `, pausa ${esc(b.from)} - ${esc(b.to)}`).join('')}${closed.length ? `, chiuso ${esc(closed.join(' e '))}` : ''}</span>`,
+      nextClosure(),
     ].filter(Boolean).join('');
     $('btn-wa').hidden = !cfg.ownerPhone;
     $('legal-body').innerHTML = legalHtml(cfg);
@@ -266,6 +269,16 @@
     renderServices();
     renderCal();
     await loadSlots();
+  }
+
+  // Tells clients about holidays in the next 60 days, before they hunt for a free day.
+  function nextClosure() {
+    const limit = new Date(now.date + 'T12:00');
+    limit.setDate(limit.getDate() + 60);
+    const c = (cfg.closures || []).filter((x) => x.to >= now.date && x.from <= localDate(limit)).sort((a, b) => a.from.localeCompare(b.from))[0];
+    if (!c) return '';
+    const when = c.from === c.to ? `il ${fmtDate(c.from)}` : `dal ${fmtDate(c.from)} al ${fmtDate(c.to)}`;
+    return `<span class="closure-note"><i class="ph ph-calendar-x"></i>Chiuso ${when}${c.note ? ` (${esc(c.note)})` : ''}</span>`;
   }
 
   function firstOpenDay() {
