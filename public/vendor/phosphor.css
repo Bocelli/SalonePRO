@@ -32,6 +32,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.ph.ph-wifi-slash:before { content: "\e4f2"; }
 .ph.ph-folder:before { content: "\e24a"; }
 .ph.ph-scissors:before { content: "\eae0"; }
 .ph.ph-calendar-blank:before { content: "\e10a"; }
@@ -42,6 +43,7 @@
 .ph.ph-gear-six:before { content: "\e272"; }
 .ph.ph-sparkle:before { content: "\e6a2"; }
 .ph.ph-plus:before { content: "\e3d4"; }
+.ph.ph-arrow-clockwise:before { content: "\e036"; }
 .ph.ph-caret-left:before { content: "\e138"; }
 .ph.ph-caret-right:before { content: "\e13a"; }
 .ph.ph-bell-ringing:before { content: "\e5e8"; }
@@ -73,7 +75,8 @@
 .ph.ph-chat-text:before { content: "\e17a"; }
 .ph.ph-lightning:before { content: "\e2de"; }
 .ph.ph-cloud-slash:before { content: "\e1b6"; }
-.ph.ph-arrow-clockwise:before { content: "\e036"; }
+.ph.ph-cloud-arrow-up:before { content: "\e1ae"; }
+.ph.ph-warning-octagon:before { content: "\e4e4"; }
 .ph.ph-megaphone:before { content: "\e324"; }
 .ph.ph-pencil-simple:before { content: "\e3b4"; }
 .ph.ph-lock-simple:before { content: "\e308"; }

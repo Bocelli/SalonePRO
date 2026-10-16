@@ -92,6 +92,13 @@
   .appt-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
   .actions { display: flex; gap: 6px; }
 
+  /* Offline bar */
+  .offline-bar { display: flex; align-items: center; gap: 10px; padding: 10px 32px; background: var(--warn-soft); color: var(--warn); border-bottom: 1px solid var(--border); font-size: .9rem; font-weight: 550; }
+  .offline-bar[hidden] { display: none; }
+  .offline-bar span { flex: 1; }
+  .offline-bar .ph-wifi-slash { font-size: 1.2rem; }
+  .mini.clash { border-left-color: var(--danger); }
+
   /* Day / week / month switch */
   .seg { display: inline-flex; gap: 2px; padding: 3px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-control); }
   .seg button { font: inherit; font-size: .86rem; font-weight: 600; padding: 6px 12px; border: 0; border-radius: 7px; background: none; color: var(--muted); cursor: pointer; }
@@ -259,6 +266,7 @@
     .add-panel summary { padding: 14px 16px; }
     .add-body { padding: 0 16px 16px; }
     .add-body .btn { justify-self: stretch; }
+    .offline-bar { padding: 10px 16px; flex-wrap: wrap; }
     .day-tools { flex-wrap: wrap; }
     .seg { flex-basis: 100%; }
     .seg button { flex: 1; }
@@ -304,6 +312,11 @@
       <h1 id="page-title">Agenda</h1>
       <button class="btn btn-primary" onclick="openApptModal()" aria-label="Nuovo appuntamento"><i class="ph ph-plus"></i><span class="hide-sm">Nuovo appuntamento</span></button>
     </header>
+    <div class="offline-bar" id="offline-bar" role="status" hidden>
+      <i class="ph ph-wifi-slash"></i>
+      <span id="offline-text"></span>
+      <button class="btn btn-outline btn-sm" onclick="reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button>
+    </div>
 
     <div class="content">
       <!-- AGENDA -->
@@ -724,6 +737,7 @@
 </div>
 
 <script src="/common.js"></script>
+<script src="/offline.js"></script>
 <script>
   let db = { config: {}, services: [], clients: [], inventory: [], appointments: [] };
   let loaded = false;
@@ -738,30 +752,121 @@
   const anyModalOpen = () => !!document.querySelector('.modal-backdrop.open');
 
   // ---------- API ----------
+  let offline = false;
+  const isNetwork = (e) => e instanceof TypeError; // fetch rejects with TypeError when there is no connection
   async function api(method, url, body) {
-    const r = await fetch(url, { method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+    let r;
+    try {
+      r = await fetch(url, { method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+    } catch (e) {
+      offline = true;
+      updateOfflineBar();
+      throw e;
+    }
+    offline = false;
     const data = await r.json().catch(() => ({}));
-    if (r.status === 401) { openModal('login'); throw new Error('Sessione scaduta, accedi di nuovo'); }
-    if (!r.ok) throw new Error(data.error || 'Errore ' + r.status);
+    if (r.status === 401) { openModal('login'); throw Object.assign(new Error('Sessione scaduta, accedi di nuovo'), { status: 401 }); }
+    if (!r.ok) throw Object.assign(new Error(data.error || 'Errore ' + r.status), { status: r.status });
     return data;
   }
-  // Optimistic UI: local state is already updated; on failure we warn and reload the truth from the server.
+
+  // ---------- Offline: data copy + queue of changes ----------
+  // shortcut: copy and queue live in localStorage (about 5 MB), move them to IndexedDB if the archive grows past a few thousand appointments.
+  const readJSON = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+  const writeJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+  const forget = (k) => { try { localStorage.removeItem(k); } catch {} };
+  let outbox = readJSON('sp_outbox') || [];
+  const saveCache = () => writeJSON('sp_cache', db);
+
+  // Optimistic UI: local state is already updated. Without connection (or with an expired session) the change waits in the queue.
   const syncFail = (e) => { toast('Non salvato: ' + e.message, 'error'); reload(); };
-  const persist = (col, item) => api('PUT', '/api/data', { col, item }).catch(syncFail);
-  const drop = (col, id) => api('DELETE', `/api/data?col=${col}&id=${id}`).catch(syncFail);
+  function send(op) {
+    saveCache();
+    if (outbox.length) return enqueue(op); // keep the order behind changes already waiting
+    const req = op.method === 'PUT' ? api('PUT', '/api/data', { col: op.col, item: op.item }) : api('DELETE', `/api/data?col=${op.col}&id=${op.id}`);
+    return req.catch((e) => (isNetwork(e) || e.status === 401 ? enqueue(op) : syncFail(e)));
+  }
+  function enqueue(op) {
+    outbox.push(op);
+    writeJSON('sp_outbox', outbox);
+    updateOfflineBar();
+    toast('Salvato sul dispositivo: lo invio appena torna la rete');
+    return Promise.resolve(); // undefined: callers skip their "saved" toast
+  }
+  const persist = (col, item) => send({ method: 'PUT', col, item });
+  const drop = (col, id) => send({ method: 'DELETE', col, id });
+
+  // Sends queued changes in order and returns the ids of the appointments sent. Stops at the first connection or
+  // login problem; a change the server refuses is dropped with a warning so it cannot block the queue forever.
+  let flushing = false;
+  async function flush() {
+    const synced = [];
+    if (flushing || !outbox.length) return synced;
+    flushing = true;
+    try {
+      while (outbox.length) {
+        const op = outbox[0];
+        try {
+          if (op.method === 'PUT') await api('PUT', '/api/data', { col: op.col, item: op.item });
+          else await api('DELETE', `/api/data?col=${op.col}&id=${op.id}`);
+          if (op.method === 'PUT' && op.col === 'appointments') synced.push(op.item.id);
+        } catch (e) {
+          if (isNetwork(e) || e.status === 401) break;
+          toast('Una modifica fatta offline non è stata accettata: ' + e.message, 'error');
+        }
+        outbox.shift();
+        writeJSON('sp_outbox', outbox);
+      }
+    } finally {
+      flushing = false;
+      updateOfflineBar();
+    }
+    return synced;
+  }
+
+  // After a sync, flag appointments made offline that now overlap others (e.g. a web booking taken meanwhile).
+  function warnClashes(ids) {
+    const found = ids.map((id) => db.appointments.find((a) => a.id === id)).filter((a) => a && clashes(db.appointments, a).length);
+    if (!found.length) return toast('Modifiche fatte offline inviate');
+    toast(`Attenzione: ${found.length === 1 ? 'un appuntamento inserito offline si sovrappone' : `${found.length} appuntamenti inseriti offline si sovrappongono`} ad altri (${found.map((a) => `${fmtDate(a.date).slice(0, 5)} ore ${a.time}`).join(', ')}). Controlla l'agenda.`, 'error');
+    $('agenda-date').value = found[0].date;
+    setView('day');
+  }
+
+  function updateOfflineBar() {
+    const n = outbox.length, waiting = `${n} ${n === 1 ? 'modifica salvata' : 'modifiche salvate'} sul dispositivo`;
+    $('offline-bar').hidden = !offline && !n;
+    $('offline-text').textContent = offline
+      ? `Sei offline. ${n ? `${waiting}: le invio appena torna la rete.` : 'Vedi gli ultimi dati scaricati e puoi continuare a lavorare.'}`
+      : `${waiting}, in attesa di invio.`;
+  }
 
   async function reload() {
+    const synced = await flush();
+    let fresh;
     try {
-      db = await api('GET', '/api/data');
+      fresh = await api('GET', '/api/data');
     } catch (e) {
-      if (!$('login').classList.contains('open')) {
-        $('agenda-list').innerHTML = empty('ph-cloud-slash', 'Impossibile caricare i dati', esc(e.message), '<button class="btn btn-outline btn-sm" onclick="reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button>');
+      if (e.status === 401) forget('sp_cache'); // session ended or revoked: no data left readable on this device
+      if (!loaded && isNetwork(e) && (fresh = readJSON('sp_cache'))) {
+        // start offline from the copy saved on this device (queued changes are already inside it)
+      } else {
+        if (!loaded && !$('login').classList.contains('open')) {
+          $('agenda-list').innerHTML = isNetwork(e)
+            ? empty('ph-wifi-slash', 'Sei offline', 'Su questo dispositivo non ci sono ancora dati salvati: collegati a internet una volta per usarlo anche offline.', '<button class="btn btn-outline btn-sm" onclick="reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button>')
+            : empty('ph-cloud-slash', 'Impossibile caricare i dati', esc(e.message), '<button class="btn btn-outline btn-sm" onclick="reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button>');
+        }
+        return;
       }
-      return;
     }
+    outbox.forEach((op) => applyOp(fresh, op));
+    db = fresh;
+    saveCache();
     const first = !loaded;
     if (first) { loaded = true; loadConfigUI(); }
     renderAll();
+    updateOfflineBar();
+    if (synced.length) warnClashes(synced);
     if (first && newsSeen() !== NEWS[0].v) openNews();
     if (first) maybeInstallBanner();
   }
@@ -769,6 +874,12 @@
   // ---------- Novità ----------
   // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
   const NEWS = [
+    { v: '1.3', date: '16 ottobre 2026', title: 'Funziona anche senza internet', items: [
+      ['ph-wifi-slash', "Senza rete il gestionale si apre lo stesso: vedi gli ultimi dati scaricati e puoi aggiungere o modificare appuntamenti."],
+      ['ph-cloud-arrow-up', "Le modifiche fatte offline restano sul dispositivo e partono da sole quando torna la rete. Una barra in alto ti dice quante ne mancano."],
+      ['ph-warning-octagon', "Se un appuntamento inserito offline si sovrappone a un altro, per esempio a una prenotazione web arrivata nel frattempo, te lo segnalo e lo vedi evidenziato in agenda."],
+      ['ph-device-mobile', "Per usarlo offline in sicurezza installa l'app sulla schermata Home e fai l'accesso almeno una volta con la rete."],
+    ] },
     { v: '1.2', date: '16 ottobre 2026', title: 'Agenda a settimana e mese, promemoria e listino a cartelle', items: [
       ['ph-calendar-blank', 'Agenda in vista Giorno, Settimana o Mese, con appuntamenti e incasso del periodo. Tocca un giorno per aprirlo.'],
       ['ph-bell-ringing', 'Promemoria in cima all’agenda: le clienti di oggi, domani e dopodomani da avvisare, con WhatsApp, SMS e "Avvisata".'],
@@ -833,13 +944,24 @@
 
   async function logout(all) {
     if (all && !confirm('Scollegare TUTTI i dispositivi, compreso questo? Su ognuno servirà di nuovo la password.')) return;
-    await fetch('/api/login' + (all ? '?all=1' : ''), { method: 'DELETE' });
+    await flush();
+    if (outbox.length && !confirm(`Ci sono ${outbox.length} modifiche fatte offline non ancora inviate: uscendo andranno perse. Uscire comunque?`)) return;
+    try {
+      await api('DELETE', '/api/login' + (all ? '?all=1' : ''));
+    } catch (e) {
+      return toast(isNetwork(e) ? 'Serve la connessione a internet per uscire' : e.message, 'error');
+    }
+    forget('sp_cache'); // the data copy (allergies included) does not stay on a device that logged out
+    forget('sp_outbox');
     location.reload();
   }
 
   // shortcut: polling every 2 min keeps the tablet in sync with web bookings; switch to push if Neon compute hours run short.
   setInterval(() => { if (loaded && !document.hidden && !anyModalOpen()) reload(); }, 120000);
   document.addEventListener('visibilitychange', () => { if (loaded && !document.hidden && !anyModalOpen()) reload(); });
+  window.addEventListener('online', () => { if (loaded) reload(); });
+  window.addEventListener('offline', () => { offline = true; updateOfflineBar(); });
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 
   // ---------- Navigation ----------
   function showTab(tab) {
@@ -945,6 +1067,7 @@
             <h3>${esc(a.clientName)}</h3>
             ${a.source === 'web' ? '<span class="badge badge-accent"><i class="ph ph-globe-simple"></i>Web</span>' : ''}
             ${a.reminderSent ? '<span class="badge badge-ok"><i class="ph ph-bell"></i>Avvisata</span>' : ''}
+            ${clashes(list, a).length ? '<span class="badge badge-danger"><i class="ph ph-warning-octagon"></i>Sovrapposto</span>' : ''}
             ${allergy}
           </div>
           <p class="appt-services">${esc((a.services || []).join(' + '))}, ${Number(a.duration) || 30} min</p>
@@ -973,7 +1096,7 @@
           <span class="muted small num">${list.length ? `${list.length} app. · ${euro(revenue(list))}` : 'Libero'}</span>
         </button>
         ${list.map((a) => `
-          <button class="mini" onclick="openApptModal(${a.id})">
+          <button class="mini${clashes(list, a).length ? ' clash' : ''}" onclick="openApptModal(${a.id})">
             <span class="num">${esc(a.time)}${a.reminderSent ? ' <i class="ph ph-bell" aria-label="avvisata"></i>' : ''}</span>
             <strong>${esc(a.clientName)}</strong>
             <small>${esc((a.services || []).join(', '))}</small>
@@ -1518,15 +1641,18 @@
     e.target.value = '';
     if (!file) return;
     if (!confirm('Il ripristino SOSTITUISCE tutti i dati attuali (agenda, clienti, listino, magazzino, impostazioni). Continuare?')) return;
+    if (outbox.length && !confirm(`Ci sono ${outbox.length} modifiche fatte offline non ancora inviate: il ripristino le annulla. Continuare?`)) return;
     const reader = new FileReader();
     reader.onload = async (ev) => {
       try {
         const r = await api('POST', '/api/data', JSON.parse(ev.target.result));
+        outbox = [];
+        forget('sp_outbox');
         loaded = false;
         await reload();
         toast(`Backup ripristinato (${r.count} elementi)`);
       } catch (err) {
-        toast('Ripristino non riuscito: ' + (err instanceof SyntaxError ? 'file non valido' : err.message), 'error');
+        toast('Ripristino non riuscito: ' + (err instanceof SyntaxError ? 'file non valido' : isNetwork(err) ? 'serve la connessione a internet' : err.message), 'error');
       }
     };
     reader.readAsText(file);

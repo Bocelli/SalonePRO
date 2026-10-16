@@ -54,6 +54,17 @@ Dopo il login compare un banner in basso: su Android e computer ha il pulsante *
 
 L'anteprima del link `/prenota` su WhatsApp e social usa `public/og.png` e i meta `og:` in `prenota.html`, con indirizzi assoluti su `salone-pro.vercel.app`: se colleghi un dominio tuo, aggiornali.
 
+## Modalità offline
+
+Il gestionale funziona anche senza internet, se su quel dispositivo è già stato fatto l'accesso almeno una volta con la rete:
+- `public/sw.js` (service worker) tiene in cache pagine e risorse: prima prova la rete, poi la cache. Le API non passano mai dalla cache.
+- Dopo ogni caricamento i dati vengono copiati sul dispositivo (`localStorage`, chiave `sp_cache`).
+- Le modifiche fatte senza rete (o con la sessione scaduta) finiscono in una coda (`sp_outbox`) e partono in ordine al ritorno della rete: evento `online`, ritorno sulla scheda, ogni 2 minuti o con "Riprova".
+- Dopo l'invio, gli appuntamenti inseriti offline che si sovrappongono ad altri (per esempio una prenotazione web arrivata nel frattempo) vengono segnalati e marcati "Sovrapposto" in agenda.
+- "Esci" cancella copia e coda dal dispositivo; se la sessione è scaduta o revocata, la copia viene cancellata appena il dispositivo torna online.
+
+Limiti: due dispositivi che modificano la stessa voce offline si sovrascrivono (vale l'ultima inviata); ripristino backup ed "Esci" richiedono la rete; la pagina `/prenota` per le clienti resta solo online.
+
 ## Novità (changelog)
 
 Al primo accesso dopo un aggiornamento il gestionale mostra "Novità di Salone PRO", riapribile dal menu (Novità). Per annunciare un aggiornamento aggiungi una voce **in cima** all'array `NEWS` in `public/index.html` con un nuovo `v`: comparirà una volta su ogni dispositivo.
