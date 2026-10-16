@@ -4,13 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Salone PRO</title>
-<meta name="robots" content="noindex">
+<meta name="description" content="Gestionale del salone: agenda, clienti, listino, magazzino e prenotazioni online.">
+<meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#fdfdfd" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#18181b" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Salone PRO">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/vendor/geist.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/vendor/phosphor.css">
 <link rel="stylesheet" href="/base.css">
@@ -187,7 +191,7 @@
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
-      <span class="brand-mark" aria-hidden="true">S</span>
+      <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors"></i></span>
       <div><strong>Salone PRO</strong><small id="brand-salon">&nbsp;</small></div>
     </div>
     <nav class="nav" aria-label="Sezioni">
@@ -403,9 +407,19 @@
         </div>
 
         <div class="panel pad">
+          <h3>Installa l'app</h3>
+          <p class="muted">Aggiungi Salone PRO alla schermata Home del tablet, del telefono o del computer: si apre a schermo intero come un'app.</p>
+          <div class="row-wrap" id="install-row" hidden><button class="btn btn-primary" onclick="installApp()"><i class="ph ph-download-simple"></i>Installa Salone PRO</button></div>
+          <p class="hint" id="install-hint">Su iPhone e iPad: apri il sito in Safari, tocca Condividi e poi "Aggiungi alla schermata Home". Su Android e computer usa il menu del browser, voce "Installa app".</p>
+        </div>
+
+        <div class="panel pad">
           <h3>Sessione</h3>
-          <p class="muted">Esci da questo dispositivo. Servirà di nuovo la password.</p>
-          <div class="row-wrap"><button class="btn btn-outline" onclick="logout()"><i class="ph ph-sign-out"></i>Esci</button></div>
+          <p class="muted">Esci da questo dispositivo. Se perdi un tablet o un telefono, esci da tutti: servirà di nuovo la password ovunque.</p>
+          <div class="row-wrap">
+            <button class="btn btn-outline" onclick="logout()"><i class="ph ph-sign-out"></i>Esci</button>
+            <button class="btn btn-danger" onclick="logout(true)"><i class="ph ph-devices"></i>Esci da tutti i dispositivi</button>
+          </div>
         </div>
       </section>
     </div>
@@ -483,7 +497,7 @@
 <!-- Login -->
 <div class="modal-backdrop" id="login" data-locked="1">
   <form class="modal login-card" onsubmit="login(event)">
-    <span class="brand-mark" aria-hidden="true">S</span>
+    <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors"></i></span>
     <div>
       <h2>Salone PRO</h2>
       <p class="muted">Area riservata al salone</p>
@@ -556,8 +570,9 @@
     }
   }
 
-  async function logout() {
-    await fetch('/api/login', { method: 'DELETE' });
+  async function logout(all) {
+    if (all && !confirm('Scollegare TUTTI i dispositivi, compreso questo? Su ognuno servirà di nuovo la password.')) return;
+    await fetch('/api/login' + (all ? '?all=1' : ''), { method: 'DELETE' });
     location.reload();
   }
 
@@ -1022,6 +1037,22 @@
     };
     reader.readAsText(file);
   }
+
+  // ---------- Installazione PWA ----------
+  let installPrompt;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installPrompt = e;
+    $('install-row').hidden = false;
+  });
+  async function installApp() {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    installPrompt = null;
+    $('install-row').hidden = true;
+  }
+  if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) $('install-hint').textContent = "L'app è già installata su questo dispositivo.";
 
   // ---------- Start ----------
   $('agenda-date').value = todayStr();

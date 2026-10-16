@@ -41,6 +41,8 @@ export async function db() {
   ready ??= sql.transaction([
     sql`CREATE TABLE IF NOT EXISTS docs (col text NOT NULL, id bigint NOT NULL, data jsonb NOT NULL, PRIMARY KEY (col, id))`,
     sql`CREATE INDEX IF NOT EXISTS docs_appt_date ON docs ((data->>'date')) WHERE col = 'appointments'`,
+    sql`CREATE TABLE IF NOT EXISTS hits (key text NOT NULL, at timestamptz NOT NULL DEFAULT now())`,
+    sql`CREATE INDEX IF NOT EXISTS hits_key_at ON hits (key, at)`,
     // First run only: seed the price list, then the config (services check runs before config exists).
     sql`INSERT INTO docs (col, id, data)
         SELECT 'services', (s->>'id')::bigint, s FROM jsonb_array_elements(${JSON.stringify(DEFAULT_SERVICES)}::jsonb) s
@@ -71,22 +73,53 @@ export function withEnd(a, services = []) {
   return a;
 }
 
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+// Config reaches the public page, so it is validated here (it can also arrive from a restored backup file).
+export function checkConfig(c) {
+  if (!HHMM.test(c.openTime) || !HHMM.test(c.closeTime) || c.openTime >= c.closeTime
+    || ![15, 20, 30, 45, 60].includes(Number(c.slotMinutes))
+    || !Array.isArray(c.closedDays) || c.closedDays.some((d) => !Number.isInteger(d) || d < 0 || d > 6)) {
+    fail(400, 'Impostazioni non valide (orari, intervallo o giorni di chiusura)');
+  }
+  return c;
+}
+
+// Vercel's edge sets these headers itself, clients cannot spoof them.
+export const clientIp = (req) => String(req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || 'unknown').split(',')[0].trim();
+
+// Fails with 429 once `max` hits for `key` fall inside the last `minutes`.
+export async function limit(sql, key, max, minutes) {
+  const [r] = await sql`SELECT count(*)::int AS n FROM hits WHERE key = ${key} AND at > now() - make_interval(mins => ${minutes})`;
+  if (r.n >= max) fail(429, `Troppi tentativi, riprova tra ${minutes} minuti`);
+}
+export const hit = (sql, key) => sql.transaction([
+  sql`INSERT INTO hits (key) VALUES (${key})`,
+  sql`DELETE FROM hits WHERE at < now() - interval '1 day'`,
+]);
+
 const sign = (v) => createHmac('sha256', process.env.ADMIN_PASSWORD).update(v).digest('base64url');
 const same = (a, b) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 const COOKIE = 'sp_session';
+const MAX_AGE = 30 * 86400;
+export const CLEAR_COOKIE = `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
 
-// shortcut: no login rate limit, the password length requirement is the brute-force defence; add a limiter if the URL gets targeted.
 export function checkPassword(pw) {
   if ((process.env.ADMIN_PASSWORD || '').length < 10) fail(500, 'Imposta ADMIN_PASSWORD (almeno 10 caratteri) nelle variabili d\'ambiente Vercel');
   return typeof pw === 'string' && same(sign('pw:' + pw), sign('pw:' + process.env.ADMIN_PASSWORD));
 }
 
-export function sessionCookie(maxAge = 30 * 86400) {
-  const exp = String(Date.now() + maxAge * 1000);
-  return `${COOKIE}=${maxAge ? `${exp}.${sign(exp)}` : ''}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
+// The session epoch lives in the DB: bumping it ("Esci da tutti i dispositivi") invalidates every issued cookie.
+export const sessionEpoch = async (sql) => Number((await sql`SELECT data->>'epoch' AS e FROM docs WHERE col = 'auth' AND id = 1`)[0]?.e || 0);
+export const bumpEpoch = (sql) => sql`INSERT INTO docs (col, id, data) VALUES ('auth', 1, '{"epoch":1}')
+  ON CONFLICT (col, id) DO UPDATE SET data = jsonb_build_object('epoch', (docs.data->>'epoch')::int + 1)`;
+
+export function sessionCookie(epoch) {
+  const payload = `${Date.now() + MAX_AGE * 1000}.${epoch}`;
+  return `${COOKIE}=${payload}.${sign(payload)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${MAX_AGE}`;
 }
 
-export function requireAdmin(req) {
-  const m = new RegExp(`(?:^|;\\s*)${COOKIE}=(\\d+)\\.([\\w-]+)`).exec(req.headers.cookie || '');
-  if (!process.env.ADMIN_PASSWORD || !m || Number(m[1]) < Date.now() || !same(m[2], sign(m[1]))) fail(401, 'Accesso richiesto');
+export async function requireAdmin(req, sql) {
+  const m = new RegExp(`(?:^|;\\s*)${COOKIE}=(\\d+)\\.(\\d+)\\.([\\w-]+)`).exec(req.headers.cookie || '');
+  if (!process.env.ADMIN_PASSWORD || !m || Number(m[1]) < Date.now() || !same(m[3], sign(`${m[1]}.${m[2]}`))
+    || Number(m[2]) !== await sessionEpoch(sql)) fail(401, 'Accesso richiesto');
 }

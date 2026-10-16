@@ -1,4 +1,4 @@
-import { handle, fail, db, addMin, romeNow, DEFAULT_CONFIG } from './_lib.js';
+import { handle, fail, db, addMin, romeNow, limit, hit, clientIp, DEFAULT_CONFIG } from './_lib.js';
 
 const PUBLIC_CONFIG = ['salonName', 'ownerName', 'address', 'vat', 'email', 'ownerPhone', 'openTime', 'closeTime', 'slotMinutes', 'closedDays'];
 const pick = (o, keys) => Object.fromEntries(keys.map((k) => [k, o[k]]));
@@ -31,6 +31,9 @@ export default handle(async (req, res) => {
   if (req.method !== 'POST') fail(405, 'Metodo non consentito');
   const b = req.body || {};
   if (b.website) return res.json({ ok: true }); // honeypot field: only bots fill it
+  const key = 'book:' + clientIp(req);
+  await limit(sql, key, 10, 60); // max 10 booking attempts per IP per hour, so a bot cannot flood the agenda
+  await hit(sql, key);
 
   const name = String(b.name || '').trim().slice(0, 80);
   const phone = String(b.phone || '').replace(/[^\d+ ]/g, '').trim().slice(0, 20);

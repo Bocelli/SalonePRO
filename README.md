@@ -33,6 +33,25 @@ Tutto passa da link `wa.me`, nessun account business o API:
 - "Inserisci da messaggio" trasforma un messaggio di prenotazione incollato in un appuntamento;
 - "Condividi su WhatsApp" manda il link della pagina di prenotazione.
 
+## Sicurezza
+
+- **Password** solo come variabile d'ambiente `ADMIN_PASSWORD` (tipo Sensitive su Vercel), mai nel codice.
+- **Sessione**: cookie HttpOnly, Secure, SameSite=Strict, firmato HMAC-SHA256, scade dopo 30 giorni.
+- **Tentativi di login**: dopo 5 password sbagliate quell'IP è bloccato per 15 minuti.
+- **Esci da tutti i dispositivi** (Impostazioni): invalida subito ogni sessione aperta, per un tablet perso o rubato. Anche cambiare `ADMIN_PASSWORD` + Redeploy scollega tutti.
+- **Prenotazioni online**: massimo 10 tentativi all'ora per IP, più un campo nascosto anti-bot.
+- **API pubblica**: non restituisce mai nomi o telefoni, solo gli orari occupati.
+- **Header**: Content-Security-Policy (nessuno script o connessione verso altri siti), anti-clickjacking, HSTS di Vercel.
+- **Dati in UE**: funzioni a Francoforte (`fra1`), database Neon a Francoforte.
+
+Da fare sugli account (fuori dal codice): attiva la verifica in due passaggi su GitHub, Vercel e Neon, perché chi entra lì vede tutto.
+
+## App installabile (PWA)
+
+`manifest.webmanifest` e le icone in `public/icons/` rendono il gestionale installabile: Impostazioni > "Installa l'app" su Android e computer, oppure Safari > Condividi > "Aggiungi alla schermata Home" su iPhone e iPad. Non c'è modalità offline: i dati arrivano sempre dal database.
+
+L'anteprima del link `/prenota` su WhatsApp e social usa `public/og.png` e i meta `og:` in `prenota.html`, con indirizzi assoluti su `salone-pro.vercel.app`: se colleghi un dominio tuo, aggiornali.
+
 ## Configurazione su Vercel
 
 1. **Database:** progetto Vercel, tab **Storage**, **Create Database**, scegli **Neon** (piano Free), regione **Frankfurt (eu-central-1)**, collegalo al progetto. Vercel aggiunge da solo `DATABASE_URL`.
@@ -55,6 +74,5 @@ npm test
 ## Limiti noti
 
 - Il gestionale ricarica i dati ogni 2 minuti e quando torni sulla scheda: una prenotazione web compare entro quel tempo.
-- Nessun limite ai tentativi di login: usa una password lunga.
 - Le icone sono ridotte a quelle usate: se ne aggiungi una nuova (`ph-...`) va rigenerato `public/vendor/phosphor.*`.
 - L'informativa privacy è un modello generico: falla verificare prima di affidartici.

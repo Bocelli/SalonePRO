@@ -32,8 +32,8 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.ph.ph-calendar-blank:before { content: "\e10a"; }
 .ph.ph-scissors:before { content: "\eae0"; }
+.ph.ph-calendar-blank:before { content: "\e10a"; }
 .ph.ph-users:before { content: "\e4d6"; }
 .ph.ph-package:before { content: "\e390"; }
 .ph.ph-globe-simple:before { content: "\e28e"; }
@@ -56,6 +56,7 @@
 .ph.ph-download-simple:before { content: "\e20c"; }
 .ph.ph-upload-simple:before { content: "\e4c0"; }
 .ph.ph-sign-out:before { content: "\e42a"; }
+.ph.ph-devices:before { content: "\eba4"; }
 .ph.ph-dots-three-outline:before { content: "\e204"; }
 .ph.ph-x:before { content: "\e4f6"; }
 .ph.ph-lightning:before { content: "\e2de"; }

@@ -13,7 +13,7 @@ const { default: data } = await import('../api/data.js');
 const { default: pub } = await import('../api/public.js');
 const { romeNow } = await import('../api/_lib.js');
 
-function call(handler, { method = 'GET', query = {}, body, cookie } = {}) {
+function call(handler, { method = 'GET', query = {}, body, cookie, ip = '10.0.0.1' } = {}) {
   return new Promise((resolve) => {
     const res = {
       statusCode: 200, headers: {},
@@ -21,7 +21,7 @@ function call(handler, { method = 'GET', query = {}, body, cookie } = {}) {
       setHeader(k, v) { this.headers[k.toLowerCase()] = v; },
       json(b) { resolve({ status: this.statusCode, body: b, headers: this.headers }); },
     };
-    handler({ method, query, body, headers: { cookie } }, res);
+    handler({ method, query, body, headers: { cookie, 'x-real-ip': ip } }, res);
   });
 }
 
@@ -33,7 +33,8 @@ function nextWeekday(day) {
 
 let cookie;
 const wed = nextWeekday(3);
-const book = (o) => call(pub, { method: 'POST', body: { name: 'Mario Lanza', phone: '333 111 2222', serviceIds: [1], date: wed, privacy: true, ...o } });
+let n = 0; // every booking from its own IP so the per-IP limit does not interfere
+const book = (o) => call(pub, { method: 'POST', ip: `10.1.0.${n++}`, body: { name: 'Mario Lanza', phone: '333 111 2222', serviceIds: [1], date: wed, privacy: true, ...o } });
 
 test('admin API needs login', async () => {
   assert.equal((await call(data)).status, 401);
@@ -41,7 +42,7 @@ test('admin API needs login', async () => {
   const ok = await call(login, { method: 'POST', body: { password: process.env.ADMIN_PASSWORD } });
   assert.equal(ok.status, 200);
   cookie = ok.headers['set-cookie'].split(';')[0];
-  assert.equal((await call(data, { cookie: 'sp_session=9999999999999.forged' })).status, 401);
+  assert.equal((await call(data, { cookie: 'sp_session=9999999999999.0.forged' })).status, 401);
 });
 
 test('first run seeds config and price list', async () => {
@@ -98,4 +99,36 @@ test('admin PUT and DELETE', async () => {
   assert.equal((await call(data, { method: 'PUT', cookie, body: { col: 'hack', item } })).status, 400);
   assert.equal((await call(data, { method: 'DELETE', cookie, query: { col: 'appointments', id: '999' } })).status, 200);
   assert.ok(!(await call(data, { cookie })).body.appointments.some((a) => a.id === 999));
+});
+
+test('settings are validated before reaching the public page', async () => {
+  const bad = { ...(await call(data, { cookie })).body.config, openTime: '<img src=x onerror=alert(1)>' };
+  assert.equal((await call(data, { method: 'PUT', cookie, body: { col: 'config', item: bad } })).status, 400);
+  assert.equal((await call(data, { method: 'POST', cookie, body: { config: { closedDays: [9] } } })).status, 400);
+});
+
+test('login: 5 wrong passwords per IP, then blocked for 15 minutes', async () => {
+  for (let i = 0; i < 5; i++) assert.equal((await call(login, { method: 'POST', ip: '6.6.6.6', body: { password: 'x' + i } })).status, 401);
+  assert.equal((await call(login, { method: 'POST', ip: '6.6.6.6', body: { password: process.env.ADMIN_PASSWORD } })).status, 429);
+  assert.equal((await call(login, { method: 'POST', ip: '7.7.7.7', body: { password: process.env.ADMIN_PASSWORD } })).status, 200);
+});
+
+test('public bookings: max 10 attempts per IP per hour', async () => {
+  for (let i = 0; i < 10; i++) assert.equal((await call(pub, { method: 'POST', ip: '8.8.8.8', body: { privacy: false } })).status, 400);
+  assert.equal((await call(pub, { method: 'POST', ip: '8.8.8.8', body: { privacy: false } })).status, 429);
+});
+
+test('logout from all devices revokes every cookie, also after a restore', async () => {
+  const other = (await call(login, { method: 'POST', ip: '9.9.9.9', body: { password: process.env.ADMIN_PASSWORD } })).headers['set-cookie'].split(';')[0];
+  assert.equal((await call(data, { cookie: other })).status, 200);
+  assert.equal((await call(login, { method: 'DELETE', query: { all: '1' }, cookie })).status, 200);
+  assert.equal((await call(data, { cookie })).status, 401);
+  assert.equal((await call(data, { cookie: other })).status, 401);
+  assert.equal((await call(login, { method: 'DELETE', query: { all: '1' } })).status, 401); // needs a valid session
+
+  const fresh = (await call(login, { method: 'POST', ip: '9.9.9.9', body: { password: process.env.ADMIN_PASSWORD } })).headers['set-cookie'].split(';')[0];
+  const backup = (await call(data, { cookie: fresh })).body;
+  assert.equal((await call(data, { method: 'POST', cookie: fresh, body: backup })).status, 200);
+  assert.equal((await call(data, { cookie })).status, 401, 'restore must not bring old sessions back');
+  assert.equal((await call(data, { cookie: fresh })).status, 200);
 });
