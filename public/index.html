@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Salone PRO</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#fdfdfd" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#18181b" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Salone PRO">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/vendor/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/vendor/phosphor.css">
+<link rel="stylesheet" href="/base.css">
+<style>
+  .app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100dvh; }
+
+  /* Sidebar (desktop + landscape tablet) */
+  .sidebar { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; gap: 24px; padding: 20px 14px; background: var(--surface); border-right: 1px solid var(--border); }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px; }
+  .brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--r-control); background: var(--accent); color: var(--on-accent); font-weight: 750; font-size: 1.05rem; flex-shrink: 0; }
+  .brand strong { display: block; font-size: .98rem; }
+  .brand small { display: block; color: var(--muted); font-size: .8rem; max-width: 168px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav-sep { height: 1px; background: var(--border); margin: 10px 12px; }
+  .nav-item { font: inherit; font-size: .93rem; font-weight: 550; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: 0; border-radius: var(--r-control); background: transparent; color: var(--muted); cursor: pointer; text-align: left; transition: background .16s var(--ease), color .16s var(--ease); }
+  .nav-item .ph { font-size: 1.25rem; }
+  .nav-item:hover { background: var(--surface-2); color: var(--text); }
+  .nav-item.active { background: var(--accent-soft); color: var(--accent-text); }
+
+  /* Main column */
+  .main { min-width: 0; display: flex; flex-direction: column; }
+  .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 32px; background: var(--bg); background: color-mix(in srgb, var(--bg) 86%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  .topbar h1 { font-size: 1.3rem; }
+  .content { width: 100%; max-width: 1120px; padding: 28px 32px 56px; }
+  .section { display: none; flex-direction: column; gap: 20px; }
+  .section.active { display: flex; animation: fade .2s var(--ease); }
+
+  /* Surfaces */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-surface); }
+  .panel.pad { padding: 22px; }
+  .panel h3 { font-size: 1.02rem; }
+  .panel.pad > h3 + p { margin-top: 4px; }
+  .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 10px 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .span-2 { grid-column: 1 / -1; }
+  .row-wrap { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
+  .hint { font-size: .84rem; color: var(--muted); margin-top: 12px; }
+  .small { font-size: .84rem; }
+
+  /* Collapsible add forms */
+  .add-panel summary { list-style: none; display: flex; align-items: center; gap: 10px; padding: 16px 20px; font-weight: 600; color: var(--accent-text); cursor: pointer; border-radius: var(--r-surface); }
+  .add-panel summary::-webkit-details-marker { display: none; }
+  .add-panel summary .ph { font-size: 1.25rem; transition: transform .2s var(--ease); }
+  .add-panel[open] summary .ph { transform: rotate(45deg); }
+  .add-body { display: grid; gap: 16px; padding: 0 20px 20px; }
+  .add-body .btn { justify-self: start; }
+
+  /* Agenda */
+  .day-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .day-title { font-size: 1.75rem; letter-spacing: -.025em; }
+  .day-tools { display: flex; align-items: center; gap: 8px; }
+  .day-tools input[type="date"] { width: auto; min-height: 40px; padding: 6px 10px; }
+  .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-surface); overflow: hidden; }
+  .metrics > * { display: flex; flex-direction: column; gap: 2px; padding: 16px 20px; font: inherit; color: inherit; text-align: left; background: none; border: 0; }
+  .metrics > * + * { border-left: 1px solid var(--border); }
+  .metric-val { font-size: 1.5rem; font-weight: 650; letter-spacing: -.02em; }
+  .metric-lbl { font-size: .84rem; color: var(--muted); }
+  .metric-link { cursor: pointer; transition: background .16s var(--ease); }
+  .metric-link:hover { background: var(--surface-2); }
+  .metric-link.alert .metric-val { color: var(--danger); }
+
+  .appt { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 16px; padding: 16px 20px; align-items: start; }
+  .appt + .appt { border-top: 1px solid var(--border); }
+  .appt-time { display: flex; flex-direction: column; }
+  .appt-time strong { font-size: 1.1rem; }
+  .appt-time span { color: var(--muted); font-size: .85rem; }
+  .appt-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .appt-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+  .appt-head h3 { font-size: 1.02rem; font-weight: 600; }
+  .appt-services { color: var(--muted); font-size: .9rem; }
+  .note { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border-radius: var(--r-control); background: var(--surface-2); font-size: .86rem; }
+  .note .ph { margin-top: 3px; flex-shrink: 0; }
+  .note.formula { background: var(--warn-soft); color: var(--warn); }
+  .appt-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .actions { display: flex; gap: 6px; }
+
+  /* Generic list rows */
+  .row { display: flex; align-items: center; gap: 14px; padding: 14px 20px; }
+  .row + .row { border-top: 1px solid var(--border); }
+  .row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .row-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+  .row-title .muted { font-size: .88rem; text-decoration: none; }
+  .row-sub { display: flex; align-items: center; gap: 6px; font-size: .86rem; color: var(--muted); }
+  .row-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .group-title { padding: 14px 20px 4px; font-size: .82rem; font-weight: 600; color: var(--muted); }
+  .group + .group { border-top: 1px solid var(--border); }
+  .group .row + .row { border-top-color: transparent; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .avatar { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-weight: 650; font-size: .85rem; flex-shrink: 0; align-self: flex-start; }
+  .stepper { display: flex; align-items: center; gap: 6px; }
+  .stepper output { min-width: 36px; text-align: center; font-size: 1.1rem; font-weight: 650; }
+  .search { position: relative; flex: 1; max-width: 320px; min-width: 200px; }
+  .search .ph { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .search input { padding-left: 36px; min-height: 40px; }
+
+  /* Toggle chips */
+  .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; max-height: 248px; overflow-y: auto; padding: 2px; }
+  .chip { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid var(--border-strong); border-radius: 999px; font-size: .9rem; cursor: pointer; user-select: none; transition: background .16s var(--ease), border-color .16s var(--ease); }
+  .chip:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-text); }
+  .chip small { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .days { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .consent { display: grid; gap: 10px; padding: 14px; border-radius: var(--r-control); background: var(--surface-2); }
+  .consent label { display: flex; align-items: flex-start; gap: 10px; font-size: .9rem; cursor: pointer; }
+
+  .empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 44px 20px; text-align: center; }
+  .empty > .ph { font-size: 2rem; color: var(--muted); margin-bottom: 6px; }
+  .empty p { max-width: 42ch; }
+  .empty .btn { margin-top: 12px; }
+  .sk-row { display: grid; grid-template-columns: 64px 1fr; gap: 16px; padding: 18px 20px; }
+  .sk-row + .sk-row { border-top: 1px solid var(--border); }
+
+  /* Web booking */
+  .web-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
+  .link-row { display: flex; gap: 8px; margin-top: 18px; }
+  .link-row input { font-size: .92rem; }
+  .checks { list-style: none; display: grid; gap: 10px; margin-top: 20px; color: var(--muted); font-size: .9rem; }
+  .checks li { display: flex; gap: 10px; }
+  .checks .ph { color: var(--ok); margin-top: 3px; }
+  .phone-frame { display: grid; gap: 10px; }
+  .phone-frame iframe { width: 100%; height: 720px; border: 1px solid var(--border); border-radius: 28px; background: var(--bg); box-shadow: var(--shadow); }
+
+  /* Login */
+  #login { background: var(--bg); }
+  .login-card { max-width: 380px; display: flex; flex-direction: column; gap: 14px; }
+  .login-card .brand-mark { width: 44px; height: 44px; font-size: 1.25rem; }
+  .error-text { min-height: 1.3em; color: var(--danger); font-size: .88rem; }
+
+  /* Bottom tab bar (phones + portrait tablets) */
+  .tabbar { display: none; }
+  .tab { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border: 0; border-radius: var(--r-control); background: none; color: var(--muted); font-size: .7rem; font-weight: 600; cursor: pointer; }
+  .tab .ph { font-size: 1.45rem; }
+  .tab.active { color: var(--accent-text); }
+
+  @media (max-width: 1100px) {
+    .web-grid { grid-template-columns: 1fr; }
+    .phone-frame { max-width: 420px; }
+  }
+  @media (max-width: 899px) {
+    .app { grid-template-columns: minmax(0, 1fr); }
+    .sidebar { display: none; }
+    .topbar { padding: calc(10px + env(safe-area-inset-top)) 16px 10px; }
+    .topbar h1 { font-size: 1.15rem; }
+    .topbar .btn-primary { width: 44px; padding: 0; }
+    .hide-sm { display: none; }
+    .content { padding: 16px 16px calc(92px + env(safe-area-inset-bottom)); }
+    .section { gap: 16px; }
+    .tabbar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; inset: auto 0 0 0; z-index: 20; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--border); }
+    .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+    .day-head { flex-direction: column; align-items: stretch; gap: 12px; }
+    .day-title { font-size: 1.4rem; }
+    .day-tools input[type="date"] { flex: 1; }
+    .metrics > * { padding: 12px 14px; }
+    .metric-val { font-size: 1.15rem; }
+    .metric-lbl { font-size: .76rem; }
+    .appt { grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 14px 16px; }
+    .appt-side { grid-column: 2; flex-direction: row; align-items: center; justify-content: space-between; }
+    .row { flex-wrap: wrap; padding: 12px 16px; }
+    .client .row-actions { width: 100%; padding-left: 54px; }
+    .panel-head { padding: 12px 16px; }
+    .panel.pad { padding: 18px 16px; }
+    .add-panel summary { padding: 14px 16px; }
+    .add-body { padding: 0 16px 16px; }
+    .add-body .btn { justify-self: stretch; }
+    .group-title { padding: 12px 16px 2px; }
+    .search { max-width: none; }
+    .link-row { flex-direction: column; }
+    .phone-frame { max-width: none; }
+    .phone-frame iframe { height: 640px; border-radius: var(--r-surface); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">S</span>
+      <div><strong>Salone PRO</strong><small id="brand-salon">&nbsp;</small></div>
+    </div>
+    <nav class="nav" aria-label="Sezioni">
+      <button class="nav-item active" data-tab="agenda"><i class="ph ph-calendar-blank"></i>Agenda</button>
+      <button class="nav-item" data-tab="listino"><i class="ph ph-scissors"></i>Listino servizi</button>
+      <button class="nav-item" data-tab="clienti"><i class="ph ph-users"></i>Schede clienti</button>
+      <button class="nav-item" data-tab="magazzino"><i class="ph ph-package"></i>Magazzino</button>
+      <div class="nav-sep"></div>
+      <button class="nav-item" data-tab="webbooking"><i class="ph ph-globe-simple"></i>Prenotazione web</button>
+      <button class="nav-item" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</button>
+      <button class="nav-item" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</button>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <h1 id="page-title">Agenda</h1>
+      <button class="btn btn-primary" onclick="openApptModal()" aria-label="Nuovo appuntamento"><i class="ph ph-plus"></i><span class="hide-sm">Nuovo appuntamento</span></button>
+    </header>
+
+    <div class="content">
+      <!-- AGENDA -->
+      <section id="tab-agenda" class="section active">
+        <div class="day-head">
+          <div>
+            <h2 class="day-title" id="agenda-day">&nbsp;</h2>
+            <p class="muted" id="agenda-sub">&nbsp;</p>
+          </div>
+          <div class="day-tools">
+            <button class="btn-icon" onclick="shiftDay(-1)" aria-label="Giorno precedente"><i class="ph ph-caret-left"></i></button>
+            <button class="btn btn-outline btn-sm" onclick="setQuickDate(0)">Oggi</button>
+            <button class="btn-icon" onclick="shiftDay(1)" aria-label="Giorno successivo"><i class="ph ph-caret-right"></i></button>
+            <input type="date" id="agenda-date" aria-label="Scegli una data" onchange="renderAgenda()">
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div><span class="metric-val num" id="stat-count">0</span><span class="metric-lbl">appuntamenti</span></div>
+          <div><span class="metric-val num" id="stat-revenue">€ 0,00</span><span class="metric-lbl">incasso previsto</span></div>
+          <button class="metric-link" id="stat-lowstock-box" data-tab="magazzino"><span class="metric-val num" id="stat-lowstock">0</span><span class="metric-lbl">da riordinare</span></button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Appuntamenti del giorno</h3>
+            <button class="btn btn-ghost btn-sm" onclick="openModal('import-modal')"><i class="ph ph-clipboard-text"></i>Inserisci da messaggio</button>
+          </div>
+          <div id="agenda-list"></div>
+        </div>
+      </section>
+
+      <!-- LISTINO -->
+      <section id="tab-listino" class="section">
+        <details class="panel add-panel">
+          <summary><i class="ph ph-plus-circle"></i>Aggiungi un servizio al listino</summary>
+          <div class="add-body">
+            <div class="form-grid">
+              <div class="field"><label for="srv-name">Nome servizio</label><input type="text" id="srv-name" placeholder="Es. Taglio + Piega"></div>
+              <div class="field"><label for="srv-cat">Categoria</label>
+                <select id="srv-cat">
+                  <option value="Taglio & Piega">Taglio &amp; Piega</option>
+                  <option value="Colore & Tecnici">Colore &amp; Tecnici</option>
+                  <option value="Trattamenti">Trattamenti &amp; Cura</option>
+                  <option value="Styling & Sposa">Styling &amp; Altro</option>
+                </select>
+              </div>
+              <div class="field"><label for="srv-price">Prezzo (€)</label><input type="number" id="srv-price" placeholder="35" step="0.5" min="0" inputmode="decimal"></div>
+              <div class="field"><label for="srv-duration">Durata (minuti)</label><input type="number" id="srv-duration" placeholder="45" step="5" min="5" inputmode="numeric"></div>
+            </div>
+            <button class="btn btn-primary" onclick="addService()"><i class="ph ph-check"></i>Salva nel listino</button>
+          </div>
+        </details>
+        <div class="panel">
+          <div class="panel-head"><h3>Listino attivo</h3><span class="muted small">Visibile nella prenotazione web</span></div>
+          <div id="services-list"></div>
+        </div>
+      </section>
+
+      <!-- CLIENTI -->
+      <section id="tab-clienti" class="section">
+        <details class="panel add-panel">
+          <summary><i class="ph ph-plus-circle"></i>Registra una nuova cliente</summary>
+          <div class="add-body">
+            <div class="form-grid">
+              <div class="field"><label for="cli-name">Nome e cognome</label><input type="text" id="cli-name" placeholder="Es. Maria Rossi" autocomplete="off"></div>
+              <div class="field"><label for="cli-phone">Telefono (WhatsApp / SMS)</label><input type="tel" id="cli-phone" placeholder="Es. 333 123 4567" autocomplete="off"></div>
+              <div class="field"><label for="cli-allergy">Allergie / note cute</label><input type="text" id="cli-allergy" placeholder="Es. cute sensibile, senza ammoniaca"></div>
+              <div class="field"><label for="cli-formula">Ultima formula colore / note tecniche</label><input type="text" id="cli-formula" placeholder="Es. 40g 6.0 + 20g 6.35 Ox 20 vol (35 min)"></div>
+            </div>
+            <div class="consent">
+              <label><input type="checkbox" id="cli-gdpr-base" checked><span><strong>Consenso GDPR base:</strong> gestione appuntamenti e notifiche di servizio.</span></label>
+              <label><input type="checkbox" id="cli-gdpr-health"><span><strong>Consenso allergie/cute (art. 9 GDPR):</strong> necessario per annotare allergie e sensibilità.</span></label>
+            </div>
+            <button class="btn btn-primary" onclick="addClient()"><i class="ph ph-user-plus"></i>Registra cliente</button>
+          </div>
+        </details>
+        <div class="panel">
+          <div class="panel-head">
+            <h3 id="cli-count">Archivio clienti</h3>
+            <div class="search"><i class="ph ph-magnifying-glass"></i><input type="search" id="cli-search" placeholder="Cerca per nome o telefono" aria-label="Cerca cliente" oninput="renderClients()"></div>
+          </div>
+          <div id="clients-list"></div>
+        </div>
+      </section>
+
+      <!-- MAGAZZINO -->
+      <section id="tab-magazzino" class="section">
+        <details class="panel add-panel">
+          <summary><i class="ph ph-plus-circle"></i>Aggiungi un prodotto al magazzino</summary>
+          <div class="add-body">
+            <div class="form-grid">
+              <div class="field"><label for="prd-name">Prodotto</label><input type="text" id="prd-name" placeholder="Es. Tinta 7.1 Biondo Cenere"></div>
+              <div class="field"><label for="prd-cat">Categoria</label>
+                <select id="prd-cat">
+                  <option value="Tinte & Colori">Tinte &amp; Colori</option>
+                  <option value="Ossigeni & Decoloranti">Ossigeni &amp; Decoloranti</option>
+                  <option value="Shampoo & Trattamenti">Shampoo &amp; Trattamenti</option>
+                  <option value="Styling & Finishing">Styling &amp; Finishing</option>
+                  <option value="Monouso & Attrezzatura">Monouso &amp; Attrezzatura</option>
+                </select>
+              </div>
+              <div class="field"><label for="prd-qty">Quantità attuale</label><input type="number" id="prd-qty" value="3" min="0" inputmode="numeric"></div>
+              <div class="field"><label for="prd-min">Soglia minima di avviso</label><input type="number" id="prd-min" value="2" min="0" inputmode="numeric"></div>
+            </div>
+            <button class="btn btn-primary" onclick="addProduct()"><i class="ph ph-check"></i>Aggiungi al magazzino</button>
+          </div>
+        </details>
+        <div class="panel">
+          <div class="panel-head"><h3>Scorte attuali</h3><span class="muted small" id="inv-summary"></span></div>
+          <div id="inventory-list"></div>
+        </div>
+      </section>
+
+      <!-- PRENOTAZIONE WEB -->
+      <section id="tab-webbooking" class="section">
+        <div class="web-grid">
+          <div class="panel pad">
+            <h3>La tua pagina di prenotazione</h3>
+            <p class="muted">Condividi il link con le clienti: vedono gli orari liberi in tempo reale e ogni prenotazione arriva subito in agenda.</p>
+            <div class="link-row">
+              <input id="public-link" readonly aria-label="Link pagina di prenotazione" onfocus="this.select()">
+              <button class="btn btn-primary" onclick="copyLink()"><i class="ph ph-copy"></i>Copia link</button>
+            </div>
+            <div class="row-wrap">
+              <a class="btn btn-outline" id="share-wa" target="_blank" rel="noopener"><i class="ph ph-whatsapp-logo"></i>Condividi su WhatsApp</a>
+              <a class="btn btn-outline" href="/prenota" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Apri la pagina</a>
+            </div>
+            <ul class="checks">
+              <li><i class="ph ph-check"></i>Date passate e giorni di chiusura non sono selezionabili.</li>
+              <li><i class="ph ph-check"></i>Gli orari occupati sono bloccati in base alla durata dei servizi scelti.</li>
+              <li><i class="ph ph-check"></i>Chi preferisce può inviarti la richiesta su WhatsApp e tu la inserisci con "Inserisci da messaggio".</li>
+            </ul>
+          </div>
+          <div class="phone-frame">
+            <iframe id="preview-frame" title="Anteprima della pagina di prenotazione"></iframe>
+            <p class="muted small">Anteprima reale: una prenotazione fatta qui finisce davvero in agenda.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRIVACY & GDPR -->
+      <section id="tab-gdpr" class="section">
+        <div class="panel pad">
+          <h3>Registra il consenso in salone</h3>
+          <p class="muted">Seleziona la cliente dopo che ha letto e firmato l'informativa cartacea.</p>
+          <div class="row-wrap">
+            <select id="gdpr-select-client" aria-label="Cliente" style="max-width:320px"></select>
+            <button class="btn btn-primary" onclick="signClientGdprInSalon()"><i class="ph ph-signature"></i>Registra consenso oggi</button>
+            <button class="btn btn-outline" onclick="printPaperGdprForm()"><i class="ph ph-printer"></i>Stampa modulo</button>
+          </div>
+        </div>
+        <div class="panel pad">
+          <h3>Informativa privacy e cookie</h3>
+          <p class="muted">Generata dai dati del salone inseriti in Impostazioni. È la stessa che vedono le clienti online.</p>
+          <div id="legal-text-container" class="legal" style="margin-top:18px"></div>
+        </div>
+      </section>
+
+      <!-- IMPOSTAZIONI -->
+      <section id="tab-backup" class="section">
+        <div class="panel pad">
+          <h3>Dati del salone e orari</h3>
+          <p class="muted">Compaiono nella pagina di prenotazione e nell'informativa privacy.</p>
+          <div class="form-grid" style="margin-top:18px">
+            <div class="field"><label for="cfg-name">Nome del salone</label><input type="text" id="cfg-name" placeholder="Es. Hair Studio"></div>
+            <div class="field"><label for="cfg-owner">Titolare</label><input type="text" id="cfg-owner" placeholder="Es. Flavio Rapallo"></div>
+            <div class="field"><label for="cfg-address">Indirizzo</label><input type="text" id="cfg-address" placeholder="Es. Via Roma 1, Salemi (TP)"></div>
+            <div class="field"><label for="cfg-vat">Partita IVA</label><input type="text" id="cfg-vat" placeholder="IT..."></div>
+            <div class="field"><label for="cfg-email">Email</label><input type="email" id="cfg-email" placeholder="info@salone.it"></div>
+            <div class="field"><label for="cfg-phone">WhatsApp del salone</label><input type="tel" id="cfg-phone" placeholder="39 333 123 4567"></div>
+            <div class="field"><label for="cfg-open">Apertura</label><input type="time" id="cfg-open"></div>
+            <div class="field"><label for="cfg-close">Chiusura</label><input type="time" id="cfg-close"></div>
+            <div class="field"><label for="cfg-slot">Intervallo orari online</label>
+              <select id="cfg-slot"><option value="15">Ogni 15 minuti</option><option value="20">Ogni 20 minuti</option><option value="30">Ogni 30 minuti</option><option value="45">Ogni 45 minuti</option><option value="60">Ogni ora</option></select>
+            </div>
+          </div>
+          <div class="field" style="margin-top:18px">
+            <span class="label">Giorni di chiusura</span>
+            <div class="days" id="cfg-closed"></div>
+            <span class="hint" style="margin-top:2px">Questi giorni non sono prenotabili online.</span>
+          </div>
+          <div class="row-wrap"><button class="btn btn-primary" onclick="saveConfig()"><i class="ph ph-floppy-disk"></i>Salva impostazioni</button></div>
+        </div>
+
+        <div class="panel pad">
+          <h3>Backup dei dati</h3>
+          <p class="muted">I dati sono nel database online. Scarica comunque un backup ogni tanto.</p>
+          <div class="row-wrap">
+            <button class="btn btn-outline" onclick="exportBackup()"><i class="ph ph-download-simple"></i>Scarica backup</button>
+            <label class="btn btn-outline"><i class="ph ph-upload-simple"></i>Ripristina da backup<input type="file" accept=".json,application/json" hidden onchange="importBackup(event)"></label>
+          </div>
+          <p class="hint">Arrivi dalla versione precedente (salone_pro_v6.html)? Aprila sul dispositivo dove la usavi, premi "Scarica Backup" e carica qui il file.</p>
+        </div>
+
+        <div class="panel pad">
+          <h3>Sessione</h3>
+          <p class="muted">Esci da questo dispositivo. Servirà di nuovo la password.</p>
+          <div class="row-wrap"><button class="btn btn-outline" onclick="logout()"><i class="ph ph-sign-out"></i>Esci</button></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <nav class="tabbar" aria-label="Sezioni">
+    <button class="tab active" data-tab="agenda"><i class="ph ph-calendar-blank"></i>Agenda</button>
+    <button class="tab" data-tab="listino"><i class="ph ph-scissors"></i>Listino</button>
+    <button class="tab" data-tab="clienti"><i class="ph ph-users"></i>Clienti</button>
+    <button class="tab" data-tab="magazzino"><i class="ph ph-package"></i>Magazzino</button>
+    <button class="tab" id="more-btn" onclick="openModal('more-sheet')"><i class="ph ph-dots-three-outline"></i>Altro</button>
+  </nav>
+</div>
+
+<!-- Mobile: other sections -->
+<div class="modal-backdrop" id="more-sheet">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Altre sezioni">
+    <nav class="nav">
+      <button class="nav-item" data-tab="webbooking"><i class="ph ph-globe-simple"></i>Prenotazione web</button>
+      <button class="nav-item" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</button>
+      <button class="nav-item" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</button>
+    </nav>
+  </div>
+</div>
+
+<!-- New / edit appointment -->
+<div class="modal-backdrop" id="appt-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="appt-modal-title">
+    <div class="modal-head">
+      <h2 id="appt-modal-title">Nuovo appuntamento</h2>
+      <button class="btn-icon" onclick="closeModal('appt-modal')" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+    </div>
+    <input type="hidden" id="modal-edit-id">
+    <div class="form-grid">
+      <div class="field"><label for="modal-client">Cliente in archivio</label><select id="modal-client" onchange="fillClientPhone()"></select></div>
+      <div class="field"><label for="modal-new-client">Oppure nuova cliente</label><input type="text" id="modal-new-client" placeholder="Nome e cognome" autocomplete="off"></div>
+      <div class="field"><label for="modal-phone">Telefono</label><input type="tel" id="modal-phone" placeholder="333 123 4567" autocomplete="off"></div>
+      <div class="field"><label for="modal-date">Data</label><input type="date" id="modal-date"></div>
+      <div class="field"><label for="modal-time">Ora</label><input type="time" id="modal-time" step="300"></div>
+      <div class="field"><label for="modal-duration">Durata (minuti)</label><input type="number" id="modal-duration" min="5" step="5" inputmode="numeric"></div>
+    </div>
+    <div class="field" style="margin-top:16px">
+      <span class="label">Servizi dal listino</span>
+      <div id="modal-services-picker" class="chips"></div>
+    </div>
+    <div class="form-grid" style="margin-top:16px">
+      <div class="field"><label for="modal-price">Totale (€)</label><input type="number" id="modal-price" min="0" step="0.5" inputmode="decimal"></div>
+      <div class="field span-2"><label for="modal-notes">Note</label><textarea id="modal-notes" rows="2" placeholder="Richieste della cliente, dettagli tecnici..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('appt-modal')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveAppointment()"><i class="ph ph-check"></i>Salva in agenda</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import booking from message -->
+<div class="modal-backdrop" id="import-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
+    <div class="modal-head">
+      <h2 id="import-title">Inserisci da messaggio</h2>
+      <button class="btn-icon" onclick="closeModal('import-modal')" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="field">
+      <label for="import-text">Incolla il messaggio di prenotazione ricevuto su WhatsApp</label>
+      <textarea id="import-text" rows="8" placeholder="PRENOTAZIONE SALONE&#10;Cliente: ...&#10;Tel: ...&#10;Data: ...&#10;Ora: ..."></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('import-modal')">Annulla</button>
+      <button class="btn btn-primary" onclick="parseBookingString()"><i class="ph ph-lightning"></i>Inserisci in agenda</button>
+    </div>
+  </div>
+</div>
+
+<!-- Login -->
+<div class="modal-backdrop" id="login" data-locked="1">
+  <form class="modal login-card" onsubmit="login(event)">
+    <span class="brand-mark" aria-hidden="true">S</span>
+    <div>
+      <h2>Salone PRO</h2>
+      <p class="muted">Area riservata al salone</p>
+    </div>
+    <div class="field">
+      <label for="login-pw">Password</label>
+      <input type="password" id="login-pw" autocomplete="current-password" required>
+    </div>
+    <p class="error-text" id="login-err" role="alert"></p>
+    <button class="btn btn-primary" type="submit">Entra</button>
+  </form>
+</div>
+
+<script src="/common.js"></script>
+<script>
+  let db = { config: {}, services: [], clients: [], inventory: [], appointments: [] };
+  let loaded = false;
+  const TITLES = { agenda: 'Agenda', listino: 'Listino servizi', clienti: 'Schede clienti', magazzino: 'Magazzino', webbooking: 'Prenotazione web', gdpr: 'Privacy & GDPR', backup: 'Impostazioni & dati' };
+  const DAYS = [[1, 'Lun'], [2, 'Mar'], [3, 'Mer'], [4, 'Gio'], [5, 'Ven'], [6, 'Sab'], [0, 'Dom']];
+  const todayStr = (offset = 0) => { const d = new Date(); d.setDate(d.getDate() + offset); return localDate(d); };
+  const newId = () => Date.now() * 100 + Math.floor(Math.random() * 100);
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const initials = (n) => n.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  const sortedClients = () => [...db.clients].sort((a, b) => a.name.localeCompare(b.name, 'it'));
+  const empty = (icon, title, text, cta = '') => `<div class="empty"><i class="ph ${icon}"></i><p><strong>${title}</strong></p><p class="muted">${text}</p>${cta}</div>`;
+  const anyModalOpen = () => !!document.querySelector('.modal-backdrop.open');
+
+  // ---------- API ----------
+  async function api(method, url, body) {
+    const r = await fetch(url, { method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+    const data = await r.json().catch(() => ({}));
+    if (r.status === 401) { openModal('login'); throw new Error('Sessione scaduta, accedi di nuovo'); }
+    if (!r.ok) throw new Error(data.error || 'Errore ' + r.status);
+    return data;
+  }
+  // Optimistic UI: local state is already updated; on failure we warn and reload the truth from the server.
+  const syncFail = (e) => { toast('Non salvato: ' + e.message, 'error'); reload(); };
+  const persist = (col, item) => api('PUT', '/api/data', { col, item }).catch(syncFail);
+  const drop = (col, id) => api('DELETE', `/api/data?col=${col}&id=${id}`).catch(syncFail);
+
+  async function reload() {
+    try {
+      db = await api('GET', '/api/data');
+    } catch (e) {
+      if (!$('login').classList.contains('open')) {
+        $('agenda-list').innerHTML = empty('ph-cloud-slash', 'Impossibile caricare i dati', esc(e.message), '<button class="btn btn-outline btn-sm" onclick="reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button>');
+      }
+      return;
+    }
+    if (!loaded) { loaded = true; loadConfigUI(); }
+    renderAll();
+  }
+
+  async function login(e) {
+    e.preventDefault();
+    const btn = e.submitter;
+    btn.disabled = true;
+    $('login-err').textContent = '';
+    try {
+      const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('login-pw').value }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'Accesso non riuscito');
+      $('login-pw').value = '';
+      closeModal('login');
+      await reload();
+    } catch (err) {
+      $('login-err').textContent = err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function logout() {
+    await fetch('/api/login', { method: 'DELETE' });
+    location.reload();
+  }
+
+  // shortcut: polling every 2 min keeps the tablet in sync with web bookings; switch to push if Neon compute hours run short.
+  setInterval(() => { if (loaded && !document.hidden && !anyModalOpen()) reload(); }, 120000);
+  document.addEventListener('visibilitychange', () => { if (loaded && !document.hidden && !anyModalOpen()) reload(); });
+
+  // ---------- Navigation ----------
+  function showTab(tab) {
+    document.querySelectorAll('.section').forEach((s) => s.classList.toggle('active', s.id === 'tab-' + tab));
+    document.querySelectorAll('.nav-item[data-tab], .tab[data-tab]').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+    $('more-btn').classList.toggle('active', ['webbooking', 'gdpr', 'backup'].includes(tab));
+    $('page-title').textContent = TITLES[tab];
+    closeModal('more-sheet');
+    window.scrollTo(0, 0);
+    if (tab === 'webbooking') $('preview-frame').src = '/prenota';
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-tab]');
+    if (b) showTab(b.dataset.tab);
+  });
+
+  function renderAll() {
+    renderAgenda();
+    renderServices();
+    renderClients();
+    renderInventory();
+    renderGdpr();
+    renderWebLink();
+  }
+
+  // ---------- Agenda ----------
+  function setQuickDate(offset) { $('agenda-date').value = todayStr(offset); renderAgenda(); }
+  function shiftDay(n) {
+    const d = new Date(($('agenda-date').value || todayStr()) + 'T12:00');
+    d.setDate(d.getDate() + n);
+    $('agenda-date').value = localDate(d);
+    renderAgenda();
+  }
+
+  function findClient(a) {
+    return db.clients.find((c) => c.id === a.clientId) || db.clients.find((c) => c.name.toLowerCase() === (a.clientName || '').toLowerCase());
+  }
+
+  function renderAgenda() {
+    const sel = $('agenda-date').value || todayStr();
+    const list = db.appointments.filter((a) => a.date === sel).sort((a, b) => a.time.localeCompare(b.time));
+    const closed = (db.config.closedDays || []).includes(new Date(sel + 'T12:00').getDay());
+    const rel = { [todayStr()]: 'Oggi', [todayStr(1)]: 'Domani', [todayStr(-1)]: 'Ieri' }[sel] || dayLabel(sel, { year: 'numeric' });
+    $('agenda-day').textContent = cap(dayLabel(sel));
+    $('agenda-sub').textContent = rel + (closed ? ' · giorno di chiusura' : '');
+
+    const low = db.inventory.filter((p) => Number(p.qty) <= Number(p.min)).length;
+    $('stat-count').textContent = list.length;
+    $('stat-revenue').textContent = euro(list.reduce((s, a) => s + Number(a.price || 0), 0));
+    $('stat-lowstock').textContent = low;
+    $('stat-lowstock-box').classList.toggle('alert', low > 0);
+
+    if (!list.length) {
+      $('agenda-list').innerHTML = empty('ph-calendar-blank', 'Nessun appuntamento', closed ? 'Il salone è chiuso in questo giorno.' : 'La giornata è libera. Aggiungi un appuntamento o condividi il link di prenotazione.',
+        '<button class="btn btn-primary btn-sm" onclick="openApptModal()"><i class="ph ph-plus"></i>Nuovo appuntamento</button>');
+      return;
+    }
+
+    $('agenda-list').innerHTML = list.map((a) => {
+      const c = findClient(a);
+      const allergy = c && c.allergy && c.allergy.toLowerCase() !== 'nessuna' ? `<span class="badge badge-danger"><i class="ph ph-warning"></i>${esc(c.allergy)}</span>` : '';
+      const wa = waNumber(a.phone);
+      const msg = encodeURIComponent(`Ciao ${a.clientName}! Ti confermiamo l'appuntamento presso ${db.config.salonName} per ${dayLabel(a.date)} alle ore ${a.time} (${(a.services || []).join(', ')}). A presto!`);
+      const contact = a.phone ? `
+          <a class="btn-icon" href="https://wa.me/${wa}?text=${msg}" target="_blank" rel="noopener" aria-label="Conferma su WhatsApp" title="WhatsApp"><i class="ph ph-whatsapp-logo"></i></a>
+          <a class="btn-icon" href="sms:+${wa}?body=${msg}" aria-label="Conferma via SMS" title="SMS"><i class="ph ph-chat-text"></i></a>` : '';
+      return `
+      <article class="appt">
+        <div class="appt-time num"><strong>${esc(a.time)}</strong><span>${addMin(a.time, a.duration || 30)}</span></div>
+        <div class="appt-body">
+          <div class="appt-head">
+            <h3>${esc(a.clientName)}</h3>
+            ${a.source === 'web' ? '<span class="badge badge-accent"><i class="ph ph-globe-simple"></i>Web</span>' : ''}
+            ${allergy}
+          </div>
+          <p class="appt-services">${esc((a.services || []).join(' + '))}, ${Number(a.duration) || 30} min</p>
+          ${a.notes ? `<p class="note"><i class="ph ph-note"></i><span>${esc(a.notes)}</span></p>` : ''}
+          ${c && c.formula ? `<p class="note formula"><i class="ph ph-palette"></i><span>${esc(c.formula)}</span></p>` : ''}
+        </div>
+        <div class="appt-side">
+          <strong class="num">${euro(a.price)}</strong>
+          <div class="actions">
+            <button class="btn-icon" onclick="openApptModal(${a.id})" aria-label="Modifica" title="Modifica"><i class="ph ph-pencil-simple"></i></button>
+            ${contact}
+            <button class="btn-icon danger" onclick="deleteAppt(${a.id})" aria-label="Elimina" title="Elimina"><i class="ph ph-trash"></i></button>
+          </div>
+        </div>
+      </article>`;
+    }).join('');
+  }
+
+  function openApptModal(id) {
+    const a = db.appointments.find((x) => x.id === id);
+    const client = a && findClient(a);
+    const cur = a ? a.services || [] : [];
+    $('appt-modal-title').textContent = a ? 'Modifica appuntamento' : 'Nuovo appuntamento';
+    $('modal-edit-id').value = a ? a.id : '';
+    $('modal-client').innerHTML = '<option value="">Seleziona una cliente</option>' + sortedClients().map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    $('modal-client').value = client ? client.id : '';
+    $('modal-new-client').value = a && !client ? a.clientName : '';
+    $('modal-phone').value = a ? a.phone || '' : '';
+    $('modal-date').value = a ? a.date : $('agenda-date').value || todayStr();
+    $('modal-time').value = a ? a.time : '09:30';
+    $('modal-duration').value = a ? a.duration || 30 : 30;
+    $('modal-price').value = a ? Number(a.price || 0) : 0;
+    $('modal-notes').value = a ? a.notes || '' : '';
+    $('modal-services-picker').innerHTML = db.services.map((s) => `
+      <label class="chip"><input type="checkbox" value="${esc(s.name)}" data-price="${Number(s.price) || 0}" data-dur="${Number(s.duration) || 0}" ${cur.includes(s.name) ? 'checked' : ''} onchange="recalcModal()">
+        <span>${esc(s.name)}</span><small>${euro(s.price)}</small></label>`).join('') || '<p class="muted small">Il listino è vuoto.</p>';
+    openModal('appt-modal');
+  }
+
+  function fillClientPhone() {
+    const c = db.clients.find((x) => x.id === Number($('modal-client').value));
+    if (c) { $('modal-phone').value = c.phone || ''; $('modal-new-client').value = ''; }
+  }
+
+  function recalcModal() {
+    let price = 0, dur = 0;
+    document.querySelectorAll('#modal-services-picker input:checked').forEach((cb) => { price += Number(cb.dataset.price); dur += Number(cb.dataset.dur); });
+    $('modal-price').value = price;
+    $('modal-duration').value = dur || 30;
+  }
+
+  function saveAppointment() {
+    const editId = Number($('modal-edit-id').value);
+    const newName = $('modal-new-client').value.trim();
+    const phone = $('modal-phone').value.trim();
+    const date = $('modal-date').value, time = $('modal-time').value;
+    if (!date || !time) return toast('Inserisci data e ora', 'error');
+    const services = [...document.querySelectorAll('#modal-services-picker input:checked')].map((cb) => cb.value);
+    if (!services.length) services.push('Servizio generico');
+
+    let client = newName
+      ? db.clients.find((c) => c.name.toLowerCase() === newName.toLowerCase())
+      : db.clients.find((c) => c.id === Number($('modal-client').value));
+    if (!client && !newName) return toast('Seleziona una cliente o scrivi un nome', 'error');
+    if (!client) {
+      client = { id: newId(), name: newName, phone, allergy: 'Nessuna', formula: '', gdprConsent: true, gdprDate: todayStr() };
+      db.clients.push(client);
+      persist('clients', client);
+    }
+
+    const old = db.appointments.find((a) => a.id === editId);
+    const appt = {
+      ...old, id: old ? old.id : newId(), clientId: client.id, clientName: client.name, phone, date, time, services,
+      price: Number($('modal-price').value || 0), duration: Number($('modal-duration').value) || 30, notes: $('modal-notes').value.trim(),
+    };
+    if (old) Object.assign(old, appt); else db.appointments.push(appt);
+    persist('appointments', appt).then((r) => r && toast(old ? 'Appuntamento aggiornato' : 'Appuntamento salvato'));
+    $('agenda-date').value = date;
+    closeModal('appt-modal');
+    renderAll();
+  }
+
+  function deleteAppt(id) {
+    const a = db.appointments.find((x) => x.id === id);
+    if (!a || !confirm(`Eliminare l'appuntamento di ${a.clientName} alle ${a.time}?`)) return;
+    db.appointments = db.appointments.filter((x) => x.id !== id);
+    drop('appointments', id);
+    renderAgenda();
+  }
+
+  function parseBookingString() {
+    const raw = $('import-text').value.trim();
+    if (!raw) return toast('Incolla prima il messaggio', 'error');
+    const get = (label) => (raw.match(new RegExp('^\\s*' + label + '\\s*:\\s*(.+)$', 'im')) || [])[1]?.trim() || '';
+    let date = get('Data');
+    const dm = date.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+    if (dm) date = `${dm[3]}-${pad(dm[2])}-${pad(dm[1])}`;
+    const time = get('Ora').replace('.', ':').padStart(5, '0');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) return toast('Nel messaggio non trovo "Data:" e "Ora:" validi', 'error');
+
+    const name = get('Cliente') || 'Cliente Web';
+    const phone = get('Tel');
+    const services = (get('Servizi') || 'Servizio prenotato').split(',').map((s) => s.trim()).filter(Boolean);
+    const duration = services.reduce((s, n) => s + (Number(db.services.find((x) => x.name === n)?.duration) || 0), 0) || 30;
+    let client = db.clients.find((c) => c.name.toLowerCase() === name.toLowerCase());
+    if (!client) {
+      client = { id: newId(), name, phone, allergy: 'Nessuna', formula: '', gdprConsent: /GDPR\s*:\s*Accettato/i.test(raw), gdprDate: todayStr() };
+      db.clients.push(client);
+      persist('clients', client);
+    }
+    const appt = {
+      id: newId(), clientId: client.id, clientName: client.name, phone, date, time, services, duration,
+      price: Number(get('Totale').replace(',', '.').replace(/[^\d.]/g, '')) || 0, notes: 'Prenotazione ricevuta via messaggio',
+    };
+    db.appointments.push(appt);
+    persist('appointments', appt).then((r) => r && toast('Prenotazione inserita in agenda'));
+    $('import-text').value = '';
+    closeModal('import-modal');
+    $('agenda-date').value = date;
+    showTab('agenda');
+    renderAll();
+  }
+
+  // ---------- Listino ----------
+  function renderServices() {
+    const cats = [...new Set(db.services.map((s) => s.cat || 'Altro'))];
+    $('services-list').innerHTML = cats.map((cat) => `
+      <div class="group">
+        <h4 class="group-title">${esc(cat)}</h4>
+        ${db.services.filter((s) => (s.cat || 'Altro') === cat).map((s) => `
+          <div class="row">
+            <div class="row-main"><strong>${esc(s.name)}</strong><span class="row-sub"><i class="ph ph-clock"></i>${Number(s.duration) || 0} min</span></div>
+            <strong class="num">${euro(s.price)}</strong>
+            <button class="btn-icon danger" onclick="deleteService(${s.id})" aria-label="Elimina ${esc(s.name)}"><i class="ph ph-trash"></i></button>
+          </div>`).join('')}
+      </div>`).join('') || empty('ph-scissors', 'Listino vuoto', 'Aggiungi il primo servizio: comparirà subito nella pagina di prenotazione.');
+  }
+
+  function addService() {
+    const name = $('srv-name').value.trim();
+    const price = Number($('srv-price').value || 0);
+    const duration = Number($('srv-duration').value || 30);
+    if (!name) return toast('Inserisci il nome del servizio', 'error');
+    if (price < 0 || duration < 5) return toast('Controlla prezzo e durata', 'error');
+    const s = { id: newId(), name, cat: $('srv-cat').value, price, duration };
+    db.services.push(s);
+    persist('services', s).then((r) => r && toast('Servizio aggiunto al listino'));
+    $('srv-name').value = $('srv-price').value = $('srv-duration').value = '';
+    renderServices();
+  }
+
+  function deleteService(id) {
+    const s = db.services.find((x) => x.id === id);
+    if (!s || !confirm(`Eliminare "${s.name}" dal listino?`)) return;
+    db.services = db.services.filter((x) => x.id !== id);
+    drop('services', id);
+    renderServices();
+  }
+
+  // ---------- Clienti ----------
+  function renderClients() {
+    const q = $('cli-search').value.trim().toLowerCase();
+    const list = sortedClients().filter((c) => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q));
+    $('cli-count').textContent = db.clients.length === 1 ? '1 cliente' : `${db.clients.length} clienti`;
+    $('clients-list').innerHTML = list.map((c) => {
+      const allergy = c.allergy && c.allergy.toLowerCase() !== 'nessuna';
+      return `
+      <div class="row client">
+        <span class="avatar" aria-hidden="true">${esc(initials(c.name))}</span>
+        <div class="row-main">
+          <div class="row-title"><strong>${esc(c.name)}</strong>${c.phone ? `<a class="muted num" href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : ''}</div>
+          <div class="badges">
+            ${allergy ? `<span class="badge badge-danger"><i class="ph ph-warning"></i>${esc(c.allergy)}</span>` : ''}
+            ${c.gdprConsent ? `<span class="badge badge-ok"><i class="ph ph-shield-check"></i>GDPR ${esc(fmtDate(c.gdprDate))}</span>` : '<span class="badge badge-warn"><i class="ph ph-shield-warning"></i>Consenso GDPR mancante</span>'}
+            ${c.source === 'web' ? '<span class="badge badge-accent"><i class="ph ph-globe-simple"></i>Web</span>' : ''}
+          </div>
+          <p class="note formula"><i class="ph ph-palette"></i><span>${esc(c.formula || 'Nessuna formula registrata')}</span></p>
+        </div>
+        <div class="row-actions">
+          <button class="btn btn-outline btn-sm" onclick="editFormula(${c.id})"><i class="ph ph-pencil-simple"></i>Formula</button>
+          <button class="btn-icon danger" onclick="deleteClient(${c.id})" aria-label="Elimina ${esc(c.name)}"><i class="ph ph-trash"></i></button>
+        </div>
+      </div>`;
+    }).join('') || (q ? empty('ph-magnifying-glass', 'Nessun risultato', `Nessuna cliente corrisponde a "${esc(q)}".`)
+                      : empty('ph-users', 'Archivio vuoto', 'Registra la prima cliente qui sopra. Le clienti che prenotano online vengono aggiunte da sole.'));
+  }
+
+  function addClient() {
+    const name = $('cli-name').value.trim();
+    const allergy = $('cli-allergy').value.trim();
+    if (!name) return toast('Inserisci il nome della cliente', 'error');
+    if (allergy && !$('cli-gdpr-health').checked) return toast('Per annotare allergie serve il consenso art. 9', 'error');
+    const c = {
+      id: newId(), name, phone: $('cli-phone').value.trim(), allergy: allergy || 'Nessuna', formula: $('cli-formula').value.trim(),
+      gdprConsent: $('cli-gdpr-base').checked, healthConsent: $('cli-gdpr-health').checked, gdprDate: todayStr(),
+    };
+    db.clients.push(c);
+    persist('clients', c).then((r) => r && toast('Cliente registrata'));
+    ['cli-name', 'cli-phone', 'cli-allergy', 'cli-formula'].forEach((id) => { $(id).value = ''; });
+    $('cli-gdpr-health').checked = false;
+    renderClients();
+    renderGdpr();
+  }
+
+  function editFormula(id) {
+    const c = db.clients.find((x) => x.id === id);
+    if (!c) return;
+    const f = prompt(`Scheda tecnica di ${c.name}:`, c.formula || '');
+    if (f === null) return;
+    c.formula = f.trim();
+    persist('clients', c).then((r) => r && toast('Formula aggiornata'));
+    renderClients();
+    renderAgenda();
+  }
+
+  function deleteClient(id) {
+    const c = db.clients.find((x) => x.id === id);
+    if (!c || !confirm(`Eliminare la scheda di ${c.name}? Gli appuntamenti restano in agenda.`)) return;
+    db.clients = db.clients.filter((x) => x.id !== id);
+    drop('clients', id);
+    renderClients();
+    renderGdpr();
+  }
+
+  // ---------- Magazzino ----------
+  function renderInventory() {
+    const low = (p) => Number(p.qty) <= Number(p.min);
+    const n = db.inventory.filter(low).length;
+    $('inv-summary').textContent = n ? `${n} da riordinare` : 'Tutto sopra la soglia';
+    $('inventory-list').innerHTML = [...db.inventory].sort((a, b) => low(b) - low(a)).map((p) => `
+      <div class="row">
+        <div class="row-main">
+          <div class="row-title"><strong>${esc(p.name)}</strong>${low(p) ? '<span class="badge badge-danger">Da riordinare</span>' : ''}</div>
+          <span class="row-sub">${esc(p.cat)}, soglia minima ${Number(p.min)}</span>
+        </div>
+        <div class="row-actions">
+          <div class="stepper">
+            <button class="btn-icon" onclick="changeQty(${p.id}, -1)" aria-label="Diminuisci"><i class="ph ph-minus"></i></button>
+            <output class="num" aria-label="Quantità">${Number(p.qty)}</output>
+            <button class="btn-icon" onclick="changeQty(${p.id}, 1)" aria-label="Aumenta"><i class="ph ph-plus"></i></button>
+          </div>
+          <button class="btn-icon danger" onclick="deleteProduct(${p.id})" aria-label="Elimina ${esc(p.name)}"><i class="ph ph-trash"></i></button>
+        </div>
+      </div>`).join('') || empty('ph-package', 'Magazzino vuoto', 'Aggiungi tinte, ossigeni e prodotti: ti avviso quando scendono sotto la soglia.');
+  }
+
+  function addProduct() {
+    const name = $('prd-name').value.trim();
+    if (!name) return toast('Inserisci il nome del prodotto', 'error');
+    const p = { id: newId(), name, cat: $('prd-cat').value, qty: Math.max(0, Number($('prd-qty').value || 0)), min: Math.max(0, Number($('prd-min').value || 1)) };
+    db.inventory.push(p);
+    persist('inventory', p).then((r) => r && toast('Prodotto aggiunto'));
+    $('prd-name').value = '';
+    renderInventory();
+    renderAgenda();
+  }
+
+  function changeQty(id, delta) {
+    const p = db.inventory.find((x) => x.id === id);
+    if (!p) return;
+    p.qty = Math.max(0, Number(p.qty) + delta);
+    persist('inventory', p);
+    renderInventory();
+    renderAgenda();
+  }
+
+  function deleteProduct(id) {
+    const p = db.inventory.find((x) => x.id === id);
+    if (!p || !confirm(`Eliminare "${p.name}" dal magazzino?`)) return;
+    db.inventory = db.inventory.filter((x) => x.id !== id);
+    drop('inventory', id);
+    renderInventory();
+    renderAgenda();
+  }
+
+  // ---------- Prenotazione web ----------
+  function renderWebLink() {
+    const link = location.origin + '/prenota';
+    $('public-link').value = link;
+    $('share-wa').href = 'https://wa.me/?text=' + encodeURIComponent(`Prenota il tuo appuntamento da ${db.config.salonName}: ${link}`);
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText($('public-link').value)
+      .then(() => toast('Link copiato'))
+      .catch(() => { $('public-link').select(); toast('Seleziona il link e copialo', 'error'); });
+  }
+
+  // ---------- Privacy ----------
+  function renderGdpr() {
+    const sel = $('gdpr-select-client');
+    const v = sel.value;
+    sel.innerHTML = sortedClients().map((c) => `<option value="${c.id}">${esc(c.name)}${c.gdprConsent ? '' : ' (consenso mancante)'}</option>`).join('') || '<option value="">Nessuna cliente</option>';
+    if (db.clients.some((c) => String(c.id) === v)) sel.value = v;
+    $('legal-text-container').innerHTML = legalHtml(db.config);
+  }
+
+  function signClientGdprInSalon() {
+    const c = db.clients.find((x) => x.id === Number($('gdpr-select-client').value));
+    if (!c) return toast('Seleziona una cliente', 'error');
+    c.gdprConsent = true;
+    c.gdprDate = todayStr();
+    persist('clients', c).then((r) => r && toast(`Consenso registrato per ${c.name}`));
+    renderClients();
+    renderGdpr();
+  }
+
+  function printPaperGdprForm() {
+    const c = db.clients.find((x) => x.id === Number($('gdpr-select-client').value));
+    const w = window.open('', '_blank');
+    if (!w) return toast('Consenti i popup per stampare il modulo', 'error');
+    w.document.write(`<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><title>Modulo privacy</title>
+      <style>body{font-family:system-ui,sans-serif;max-width:720px;margin:32px auto;padding:0 20px;line-height:1.55;color:#18181b}h1{font-size:1.25rem}h4{margin:16px 0 4px}
+      .opt{display:block;margin:14px 0}.sign{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:48px}.sign div{border-top:1px solid #18181b;padding-top:6px;font-size:.85rem}</style></head><body>
+      <h1>Informativa privacy e consenso, ${esc(db.config.salonName)}</h1>
+      <p>Cliente: <strong>${c ? esc(c.name) : '______________________________'}</strong></p>
+      ${legalHtml(db.config)}
+      <span class="opt">&#9744; Ho letto l'informativa e acconsento al trattamento dei dati per la gestione degli appuntamenti.</span>
+      <span class="opt">&#9744; Acconsento all'annotazione di allergie e sensibilità della cute per la sicurezza dei trattamenti (art. 9 GDPR).</span>
+      <div class="sign"><div>Data</div><div>Firma</div></div>
+      <script>window.onload = () => window.print();<\/script></body></html>`);
+    w.document.close();
+  }
+
+  // ---------- Impostazioni ----------
+  function loadConfigUI() {
+    const c = db.config;
+    $('cfg-name').value = c.salonName || '';
+    $('cfg-owner').value = c.ownerName || '';
+    $('cfg-address').value = c.address || '';
+    $('cfg-vat').value = c.vat || '';
+    $('cfg-email').value = c.email || '';
+    $('cfg-phone').value = c.ownerPhone || '';
+    $('cfg-open').value = c.openTime || '09:00';
+    $('cfg-close').value = c.closeTime || '19:00';
+    $('cfg-slot').value = String(c.slotMinutes || 30);
+    $('cfg-closed').innerHTML = DAYS.map(([d, l]) => `<label class="chip"><input type="checkbox" value="${d}" ${(c.closedDays || []).includes(d) ? 'checked' : ''}>${l}</label>`).join('');
+    $('brand-salon').textContent = c.salonName || '';
+  }
+
+  function saveConfig() {
+    const openTime = $('cfg-open').value || '09:00', closeTime = $('cfg-close').value || '19:00';
+    if (openTime >= closeTime) return toast("La chiusura deve essere dopo l'apertura", 'error');
+    Object.assign(db.config, {
+      salonName: $('cfg-name').value.trim() || 'Il Mio Salone',
+      ownerName: $('cfg-owner').value.trim() || 'Titolare',
+      address: $('cfg-address').value.trim(),
+      vat: $('cfg-vat').value.trim(),
+      email: $('cfg-email').value.trim(),
+      ownerPhone: $('cfg-phone').value.trim(),
+      openTime, closeTime,
+      slotMinutes: Number($('cfg-slot').value),
+      closedDays: [...document.querySelectorAll('#cfg-closed input:checked')].map((i) => Number(i.value)),
+    });
+    persist('config', { ...db.config, id: 1 }).then((r) => r && toast('Impostazioni salvate'));
+    loadConfigUI();
+    renderAll();
+  }
+
+  function exportBackup() {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' }));
+    a.download = `backup_salone_pro_${todayStr()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function importBackup(e) {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!confirm('Il ripristino SOSTITUISCE tutti i dati attuali (agenda, clienti, listino, magazzino, impostazioni). Continuare?')) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const r = await api('POST', '/api/data', JSON.parse(ev.target.result));
+        loaded = false;
+        await reload();
+        toast(`Backup ripristinato (${r.count} elementi)`);
+      } catch (err) {
+        toast('Ripristino non riuscito: ' + (err instanceof SyntaxError ? 'file non valido' : err.message), 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---------- Start ----------
+  $('agenda-date').value = todayStr();
+  $('agenda-day').textContent = cap(dayLabel(todayStr()));
+  $('agenda-list').innerHTML = Array.from({ length: 3 }, () =>
+    '<div class="sk-row"><div class="skeleton" style="height:36px"></div><div style="display:grid;gap:8px"><div class="skeleton" style="height:16px;width:40%"></div><div class="skeleton" style="height:14px;width:65%"></div></div></div>').join('');
+  reload();
+</script>
+</body>
+</html>

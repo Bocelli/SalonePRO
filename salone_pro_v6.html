@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Salone PRO v6 - Gestionale & Booking Online</title>
+    <meta name="theme-color" content="#1e1b4b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary: #ec4899;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --sidebar: #1e1b4b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Layout Sidebar per Tablet */
+        .sidebar { width: 255px; background: var(--sidebar); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        .logo { padding: 22px 20px; font-size: 1.35rem; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; color: #fff; }
+        .logo span { color: var(--secondary); }
+        .nav-links { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+        .nav-btn { background: transparent; border: none; color: #cbd5e1; padding: 13px 15px; border-radius: 12px; text-align: left; font-size: 0.96rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
+        .nav-btn:hover, .nav-btn.active { background: var(--primary); color: white; }
+        .nav-btn.booking-special { background: rgba(236, 72, 153, 0.18); color: #f472b6; border: 1px dashed #ec4899; margin-top: 4px; }
+        .nav-btn.booking-special.active { background: var(--secondary); color: white; border-style: solid; }
+        .nav-btn.gdpr-special { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px dashed #10b981; }
+        .nav-btn.gdpr-special.active { background: var(--success); color: white; border-style: solid; }
+
+        /* Contenuto Principale */
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background: var(--card); padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .topbar h1 { font-size: 1.35rem; font-weight: 800; }
+        .content { flex: 1; padding: 22px; overflow-y: auto; }
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Statistiche e Card */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 22px; }
+        .stat-card { background: var(--card); padding: 18px; border-radius: 14px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .stat-label { font-size: 0.82rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+        .stat-val { font-size: 1.65rem; font-weight: 800; margin-top: 6px; color: var(--primary); }
+
+        .card { background: var(--card); border-radius: 16px; border: 1px solid var(--border); padding: 20px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+
+        /* Bottoni */
+        .btn { padding: 11px 18px; border-radius: 10px; border: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.15s; text-decoration: none; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: var(--secondary); color: white; }
+        .btn-success { background: #25D366; color: white; }
+        .btn-web { background: #0284c7; color: white; }
+        .btn-sms { background: #64748b; color: white; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text); }
+        .btn-danger { background: #fee2e2; color: var(--danger); }
+        .btn-sm { padding: 8px 12px; font-size: 0.84rem; border-radius: 8px; }
+
+        /* Form */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 14px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 0.85rem; font-weight: 700; color: var(--muted); }
+        input, select, textarea { padding: 12px; border-radius: 10px; border: 1px solid var(--border); font-size: 1rem; background: #fff; }
+        
+        .services-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 8px; max-height: 190px; overflow-y: auto; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc; }
+        .service-chip { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: white; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; cursor: pointer; user-select: none; }
+        .service-chip input { width: 18px; height: 18px; accent-color: var(--primary); }
+
+        /* Appuntamenti */
+        .appt-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; background: #fff; gap: 14px; flex-wrap: wrap; }
+        .appt-time { font-size: 1.25rem; font-weight: 800; color: var(--primary); min-width: 75px; }
+        .appt-info { flex: 1; min-width: 200px; }
+        .appt-client { font-size: 1.1rem; font-weight: 700; }
+        .appt-services { font-size: 0.9rem; color: var(--muted); margin-top: 3px; }
+        .formula-badge { display: inline-block; margin-top: 6px; padding: 5px 10px; background: #fef3c7; color: #92400e; border-radius: 6px; font-size: 0.82rem; font-weight: 600; }
+        .allergy-badge { display: inline-block; margin-left: 6px; padding: 3px 8px; background: #fee2e2; color: #b91c1c; border-radius: 6px; font-size: 0.78rem; font-weight: 700; }
+        .gdpr-ok-badge { display: inline-block; margin-left: 6px; padding: 3px 8px; background: #dcfce7; color: #15803d; border-radius: 6px; font-size: 0.78rem; font-weight: 700; }
+
+        /* Modal */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 16px; }
+        .modal-backdrop.open { display: flex; }
+        .modal { background: white; width: 100%; max-width: 680px; border-radius: 18px; padding: 24px; max-height: 90vh; overflow-y: auto; }
+
+        /* Anteprima Pagina Web Cliente */
+        .client-web-preview { max-width: 520px; margin: 0 auto; background: white; border-radius: 24px; border: 3px solid #1e1b4b; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.12); }
+        .client-web-header { background: linear-gradient(135deg, #4f46e5, #ec4899); color: white; padding: 24px 20px; text-align: center; }
+        .client-web-body { padding: 20px; }
+
+        /* Calendario Integrato & Fasce Orarie */
+        .calendar-widget { background: #f8fafc; border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 14px; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 700; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+        .cal-day-label { font-size: 0.75rem; font-weight: 700; color: var(--muted); padding: 4px 0; }
+        .cal-day { padding: 8px 4px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; border: 1px solid transparent; background: white; }
+        .cal-day:hover:not(.disabled) { background: #e0e7ff; color: var(--primary); }
+        .cal-day.active { background: var(--primary) !important; color: white !important; font-weight: 800; }
+        .cal-day.disabled { opacity: 0.35; cursor: not-allowed; background: #e2e8f0; text-decoration: line-through; }
+        
+        .time-slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; padding: 8px; border: 1px solid var(--border); border-radius: 12px; background: #fff; margin-bottom: 14px; }
+        .time-slot { padding: 9px 6px; text-align: center; border-radius: 8px; font-size: 0.88rem; font-weight: 700; cursor: pointer; border: 1px solid var(--border); transition: 0.15s; }
+        .time-slot.free { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+        .time-slot.free:hover { background: #10b981; color: white; }
+        .time-slot.free.selected { background: var(--primary) !important; color: white !important; border-color: var(--primary-dark); }
+        .time-slot.busy { background: #fee2e2; border-color: #fecaca; color: #991b1b; cursor: not-allowed; opacity: 0.75; }
+
+        .legal-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 16px; font-size: 0.88rem; line-height: 1.55; color: #334155; max-height: 320px; overflow-y: auto; }
+        .legal-box h4 { color: var(--text); margin: 12px 0 4px; }
+
+        @media (max-width: 860px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; flex-direction: row; padding: 6px; }
+            .logo { display: none; }
+            .nav-links { flex-direction: row; flex-wrap: wrap; padding: 4px; gap: 4px; }
+            .nav-btn { padding: 9px 12px; font-size: 0.84rem; white-space: nowrap; flex: 1 1 auto; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="logo">✂️ Salone<span>PRO</span></div>
+        <div class="nav-links">
+            <button class="nav-btn active" onclick="showTab('agenda', this)">📅 Agenda Giorno</button>
+            <button class="nav-btn" onclick="showTab('listino', this)">💇‍♀️ Listino Servizi</button>
+            <button class="nav-btn" onclick="showTab('clienti', this)">👥 Schede Clienti</button>
+            <button class="nav-btn" onclick="showTab('magazzino', this)">📦 Magazzino</button>
+            <button class="nav-btn booking-special" onclick="showTab('webbooking', this)">🌐 Prenotazione Web</button>
+            <button class="nav-btn gdpr-special" onclick="showTab('gdpr', this)">🛡️ Privacy & GDPR</button>
+            <button class="nav-btn" onclick="showTab('backup', this)">⚙️ Impostazioni & Dati</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h1 id="page-title">📅 Agenda Giornaliera</h1>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <span id="salon-name-badge" style="font-weight:700; color:var(--muted);">Il Mio Salone</span>
+                <button class="btn btn-primary" onclick="openApptModal()">+ Nuovo Appuntamento</button>
+            </div>
+        </header>
+
+        <div class="content">
+            <!-- SEZIONE 1: AGENDA -->
+            <section id="tab-agenda" class="section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Appuntamenti Giorno</div>
+                        <div class="stat-val" id="stat-count">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Incasso Previsto</div>
+                        <div class="stat-val" id="stat-revenue">€ 0,00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Prodotti Sotto Scorta</div>
+                        <div class="stat-val" id="stat-lowstock" style="color:var(--danger);">0</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <input type="date" id="agenda-date" onchange="renderAgenda()">
+                            <button class="btn btn-outline btn-sm" onclick="setQuickDate(0)">Oggi</button>
+                            <button class="btn btn-outline btn-sm" onclick="setQuickDate(1)">Domani</button>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="openWhatsappImportModal()">📥 Inserisci Prenotazione da Messaggio</button>
+                    </div>
+                    <div id="agenda-list"></div>
+                </div>
+            </section>
+
+            <!-- SEZIONE 2: LISTINO SERVIZI -->
+            <section id="tab-listino" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Aggiungi Voce al Listino</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nome Servizio (es. Piega, Colore Radici, Schiariture)</label>
+                            <input type="text" id="srv-name" placeholder="Es. Taglio + Piega">
+                        </div>
+                        <div class="form-group">
+                            <label>Categoria</label>
+                            <select id="srv-cat">
+                                <option value="Taglio & Piega">Taglio & Piega</option>
+                                <option value="Colore & Tecnici">Colore & Tecnici</option>
+                                <option value="Trattamenti">Trattamenti & Cura</option>
+                                <option value="Styling & Sposa">Styling & Altro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Prezzo (€)</label>
+                            <input type="number" id="srv-price" placeholder="35" step="0.5">
+                        </div>
+                        <div class="form-group">
+                            <label>Durata stimata (minuti)</label>
+                            <input type="number" id="srv-duration" placeholder="45" step="5">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="addService()">+ Salva nel Listino</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Listino Attivo (Sincronizzato con la Prenotazione Web)</h3>
+                    </div>
+                    <div id="services-list"></div>
+                </div>
+            </section>
+
+            <!-- SEZIONE 3: CLIENTI & SCHEDE TECNICHE -->
+            <section id="tab-clienti" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Nuova Cliente (con Consenso GDPR)</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nome e Cognome</label>
+                            <input type="text" id="cli-name" placeholder="Es. Maria Rossi">
+                        </div>
+                        <div class="form-group">
+                            <label>Telefono (per WhatsApp/SMS)</label>
+                            <input type="tel" id="cli-phone" placeholder="Es. 3331234567">
+                        </div>
+                        <div class="form-group">
+                            <label>Allergie / Note Cute (Dati Particolari Art. 9 GDPR)</label>
+                            <input type="text" id="cli-allergy" placeholder="Es. Cute sensibile, usare senza ammoniaca">
+                        </div>
+                        <div class="form-group">
+                            <label>Ultima Formula Colore / Note Tecniche</label>
+                            <input type="text" id="cli-formula" placeholder="Es. 40g 6.0 + 20g 6.35 Ox 20 vol (35 min)">
+                        </div>
+                    </div>
+                    <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:10px; margin-bottom:14px; display:flex; flex-direction:column; gap:8px;">
+                        <label style="color:#166534; display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.9rem;">
+                            <input type="checkbox" id="cli-gdpr-base" checked style="width:18px; height:18px;">
+                            <span><strong>Consenso GDPR Base:</strong> Consente alla gestione appuntamenti e notifiche di servizio.</span>
+                        </label>
+                        <label style="color:#166534; display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.9rem;">
+                            <input type="checkbox" id="cli-gdpr-health" checked style="width:18px; height:18px;">
+                            <span><strong>Consenso Allergie/Cute (Art. 9 GDPR):</strong> Consente l'annotazione per sicurezza trattamenti.</span>
+                        </label>
+                    </div>
+                    <button class="btn btn-primary" onclick="addClient()">+ Registra Cliente</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Archivio Clienti, Formule & Consensi</h3>
+                        <input type="text" id="cli-search" placeholder="🔍 Cerca cliente..." oninput="renderClients()" style="max-width:260px;">
+                    </div>
+                    <div id="clients-list"></div>
+                </div>
+            </section>
+
+            <!-- SEZIONE 4: MAGAZZINO (RINOMINATO) -->
+            <section id="tab-magazzino" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Aggiungi Prodotto a Magazzino</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Prodotto / Articolo</label>
+                            <input type="text" id="prd-name" placeholder="Es. Tinta 7.1 Biondo Cenere o Shampoo Nutriente">
+                        </div>
+                        <div class="form-group">
+                            <label>Categoria</label>
+                            <select id="prd-cat">
+                                <option value="Tinte & Colori">Tinte & Colori</option>
+                                <option value="Ossigeni & Decoloranti">Ossigeni & Decoloranti</option>
+                                <option value="Shampoo & Trattamenti">Shampoo & Trattamenti</option>
+                                <option value="Styling & Finishing">Styling & Finishing</option>
+                                <option value="Monouso & Attrezzatura">Monouso & Attrezzatura</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Quantità Attuale</label>
+                            <input type="number" id="prd-qty" value="3">
+                        </div>
+                        <div class="form-group">
+                            <label>Soglia Minima Avviso</label>
+                            <input type="number" id="prd-min" value="2">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="addProduct()">+ Aggiungi al Magazzino</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Scorte Attuali di Magazzino</h3>
+                    </div>
+                    <div id="inventory-list"></div>
+                </div>
+            </section>
+
+            <!-- SEZIONE 5: PRENOTAZIONE WEB CON CALENDARIO & FASCE ORARIE -->
+            <section id="tab-webbooking" class="section">
+                <div class="card" style="background: #fdf2f8; border-color: #fbcfe8;">
+                    <h3 style="color:#9d174d; margin-bottom:8px;">🌐 Nuova Pagina Web Clienti: Calendario Integrato, Slot Orari & Prenotazione Web</h3>
+                    <p style="font-size:0.94rem; color:#831843; line-height:1.5; margin-bottom:14px;">
+                        • <strong>Calendario integrato con blocco date passate:</strong> la cliente non può selezionare nessun giorno prima di oggi.<br>
+                        • <strong>Fasce Orarie con Slot Occupati / Liberi:</strong> la cliente vede subito in <span style="color:#15803d; font-weight:700;">VERDE</span> gli orari liberi e in <span style="color:#b91c1c; font-weight:700;">ROSSO (Occupato)</span> se c'è già un'altra cliente!<br>
+                        • <strong>Doppia modalità di prenotazione:</strong> la cliente può confermare <em>direttamente sul Web</em> (scarica ricevuta e codice) oppure inviare la conferma rapida su <em>WhatsApp</em>.
+                    </p>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                        <button class="btn btn-secondary" onclick="exportClientBookingPage()">⬇️ Scarica index.html Completo (con Calendario & Slot)</button>
+                        <button class="btn btn-outline" onclick="openWhatsappImportModal()">📥 Incolla Prenotazione Ricevuta</button>
+                    </div>
+                </div>
+
+                <h3 style="text-align:center; margin: 18px 0 12px;">📱 Anteprima dal vivo di ciò che vedrà la cliente:</h3>
+                <div class="client-web-preview">
+                    <div class="client-web-header">
+                        <h2 id="preview-salon-title">✂️ Il Mio Salone</h2>
+                        <p style="opacity:0.9; font-size:0.9rem; margin-top:4px;">Prenotazione Online in Tempo Reale</p>
+                    </div>
+                    <div class="client-web-body">
+                        <div class="form-group" style="margin-bottom:12px;">
+                            <label>Il tuo Nome e Cognome *</label>
+                            <input type="text" id="wb-name" placeholder="Es. Giulia Bianchi">
+                        </div>
+                        <div class="form-group" style="margin-bottom:12px;">
+                            <label>Il tuo Telefono *</label>
+                            <input type="tel" id="wb-phone" placeholder="Es. 3339876543">
+                        </div>
+                        <div class="form-group" style="margin-bottom:12px;">
+                            <label>Scegli i Servizi desiderati:</label>
+                            <div id="wb-services-box" class="services-picker"></div>
+                        </div>
+
+                        <!-- CALENDARIO INTERNO INTEGRATO -->
+                        <div class="calendar-widget">
+                            <div class="cal-header">
+                                <button class="btn btn-outline btn-sm" onclick="changePreviewMonth(-1)">&lt;</button>
+                                <span id="preview-month-title">Mese Anno</span>
+                                <button class="btn btn-outline btn-sm" onclick="changePreviewMonth(1)">&gt;</button>
+                            </div>
+                            <div class="cal-grid" id="preview-calendar-grid"></div>
+                        </div>
+
+                        <!-- FASCE ORARIE LIBERE / OCCUPATE -->
+                        <label style="margin-bottom:6px; display:block;">Orari disponibili per il giorno selezionato:</label>
+                        <div class="time-slots-grid" id="preview-slots-grid"></div>
+
+                        <div style="background:#f1f5f9; padding:12px; border-radius:10px; margin-bottom:12px; display:flex; justify-content:space-between; font-weight:700;">
+                            <span>Totale Stimato:</span>
+                            <span id="wb-total" style="color:var(--primary);">€ 0,00 (0 min)</span>
+                        </div>
+
+                        <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px 12px; border-radius:10px; margin-bottom:14px; font-size:0.83rem;">
+                            <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; color:#334155;">
+                                <input type="checkbox" id="wb-gdpr-check" checked style="width:18px; height:18px; margin-top:2px;">
+                                <span>Accetto l'<a href="javascript:void(0)" onclick="openLegalPreviewModal()" style="color:var(--primary); font-weight:700;">Informativa Privacy (GDPR)</a> per la gestione dell'appuntamento. *</span>
+                            </label>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <button class="btn btn-web" style="justify-content:center;" onclick="testWebBookingSubmit('web')">
+                                💻 Prenota via Web
+                            </button>
+                            <button class="btn btn-success" style="justify-content:center;" onclick="testWebBookingSubmit('wa')">
+                                📲 Invia su WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEZIONE 6: PRIVACY & GDPR -->
+            <section id="tab-gdpr" class="section">
+                <div class="card" style="border-left: 5px solid var(--success);">
+                    <h3 style="margin-bottom:8px;">🛡️ Centro Conformità Privacy, Cookie & GDPR (UE 2016/679)</h3>
+                    <p style="font-size:0.92rem; color:var(--muted); line-height:1.5;">
+                        Documentazione e moduli aggiornati automaticamente in base ai dati della tua attività.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>✍️ Firma Consenso Cliente in Salone</h3>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                        <select id="gdpr-select-client" style="min-width:240px;"></select>
+                        <button class="btn btn-primary" onclick="signClientGdprInSalon()">✅ Registra Consenso GDPR Oggi</button>
+                        <button class="btn btn-outline" onclick="printPaperGdprForm()">🖨️ Stampa Modulo Cartaceo</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📄 Testo Informativa Privacy & Cookie Policy</h3>
+                    </div>
+                    <div id="legal-text-container" class="legal-box"></div>
+                </div>
+            </section>
+
+            <!-- SEZIONE 7: IMPOSTAZIONI & BACKUP -->
+            <section id="tab-backup" class="section">
+                <div class="card">
+                    <h3 style="margin-bottom:14px;">Dati Salone & Orari di Lavoro</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nome del Salone</label>
+                            <input type="text" id="cfg-name" placeholder="Es. Hair Studio">
+                        </div>
+                        <div class="form-group">
+                            <label>Titolare</label>
+                            <input type="text" id="cfg-owner" placeholder="Es. Flavio Rapallo">
+                        </div>
+                        <div class="form-group">
+                            <label>Indirizzo Salone</label>
+                            <input type="text" id="cfg-address" placeholder="Es. Salemi (TP)">
+                        </div>
+                        <div class="form-group">
+                            <label>Partita IVA</label>
+                            <input type="text" id="cfg-vat" placeholder="IT...">
+                        </div>
+                        <div class="form-group">
+                            <label>Email Salone</label>
+                            <input type="email" id="cfg-email" placeholder="info@salone.it">
+                        </div>
+                        <div class="form-group">
+                            <label>WhatsApp Salone (prefisso 39 senza +)</label>
+                            <input type="tel" id="cfg-phone" placeholder="39333...">
+                        </div>
+                        <div class="form-group">
+                            <label>Orario Apertura</label>
+                            <input type="time" id="cfg-open" value="09:00">
+                        </div>
+                        <div class="form-group">
+                            <label>Orario Chiusura</label>
+                            <input type="time" id="cfg-close" value="19:00">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveConfig()">💾 Salva Impostazioni & Aggiorna Orari</button>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom:12px;">Backup Dati Tablet</h3>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                        <button class="btn btn-outline" onclick="exportBackup()">⬇️ Scarica Backup (.json)</button>
+                        <label class="btn btn-outline" style="cursor:pointer;">
+                            ⬆️ Ripristina da Backup
+                            <input type="file" accept=".json" style="display:none;" onchange="importBackup(event)">
+                        </label>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- MODAL NUOVO / MODIFICA APPUNTAMENTO -->
+    <div class="modal-backdrop" id="appt-modal">
+        <div class="modal">
+            <h2 id="appt-modal-title" style="margin-bottom:16px;">Nuovo Appuntamento in Agenda</h2>
+            <input type="hidden" id="modal-edit-id" value="">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Seleziona Cliente in Archivio</label>
+                    <select id="modal-client" onchange="fillClientPhone()"></select>
+                </div>
+                <div class="form-group">
+                    <label>Oppure scrivi Nome Nuova Cliente</label>
+                    <input type="text" id="modal-new-client" placeholder="Lascia vuoto se già selezionata">
+                </div>
+                <div class="form-group">
+                    <label>Telefono Cliente</label>
+                    <input type="tel" id="modal-phone" placeholder="333...">
+                </div>
+                <div class="form-group">
+                    <label>Data e Ora</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="date" id="modal-date" style="flex:1;">
+                        <input type="time" id="modal-time" value="09:30">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:14px;">
+                <label>Seleziona Servizi dal Listino:</label>
+                <div id="modal-services-picker" class="services-picker"></div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Totale (€)</label>
+                    <input type="number" id="modal-price" value="0" step="0.5">
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>📝 Note Appuntamento / Dettagli Servizio</label>
+                    <textarea id="modal-notes" rows="2" placeholder="Inserisci note sull'appuntamento, richieste della cliente, dettagli tecnici..."></textarea>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
+                <button class="btn btn-outline" onclick="closeApptModal()">Annulla</button>
+                <button class="btn btn-primary" onclick="saveAppointment()">✅ Salva in Agenda</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL IMPORTA PRENOTAZIONE -->
+    <div class="modal-backdrop" id="import-modal">
+        <div class="modal">
+            <h2 style="margin-bottom:10px;">📥 Importa Prenotazione Ricevuta</h2>
+            <p style="font-size:0.9rem; color:var(--muted); margin-bottom:12px;">
+                Incolla il testo del messaggio (ricevuto via WhatsApp o generato dal Web):
+            </p>
+            <textarea id="import-text" rows="6" style="width:100%; margin-bottom:14px;" placeholder="Incolla qui..."></textarea>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn btn-outline" onclick="document.getElementById('import-modal').classList.remove('open')">Chiudi</button>
+                <button class="btn btn-secondary" onclick="parseBookingString()">⚡ Inserisci Subito in Agenda</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ANTEPRIMA INFORMATIVA -->
+    <div class="modal-backdrop" id="legal-preview-modal">
+        <div class="modal">
+            <h2 style="margin-bottom:12px;">🛡️ Informativa Privacy & GDPR</h2>
+            <div id="modal-legal-content" class="legal-box" style="max-height:60vh;"></div>
+            <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+                <button class="btn btn-primary" onclick="document.getElementById('legal-preview-modal').classList.remove('open')">Ho capito</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'salone_pro_v4_data';
+
+        const defaultData = {
+            config: {
+                salonName: "Salone Donna & Style",
+                ownerName: "Titolare del Salone",
+                address: "Via Roma 1, Italia",
+                vat: "IT00000000000",
+                email: "privacy@salone.it",
+                ownerPhone: "393330000000",
+                openTime: "09:00",
+                closeTime: "19:00",
+                slotMinutes: 30
+            },
+            services: [
+                { id: 1, name: "Piega Classica", cat: "Taglio & Piega", price: 18, duration: 30 },
+                { id: 2, name: "Taglio Donna", cat: "Taglio & Piega", price: 22, duration: 30 },
+                { id: 3, name: "Taglio + Piega", cat: "Taglio & Piega", price: 35, duration: 60 },
+                { id: 4, name: "Colore Ricrescita", cat: "Colore & Tecnici", price: 30, duration: 45 },
+                { id: 5, name: "Balayage / Schiariture", cat: "Colore & Tecnici", price: 65, duration: 90 },
+                { id: 6, name: "Tonalizzante / Gloss", cat: "Colore & Tecnici", price: 20, duration: 30 },
+                { id: 7, name: "Trattamento Cheratina", cat: "Trattamenti", price: 25, duration: 30 }
+            ],
+            clients: [
+                { id: 101, name: "Elena Rizzo", phone: "3331122334", allergy: "Nessuna", formula: "Radici: 40g 5.0 + 10g 5.4 Ox 20 vol (35 min)", gdprConsent: true, gdprDate: "2026-10-15" },
+                { id: 102, name: "Giovanna Marino", phone: "3475566778", allergy: "Cute sensibile", formula: "Schiariture + Tonalizzante 9.12 Ox 10 vol", gdprConsent: true, gdprDate: "2026-10-15" }
+            ],
+            inventory: [
+                { id: 201, name: "Tinta 5.0 Castano Chiaro", cat: "Tinte & Colori", qty: 4, min: 2 },
+                { id: 202, name: "Tinta 7.1 Biondo Cenere", cat: "Tinte & Colori", qty: 1, min: 2 },
+                { id: 203, name: "Ossigeno 20 Volumi (1000ml)", cat: "Ossigeni & Decoloranti", qty: 3, min: 2 },
+                { id: 204, name: "Shampoo Ristrutturante 1000ml", cat: "Shampoo & Trattamenti", qty: 2, min: 2 }
+            ],
+            appointments: []
+        };
+
+        let db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData;
+        if (!db.config.openTime) db.config.openTime = "09:00";
+        if (!db.config.closeTime) db.config.closeTime = "19:00";
+        if (!db.config.slotMinutes) db.config.slotMinutes = 30;
+
+        function saveDB() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+            updateStats();
+        }
+
+        function todayStr(offsetDays = 0) {
+            const d = new Date();
+            d.setDate(d.getDate() + offsetDays);
+            return d.toISOString().split('T')[0];
+        }
+
+        let previewCurrentDate = new Date();
+        let previewSelectedDateStr = todayStr(0);
+        let previewSelectedTimeStr = "";
+
+        window.onload = () => {
+            const today = todayStr(0);
+            document.getElementById('agenda-date').value = today;
+            document.getElementById('modal-date').min = today;
+            if (db.appointments.length === 0) {
+                db.appointments.push(
+                    { id: 301, clientId: 101, clientName: "Elena Rizzo", phone: "3331122334", date: today, time: "10:00", services: ["Colore Ricrescita"], price: 30, notes: "" },
+                    { id: 302, clientId: 102, clientName: "Giovanna Marino", phone: "3475566778", date: today, time: "15:30", services: ["Piega Classica"], price: 18, notes: "" }
+                );
+                saveDB();
+            }
+            loadConfigUI();
+            renderAll();
+        };
+
+        function renderAll() {
+            renderAgenda();
+            renderServices();
+            renderClients();
+            renderInventory();
+            renderWebBookingPreview();
+            renderLegalDocs();
+            updateStats();
+        }
+
+        function showTab(tabId, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            if (btn) document.getElementById('page-title').innerText = btn.innerText;
+        }
+
+        function setQuickDate(offset) {
+            document.getElementById('agenda-date').value = todayStr(offset);
+            renderAgenda();
+        }
+
+        function updateStats() {
+            const selDate = document.getElementById('agenda-date').value || todayStr(0);
+            const dayAppts = db.appointments.filter(a => a.date === selDate);
+            const rev = dayAppts.reduce((s, a) => s + Number(a.price || 0), 0);
+            const low = db.inventory.filter(p => p.qty <= p.min).length;
+
+            document.getElementById('stat-count').innerText = dayAppts.length;
+            document.getElementById('stat-revenue').innerText = `€ ${rev.toFixed(2).replace('.', ',')}`;
+            document.getElementById('stat-lowstock').innerText = low;
+        }
+
+        // --- AGENDA ---
+        function renderAgenda() {
+            const selDate = document.getElementById('agenda-date').value;
+            const box = document.getElementById('agenda-list');
+            const list = db.appointments.filter(a => a.date === selDate).sort((a,b) => a.time.localeCompare(b.time));
+            updateStats();
+
+            if (list.length === 0) {
+                box.innerHTML = `<p style="color:var(--muted); padding:20px; text-align:center;">Nessun appuntamento per questa data.</p>`;
+                return;
+            }
+
+            box.innerHTML = list.map(a => {
+                const clientObj = db.clients.find(c => c.id == a.clientId || c.name.toLowerCase() === a.clientName.toLowerCase());
+                const formulaHtml = (clientObj && clientObj.formula) ? `<div class="formula-badge">🎨 Formula: ${clientObj.formula}</div>` : '';
+                const allergyHtml = (clientObj && clientObj.allergy && clientObj.allergy.toLowerCase() !== 'nessuna') ? `<span class="allergy-badge">⚠️ ${clientObj.allergy}</span>` : '';
+                const cleanPhone = (a.phone || '').replace(/\D/g, '');
+                const waPhone = cleanPhone.startsWith('39') ? cleanPhone : '39' + cleanPhone;
+                const msg = encodeURIComponent(`Ciao ${a.clientName}! Ti confermiamo l'appuntamento presso ${db.config.salonName} per il giorno ${a.date.split('-').reverse().join('/')} alle ore ${a.time} (${a.services.join(', ')}). A presto!`);
+
+                return `
+                <div class="appt-item">
+                    <div class="appt-time">${a.time}</div>
+                    <div class="appt-info">
+                        <div class="appt-client">${a.clientName} ${allergyHtml}</div>
+                        <div class="appt-services">💇‍♀️ ${a.services.join(' + ')} — <strong>€ ${Number(a.price).toFixed(2)}</strong></div>
+                        ${a.notes ? `<div style="font-size:0.85rem; color:#475569; margin-top:4px;">📝 ${a.notes}</div>` : ''}
+                        ${formulaHtml}
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn btn-outline btn-sm" onclick="openEditApptModal(${a.id})" title="Modifica Data, Ora, Servizi o Note">✏️ Modifica</button>
+                        <a class="btn btn-success btn-sm" href="https://wa.me/${waPhone}?text=${msg}" target="_blank">📲 WhatsApp</a>
+                        <a class="btn btn-sms btn-sm" href="sms:+${waPhone}?body=${msg}">💬 SMS</a>
+                        <button class="btn btn-danger btn-sm" onclick="deleteAppt(${a.id})">🗑️</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function openApptModal() {
+            document.getElementById('appt-modal-title').innerText = "Nuovo Appuntamento in Agenda";
+            document.getElementById('modal-edit-id').value = "";
+            document.getElementById('modal-date').value = document.getElementById('agenda-date').value || todayStr(0);
+            document.getElementById('modal-time').value = "09:30";
+            const sel = document.getElementById('modal-client');
+            sel.innerHTML = `<option value="">-- Seleziona cliente --</option>` + db.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('modal-new-client').value = '';
+            document.getElementById('modal-phone').value = '';
+            document.getElementById('modal-price').value = 0;
+            document.getElementById('modal-notes').value = '';
+
+            const picker = document.getElementById('modal-services-picker');
+            picker.innerHTML = db.services.map(s => `
+                <label class="service-chip">
+                    <input type="checkbox" value="${s.name}" data-price="${s.price}" onchange="recalcModalPrice()">
+                    <span>${s.name} (€${s.price})</span>
+                </label>
+            `).join('');
+
+            document.getElementById('appt-modal').classList.add('open');
+        }
+
+        function openEditApptModal(apptId) {
+            const appt = db.appointments.find(a => a.id == apptId);
+            if (!appt) return;
+
+            document.getElementById('appt-modal-title').innerText = "✏️ Modifica Appuntamento";
+            document.getElementById('modal-edit-id').value = appt.id;
+            document.getElementById('modal-date').value = appt.date;
+            document.getElementById('modal-time').value = appt.time;
+            document.getElementById('modal-phone').value = appt.phone || '';
+            document.getElementById('modal-notes').value = appt.notes || '';
+
+            const sel = document.getElementById('modal-client');
+            sel.innerHTML = `<option value="">-- Seleziona cliente --</option>` + db.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+            const existingClient = db.clients.find(c => c.id == appt.clientId || c.name.toLowerCase() === (appt.clientName || '').toLowerCase());
+            if (existingClient) {
+                sel.value = existingClient.id;
+                document.getElementById('modal-new-client').value = '';
+            } else {
+                sel.value = '';
+                document.getElementById('modal-new-client').value = appt.clientName || '';
+            }
+
+            const currentServices = appt.services || [];
+            const picker = document.getElementById('modal-services-picker');
+            picker.innerHTML = db.services.map(s => {
+                const isChecked = currentServices.includes(s.name) ? 'checked' : '';
+                return `
+                <label class="service-chip">
+                    <input type="checkbox" value="${s.name}" data-price="${s.price}" ${isChecked} onchange="recalcModalPrice()">
+                    <span>${s.name} (€${s.price})</span>
+                </label>`;
+            }).join('');
+
+            document.getElementById('modal-price').value = Number(appt.price || 0);
+            document.getElementById('appt-modal').classList.add('open');
+        }
+
+        function closeApptModal() {
+            document.getElementById('appt-modal').classList.remove('open');
+        }
+
+        function fillClientPhone() {
+            const cid = document.getElementById('modal-client').value;
+            const c = db.clients.find(x => x.id == cid);
+            if (c) document.getElementById('modal-phone').value = c.phone;
+        }
+
+        function recalcModalPrice() {
+            let sum = 0;
+            document.querySelectorAll('#modal-services-picker input:checked').forEach(cb => {
+                sum += Number(cb.getAttribute('data-price') || 0);
+            });
+            document.getElementById('modal-price').value = sum;
+        }
+
+        function saveAppointment() {
+            const editId = document.getElementById('modal-edit-id').value;
+            const cid = document.getElementById('modal-client').value;
+            const newName = document.getElementById('modal-new-client').value.trim();
+            const phone = document.getElementById('modal-phone').value.trim();
+            const date = document.getElementById('modal-date').value;
+            const time = document.getElementById('modal-time').value;
+            const price = Number(document.getElementById('modal-price').value || 0);
+            const notes = document.getElementById('modal-notes').value.trim();
+
+            const checkedServices = Array.from(document.querySelectorAll('#modal-services-picker input:checked')).map(cb => cb.value);
+            if (checkedServices.length === 0) checkedServices.push("Servizio generico");
+
+            let clientName = "";
+            let finalClientId = cid;
+
+            if (newName) {
+                clientName = newName;
+                const existingByName = db.clients.find(c => c.name.toLowerCase() === newName.toLowerCase());
+                if (existingByName) {
+                    finalClientId = existingByName.id;
+                } else {
+                    finalClientId = Date.now();
+                    db.clients.push({ id: finalClientId, name: newName, phone: phone, allergy: "Nessuna", formula: "", gdprConsent: true, gdprDate: todayStr(0) });
+                }
+            } else if (cid) {
+                const c = db.clients.find(x => x.id == cid);
+                clientName = c ? c.name : "Cliente";
+            } else {
+                alert("Seleziona una cliente o inserisci un nome!");
+                return;
+            }
+
+            if (editId) {
+                const idx = db.appointments.findIndex(a => a.id == editId);
+                if (idx !== -1) {
+                    db.appointments[idx] = {
+                        ...db.appointments[idx],
+                        clientId: finalClientId,
+                        clientName,
+                        phone,
+                        date,
+                        time,
+                        services: checkedServices,
+                        price,
+                        notes
+                    };
+                }
+            } else {
+                db.appointments.push({
+                    id: Date.now() + 1,
+                    clientId: finalClientId,
+                    clientName,
+                    phone,
+                    date,
+                    time,
+                    services: checkedServices,
+                    price,
+                    notes
+                });
+            }
+
+            document.getElementById('agenda-date').value = date;
+            saveDB();
+            renderAll();
+            closeApptModal();
+        }
+
+        function deleteAppt(id) {
+            db.appointments = db.appointments.filter(a => a.id !== id);
+            saveDB();
+            renderAgenda();
+            renderWebSlots();
+        }
+
+        // --- LISTINO SERVIZI ---
+        function renderServices() {
+            const box = document.getElementById('services-list');
+            box.innerHTML = db.services.map(s => `
+                <div class="appt-item" style="padding:12px 16px;">
+                    <div>
+                        <div style="font-weight:700; font-size:1.05rem;">${s.name}</div>
+                        <div style="font-size:0.85rem; color:var(--muted);">${s.cat} • ⏱️ ${s.duration} min</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="font-size:1.2rem; font-weight:800; color:var(--primary);">€ ${Number(s.price).toFixed(2)}</span>
+                        <button class="btn btn-danger btn-sm" onclick="deleteService(${s.id})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+            renderWebBookingPreview();
+        }
+
+        function addService() {
+            const name = document.getElementById('srv-name').value.trim();
+            const cat = document.getElementById('srv-cat').value;
+            const price = Number(document.getElementById('srv-price').value || 0);
+            const duration = Number(document.getElementById('srv-duration').value || 30);
+            if (!name) return alert("Inserisci il nome del servizio");
+
+            db.services.push({ id: Date.now(), name, cat, price, duration });
+            document.getElementById('srv-name').value = '';
+            document.getElementById('srv-price').value = '';
+            saveDB();
+            renderServices();
+        }
+
+        function deleteService(id) {
+            db.services = db.services.filter(s => s.id !== id);
+            saveDB();
+            renderServices();
+        }
+
+        // --- CLIENTI ---
+        function renderClients() {
+            const q = (document.getElementById('cli-search').value || '').toLowerCase();
+            const box = document.getElementById('clients-list');
+            const filtered = db.clients.filter(c => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q));
+
+            box.innerHTML = filtered.map(c => `
+                <div class="appt-item">
+                    <div style="flex:1;">
+                        <div class="appt-client">${c.name} <span style="font-weight:400; font-size:0.9rem; color:var(--muted);">(${c.phone || 'N/D'})</span></div>
+                        <div style="margin-top:6px;">
+                            <span class="allergy-badge">⚠️ Cute/Allergie: ${c.allergy || 'Nessuna'}</span>
+                        </div>
+                        <div class="formula-badge" style="display:block; margin-top:8px;">
+                            🎨 <strong>Scheda Tecnica:</strong> ${c.formula || 'Nessuna formula registrata'}
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-outline btn-sm" onclick="editFormula(${c.id})">✏️ Formula</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteClient(${c.id})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addClient() {
+            const name = document.getElementById('cli-name').value.trim();
+            const phone = document.getElementById('cli-phone').value.trim();
+            const allergy = document.getElementById('cli-allergy').value.trim() || "Nessuna";
+            const formula = document.getElementById('cli-formula').value.trim();
+            const gdprBase = document.getElementById('cli-gdpr-base').checked;
+            if (!name) return alert("Inserisci il nome della cliente");
+
+            db.clients.push({ id: Date.now(), name, phone, allergy, formula, gdprConsent: gdprBase, gdprDate: todayStr(0) });
+            document.getElementById('cli-name').value = '';
+            document.getElementById('cli-phone').value = '';
+            document.getElementById('cli-allergy').value = '';
+            document.getElementById('cli-formula').value = '';
+            saveDB();
+            renderClients();
+            renderLegalDocs();
+        }
+
+        function editFormula(id) {
+            const c = db.clients.find(x => x.id === id);
+            if (!c) return;
+            const nueva = prompt(`Aggiorna Scheda Tecnica per ${c.name}:`, c.formula || "");
+            if (nueva !== null) {
+                c.formula = nueva;
+                saveDB();
+                renderClients();
+                renderAgenda();
+            }
+        }
+
+        function deleteClient(id) {
+            if (!confirm("Confermi la cancellazione della cliente?")) return;
+            db.clients = db.clients.filter(c => c.id !== id);
+            saveDB();
+            renderClients();
+        }
+
+        // --- MAGAZZINO (RINOMINATO) ---
+        function renderInventory() {
+            const box = document.getElementById('inventory-list');
+            box.innerHTML = db.inventory.map(p => {
+                const isLow = p.qty <= p.min;
+                return `
+                <div class="appt-item">
+                    <div>
+                        <div style="font-weight:700;">${p.name} ${isLow ? '<span class="allergy-badge">DA ORDINARE</span>' : ''}</div>
+                        <div style="font-size:0.85rem; color:var(--muted);">${p.cat} • Scorta minima: ${p.min}</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button class="btn btn-outline btn-sm" onclick="changeQty(${p.id}, -1)">➖</button>
+                        <span style="font-size:1.25rem; font-weight:800; min-width:32px; text-align:center;">${p.qty}</span>
+                        <button class="btn btn-outline btn-sm" onclick="changeQty(${p.id}, 1)">➕</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">🗑️</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function addProduct() {
+            const name = document.getElementById('prd-name').value.trim();
+            const cat = document.getElementById('prd-cat').value;
+            const qty = Number(document.getElementById('prd-qty').value || 0);
+            const min = Number(document.getElementById('prd-min').value || 1);
+            if (!name) return alert("Inserisci il nome del prodotto");
+
+            db.inventory.push({ id: Date.now(), name, cat, qty, min });
+            document.getElementById('prd-name').value = '';
+            saveDB();
+            renderInventory();
+        }
+
+        function changeQty(id, delta) {
+            const p = db.inventory.find(x => x.id === id);
+            if (p) {
+                p.qty = Math.max(0, p.qty + delta);
+                saveDB();
+                renderInventory();
+            }
+        }
+
+        function deleteProduct(id) {
+            db.inventory = db.inventory.filter(p => p.id !== id);
+            saveDB();
+            renderInventory();
+        }
+
+        // --- CALENDARIO E FASCE ORARIE (PRENOTAZIONE WEB) ---
+        function renderWebBookingPreview() {
+            document.getElementById('preview-salon-title').innerText = "✂️ " + db.config.salonName;
+            const box = document.getElementById('wb-services-box');
+            box.innerHTML = db.services.map(s => `
+                <label class="service-chip">
+                    <input type="checkbox" value="${s.name}" data-price="${s.price}" data-dur="${s.duration}" onchange="recalcWebBooking()">
+                    <span>${s.name} (€${s.price})</span>
+                </label>
+            `).join('');
+            renderWebCalendar();
+            renderWebSlots();
+            recalcWebBooking();
+        }
+
+        function changePreviewMonth(delta) {
+            previewCurrentDate.setMonth(previewCurrentDate.getMonth() + delta);
+            renderWebCalendar();
+        }
+
+        function renderWebCalendar() {
+            const grid = document.getElementById('preview-calendar-grid');
+            const title = document.getElementById('preview-month-title');
+            const year = previewCurrentDate.getFullYear();
+            const month = previewCurrentDate.getMonth();
+            const monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+            title.innerText = `${monthNames[month]} ${year}`;
+
+            const daysLabels = ["L", "M", "M", "G", "V", "S", "D"];
+            let html = daysLabels.map(l => `<div class="cal-day-label">${l}</div>`).join('');
+
+            const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; // Lunedì = 0
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                html += `<div></div>`;
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const thisDate = new Date(year, month, d);
+                thisDate.setHours(0,0,0,0);
+                const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const isPast = thisDate < today;
+                const isSelected = dStr === previewSelectedDateStr;
+
+                if (isPast) {
+                    html += `<div class="cal-day disabled" title="Data passata non prenotabile">${d}</div>`;
+                } else {
+                    html += `<div class="cal-day ${isSelected ? 'active' : ''}" onclick="selectPreviewDate('${dStr}')">${d}</div>`;
+                }
+            }
+            grid.innerHTML = html;
+        }
+
+        function selectPreviewDate(dStr) {
+            previewSelectedDateStr = dStr;
+            renderWebCalendar();
+            renderWebSlots();
+        }
+
+        // Genera fasce orarie e controlla se già occupate
+        function generateDaySlots() {
+            const slots = [];
+            const [openH, openM] = (db.config.openTime || "09:00").split(':').map(Number);
+            const [closeH, closeM] = (db.config.closeTime || "19:00").split(':').map(Number);
+            const step = Number(db.config.slotMinutes || 30);
+
+            let currentMinutes = openH * 60 + openM;
+            const endMinutes = closeH * 60 + closeM;
+
+            while (currentMinutes < endMinutes) {
+                const h = Math.floor(currentMinutes / 60);
+                const m = currentMinutes % 60;
+                const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+                slots.push(timeStr);
+                currentMinutes += step;
+            }
+            return slots;
+        }
+
+        function renderWebSlots() {
+            const box = document.getElementById('preview-slots-grid');
+            const daySlots = generateDaySlots();
+            const bookedTimes = db.appointments.filter(a => a.date === previewSelectedDateStr).map(a => a.time);
+
+            if (daySlots.length === 0) {
+                box.innerHTML = `<div style="grid-column:1/-1; color:var(--muted); text-align:center; padding:10px;">Nessuno slot configurato</div>`;
+                return;
+            }
+
+            box.innerHTML = daySlots.map(timeStr => {
+                const isBusy = bookedTimes.includes(timeStr);
+                const isSelected = (previewSelectedTimeStr === timeStr && !isBusy);
+                if (isBusy) {
+                    return `<div class="time-slot busy" title="Orario già occupato da un'altra cliente">🔴 ${timeStr}<br><span style="font-size:0.75rem;">Occupato</span></div>`;
+                } else {
+                    return `<div class="time-slot free ${isSelected ? 'selected' : ''}" onclick="selectPreviewTime('${timeStr}')">🟢 ${timeStr}<br><span style="font-size:0.75rem;">Disponibile</span></div>`;
+                }
+            }).join('');
+        }
+
+        function selectPreviewTime(timeStr) {
+            previewSelectedTimeStr = timeStr;
+            renderWebSlots();
+        }
+
+        function recalcWebBooking() {
+            let sum = 0, dur = 0;
+            document.querySelectorAll('#wb-services-box input:checked').forEach(cb => {
+                sum += Number(cb.getAttribute('data-price') || 0);
+                dur += Number(cb.getAttribute('data-dur') || 0);
+            });
+            document.getElementById('wb-total').innerText = `€ ${sum.toFixed(2)} (${dur} min)`;
+        }
+
+        function testWebBookingSubmit(mode) {
+            const name = document.getElementById('wb-name').value.trim();
+            const phone = document.getElementById('wb-phone').value.trim();
+            const date = previewSelectedDateStr;
+            const time = previewSelectedTimeStr;
+            const gdprChecked = document.getElementById('wb-gdpr-check').checked;
+            const srvs = Array.from(document.querySelectorAll('#wb-services-box input:checked')).map(c => c.value);
+
+            if (!name) return alert("Inserisci il tuo Nome e Cognome!");
+            if (!phone) return alert("Inserisci il tuo Numero di Telefono!");
+            if (srvs.length === 0) return alert("Seleziona almeno un servizio dal listino!");
+            if (!time) return alert("Seleziona un orario tra quelli disponibili in verde!");
+            if (!gdprChecked) return alert("È obbligatorio accettare l'Informativa Privacy per procedere!");
+
+            // Verifica che lo slot non sia occupato
+            const alreadyBooked = db.appointments.some(a => a.date === date && a.time === time);
+            if (alreadyBooked) return alert("Ci dispiace, questo orario è appena stato occupato. Scegline un altro!");
+
+            let tot = 0;
+            document.querySelectorAll('#wb-services-box input:checked').forEach(cb => tot += Number(cb.getAttribute('data-price') || 0));
+
+            const codeMsg = `PRENOTAZIONE SALONE
+Cliente: ${name}
+Tel: ${phone}
+Data: ${date}
+Ora: ${time}
+Servizi: ${srvs.join(', ')}
+Totale: ${tot}
+Canale: ${mode === 'web' ? 'Web Diretto' : 'WhatsApp'}
+GDPR: Accettato (${todayStr(0)})`;
+
+            if (mode === 'web') {
+                // Prenotazione Diretta Web
+                parseBookingString(codeMsg);
+                alert(`🎉 Prenotazione Confermata con Successo per il ${date.split('-').reverse().join('/')} alle ${time}!
+L'appuntamento è stato inserito direttamente nell'agenda del salone.`);
+            } else {
+                // Invia a WhatsApp
+                const cleanOwner = db.config.ownerPhone.replace(/\D/g, '');
+                window.open(`https://wa.me/${cleanOwner}?text=${encodeURIComponent(codeMsg)}`, '_blank');
+            }
+        }
+
+        function openWhatsappImportModal() {
+            document.getElementById('import-modal').classList.add('open');
+        }
+
+        function parseBookingString(customText) {
+            const raw = customText || document.getElementById('import-text').value.trim();
+            if (!raw) return;
+
+            const getField = (label) => {
+                const m = raw.match(new RegExp(label + "\s*:\s*(.+)", "i"));
+                return m ? m[1].trim() : "";
+            };
+
+            const name = getField("Cliente") || "Cliente Web";
+            const phone = getField("Tel") || "";
+            const date = getField("Data") || todayStr(0);
+            const time = getField("Ora") || "10:00";
+            const srvStr = getField("Servizi") || "Servizio Prenotato";
+            const tot = Number(getField("Totale") || 0);
+
+            let client = db.clients.find(c => c.name.toLowerCase() === name.toLowerCase());
+            if (!client) {
+                client = { id: Date.now(), name, phone, allergy: "Nessuna", formula: "", gdprConsent: true, gdprDate: todayStr(0) };
+                db.clients.push(client);
+            }
+
+            db.appointments.push({
+                id: Date.now() + 5,
+                clientId: client.id,
+                clientName: name,
+                phone: phone,
+                date: date,
+                time: time,
+                services: srvStr.split(',').map(s => s.trim()),
+                price: tot,
+                notes: "Prenotazione Ricevuta"
+            });
+
+            document.getElementById('agenda-date').value = date;
+            saveDB();
+            renderAll();
+            document.getElementById('import-modal').classList.remove('open');
+            showTab('agenda', document.querySelector('.nav-btn'));
+        }
+
+        // --- ESPORTAZIONE INDEX.HTML PER CLIENTI ---
+        function exportClientBookingPage() {
+            const servicesJson = JSON.stringify(db.services);
+            const configJson = JSON.stringify(db.config);
+            const existingBookingsJson = JSON.stringify(db.appointments.map(a => ({ date: a.date, time: a.time })));
+            const legalHtml = getLegalHtmlText().replace(/`/g, "'");
+
+            const clientHtml = `<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prenota Online - ${db.config.salonName}</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8fafc; margin: 0; padding: 16px 16px 80px; color: #0f172a; }
+.box { max-width: 490px; margin: 0 auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+.head { background: linear-gradient(135deg, #4f46e5, #ec4899); color: #fff; padding: 26px 20px; text-align: center; }
+.head h1 { margin: 0; font-size: 1.5rem; }
+.body { padding: 20px; }
+label.lbl { display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 6px; }
+input[type="text"], input[type="tel"] { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 1rem; margin-bottom: 14px; box-sizing: border-box; }
+.srv-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; cursor: pointer; }
+.calendar-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 14px; }
+.cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 700; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.cal-lbl { font-size: 0.75rem; font-weight: 700; color: #64748b; padding: 4px 0; }
+.cal-cell { padding: 8px 4px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; background: #fff; border: 1px solid transparent; }
+.cal-cell.disabled { opacity: 0.35; cursor: not-allowed; background: #e2e8f0; text-decoration: line-through; }
+.cal-cell.active { background: #4f46e5 !important; color: #fff !important; font-weight: 800; }
+.slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; padding: 8px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; margin-bottom: 14px; }
+.slot { padding: 9px 6px; text-align: center; border-radius: 8px; font-size: 0.86rem; font-weight: 700; cursor: pointer; border: 1px solid #e2e8f0; }
+.slot.free { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+.slot.free.selected { background: #4f46e5 !important; color: #fff !important; border-color: #3730a3; }
+.slot.busy { background: #fee2e2; border-color: #fecaca; color: #991b1b; cursor: not-allowed; opacity: 0.75; }
+.gdpr-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; margin-bottom: 16px; font-size: 0.83rem; line-height: 1.45; }
+.btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn { padding: 13px; border-radius: 12px; border: none; font-weight: 800; font-size: 0.98rem; cursor: pointer; text-align: center; color: #fff; }
+.btn-web { background: #0284c7; }
+.btn-wa { background: #25D366; }
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; padding: 16px; z-index: 1000; }
+.modal-box { background: #fff; max-width: 500px; width: 100%; border-radius: 16px; padding: 22px; max-height: 85vh; overflow-y: auto; font-size: 0.88rem; }
+.cookie-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1e1b4b; color: #fff; padding: 12px 16px; font-size: 0.82rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; z-index: 999; }
+.cookie-bar button { background: #ec4899; color: #fff; border: none; padding: 7px 12px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="head">
+    <h1>✂️ ${db.config.salonName}</h1>
+    <p style="margin:5px 0 0; opacity:0.9;">Disponibilità in Tempo Reale & Prenotazione</p>
+  </div>
+  <div class="body">
+    <label class="lbl">Il tuo Nome e Cognome *</label>
+    <input type="text" id="c-name" placeholder="Es. Maria Rossi">
+    <label class="lbl">Il tuo Telefono *</label>
+    <input type="tel" id="c-phone" placeholder="Es. 3331234567">
+    
+    <label class="lbl">Scegli i Servizi desiderati:</label>
+    <div id="srv-list" style="margin-bottom:14px;"></div>
+
+    <div class="calendar-box">
+      <div class="cal-head">
+        <button onclick="navMonth(-1)" style="border:1px solid #cbd5e1; background:#fff; padding:4px 8px; border-radius:6px; cursor:pointer;">&lt;</button>
+        <span id="cal-title">Mese</span>
+        <button onclick="navMonth(1)" style="border:1px solid #cbd5e1; background:#fff; padding:4px 8px; border-radius:6px; cursor:pointer;">&gt;</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <label class="lbl">Seleziona un orario tra quelli liberi (in verde):</label>
+    <div class="slots-grid" id="slots-grid"></div>
+
+    <div style="background:#f1f5f9; padding:12px; border-radius:10px; margin-bottom:14px; display:flex; justify-content:space-between; font-weight:700;">
+      <span>Totale Stimato:</span>
+      <span id="c-tot">€ 0,00</span>
+    </div>
+
+    <div class="gdpr-box">
+      <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+        <input type="checkbox" id="c-gdpr" checked style="width:18px; height:18px; margin-top:2px; flex-shrink:0;">
+        <span>Accetto l'<a href="javascript:void(0)" onclick="openLegal()" style="color:#4f46e5;font-weight:700;">Informativa Privacy (GDPR)</a> per la gestione dell'appuntamento. *</span>
+      </label>
+    </div>
+
+    <div class="btn-grid">
+      <button class="btn btn-web" onclick="submitBooking('web')">💻 Prenota via Web</button>
+      <button class="btn btn-wa" onclick="submitBooking('wa')">📲 Invia su WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<div class="cookie-bar" id="ck-bar">
+  <span>🍪 Questa pagina usa solo funzioni tecniche e <strong>zero cookie di profilazione</strong>.</span>
+  <button onclick="closeCookie()">OK</button>
+</div>
+
+<div class="modal-bg" id="legal-modal">
+  <div class="modal-box">
+    <h3 style="margin-top:0;">🛡️ Informativa Privacy & GDPR</h3>
+    <div>${legalHtml}</div>
+    <button onclick="closeLegal()" style="margin-top:14px; width:100%; padding:11px; background:#4f46e5; color:#fff; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Chiudi</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="success-modal">
+  <div class="modal-box" style="text-align:center;">
+    <div style="font-size:3rem; margin-bottom:10px;">🎉</div>
+    <h3 style="margin-top:0; color:#065f46;">Prenotazione Web Registrata!</h3>
+    <p id="success-details" style="color:#334155; line-height:1.5;"></p>
+    <button onclick="location.reload()" style="margin-top:14px; width:100%; padding:11px; background:#0284c7; color:#fff; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Ottimo, Grazie!</button>
+  </div>
+</div>
+
+<script>
+const services = ${servicesJson};
+const config = ${configJson};
+let busySlots = ${existingBookingsJson};
+
+let curDate = new Date();
+let selDate = new Date().toISOString().split('T')[0];
+let selTime = "";
+
+if (localStorage.getItem('ck_ok')) document.getElementById('ck-bar').style.display = 'none';
+function closeCookie() { localStorage.setItem('ck_ok', '1'); document.getElementById('ck-bar').style.display = 'none'; }
+function openLegal() { document.getElementById('legal-modal').style.display = 'flex'; }
+function closeLegal() { document.getElementById('legal-modal').style.display = 'none'; }
+
+// Listino
+document.getElementById('srv-list').innerHTML = services.map(s => \`
+  <label class="srv-item">
+    <span><input type="checkbox" value="\${s.name}" data-price="\${s.price}" onchange="calc()" style="margin-right:8px;"> \${s.name} (\${s.duration} min)</span>
+    <strong>€ \${s.price}</strong>
+  </label>
+\`).join('');
+
+function calc() {
+  let t = 0;
+  document.querySelectorAll('#srv-list input:checked').forEach(c => t += Number(c.dataset.price));
+  document.getElementById('c-tot').innerText = '€ ' + t.toFixed(2);
+  return t;
+}
+
+// Calendario
+function navMonth(d) { curDate.setMonth(curDate.getMonth() + d); renderCal(); }
+
+function renderCal() {
+  const grid = document.getElementById('cal-grid');
+  const y = curDate.getFullYear(), m = curDate.getMonth();
+  const names = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+  document.getElementById('cal-title').innerText = names[m] + ' ' + y;
+
+  let html = ["L","M","M","G","V","S","D"].map(l => \`<div class="cal-lbl">\${l}</div>\`).join('');
+  const first = (new Date(y, m, 1).getDay() + 6) % 7;
+  const days = new Date(y, m + 1, 0).getDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  for (let i = 0; i < first; i++) html += '<div></div>';
+  for (let d = 1; d <= days; d++) {
+    const dObj = new Date(y, m, d); dObj.setHours(0,0,0,0);
+    const dStr = \`\${y}-\${String(m+1).padStart(2,'0')}-\${String(d).padStart(2,'0')}\`;
+    const isPast = dObj < today;
+    const isSel = dStr === selDate;
+
+    if (isPast) {
+      html += \`<div class="cal-cell disabled">\${d}</div>\`;
+    } else {
+      html += \`<div class="cal-cell \${isSel ? 'active' : ''}" onclick="pickDate('\${dStr}')">\${d}</div>\`;
+    }
+  }
+  grid.innerHTML = html;
+  renderSlots();
+}
+
+function pickDate(dStr) { selDate = dStr; selTime = ""; renderCal(); }
+
+function renderSlots() {
+  const box = document.getElementById('slots-grid');
+  const [oH, oM] = (config.openTime || "09:00").split(':').map(Number);
+  const [cH, cM] = (config.closeTime || "19:00").split(':').map(Number);
+  const step = Number(config.slotMinutes || 30);
+  
+  let cur = oH * 60 + oM;
+  const end = cH * 60 + cM;
+  const slots = [];
+  while (cur < end) {
+    slots.push(\`\${String(Math.floor(cur/60)).padStart(2,'0')}:\${String(cur%60).padStart(2,'0')}\`);
+    cur += step;
+  }
+
+  const booked = busySlots.filter(b => b.date === selDate).map(b => b.time);
+
+  box.innerHTML = slots.map(t => {
+    const isBusy = booked.includes(t);
+    const isSel = t === selTime;
+    if (isBusy) {
+      return \`<div class="slot busy">🔴 \${t}<br><small>Occupato</small></div>\`;
+    } else {
+      return \`<div class="slot free \${isSel ? 'selected' : ''}" onclick="pickTime('\${t}')">🟢 \${t}<br><small>Libero</small></div>\`;
+    }
+  }).join('');
+}
+
+function pickTime(t) { selTime = t; renderSlots(); }
+
+function submitBooking(mode) {
+  const name = document.getElementById('c-name').value.trim();
+  const phone = document.getElementById('c-phone').value.trim();
+  const srvs = Array.from(document.querySelectorAll('#srv-list input:checked')).map(c => c.value);
+  const gdpr = document.getElementById('c-gdpr').checked;
+
+  if (!name) return alert('Inserisci il tuo Nome e Cognome!');
+  if (!phone) return alert('Inserisci il tuo Numero di Telefono!');
+  if (srvs.length === 0) return alert('Seleziona almeno un servizio dal listino!');
+  if (!selTime) return alert('Seleziona un orario tra quelli liberi in verde!');
+  if (!gdpr) return alert("Accetta l'Informativa Privacy per procedere!");
+
+  const isAlready = busySlots.some(b => b.date === selDate && b.time === selTime);
+  if (isAlready) return alert('Questo orario risulta già occupato. Selezionane un altro!');
+
+  const tot = calc();
+  const msg = \`PRENOTAZIONE SALONE\nCliente: \${name}\nTel: \${phone}\nData: \${selDate}\nOra: \${selTime}\nServizi: \${srvs.join(', ')}\nTotale: \${tot}\nCanale: \${mode === 'web' ? 'Web Diretto' : 'WhatsApp'}\nGDPR: Accettato (\${new Date().toISOString().split('T')[0]})\`;
+
+  busySlots.push({ date: selDate, time: selTime });
+
+  if (mode === 'web') {
+    document.getElementById('success-details').innerHTML = \`Grazie <strong>\${name}</strong>!<br>Il tuo appuntamento per <strong>\${srvs.join(' + ')}</strong> è fissato per il giorno <strong>\${selDate.split('-').reverse().join('/')}</strong> alle ore <strong>\${selTime}</strong>.<br><br>Totale indicativo: € \${tot.toFixed(2)}\`;
+    document.getElementById('success-modal').style.display = 'flex';
+  } else {
+    window.open('https://wa.me/' + config.ownerPhone.replace(/\D/g, '') + '?text=' + encodeURIComponent(msg), '_blank');
+  }
+}
+
+renderCal();
+<\/script>
+</body>
+</html>`;
+
+            const blob = new Blob([clientHtml], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'index.html';
+            a.click();
+        }
+
+        // --- IMPOSTAZIONI ---
+        function loadConfigUI() {
+            document.getElementById('cfg-name').value = db.config.salonName || "";
+            document.getElementById('cfg-owner').value = db.config.ownerName || "";
+            document.getElementById('cfg-address').value = db.config.address || "";
+            document.getElementById('cfg-vat').value = db.config.vat || "";
+            document.getElementById('cfg-email').value = db.config.email || "";
+            document.getElementById('cfg-phone').value = db.config.ownerPhone || "";
+            document.getElementById('cfg-open').value = db.config.openTime || "09:00";
+            document.getElementById('cfg-close').value = db.config.closeTime || "19:00";
+            document.getElementById('salon-name-badge').innerText = db.config.salonName;
+        }
+
+        function saveConfig() {
+            db.config.salonName = document.getElementById('cfg-name').value.trim() || "Il Mio Salone";
+            db.config.ownerName = document.getElementById('cfg-owner').value.trim() || "Titolare";
+            db.config.address = document.getElementById('cfg-address').value.trim() || "Sede Salone";
+            db.config.vat = document.getElementById('cfg-vat').value.trim() || "N/D";
+            db.config.email = document.getElementById('cfg-email').value.trim() || "N/D";
+            db.config.ownerPhone = document.getElementById('cfg-phone').value.trim() || "393330000000";
+            db.config.openTime = document.getElementById('cfg-open').value || "09:00";
+            db.config.closeTime = document.getElementById('cfg-close').value || "19:00";
+            saveDB();
+            loadConfigUI();
+            renderWebBookingPreview();
+            renderLegalDocs();
+            alert("Impostazioni e orari aggiornati!");
+        }
+
+        function getLegalHtmlText() {
+            const c = db.config;
+            return `
+                <h4>1. Titolare del Trattamento</h4>
+                <p>Il Titolare è <strong>${c.salonName}</strong> (${c.ownerName}), con sede in <strong>${c.address}</strong>, P.IVA <strong>${c.vat}</strong>, Tel: <strong>+${c.ownerPhone}</strong>, Email: <strong>${c.email}</strong>.</p>
+                <h4>2. Finalità e Base Giuridica</h4>
+                <p>I dati raccolti (Nome, Telefono, Servizi scelti) sono trattati esclusivamente per la prenotazione e gestione degli appuntamenti (Art. 6 GDPR) e la sicurezza dei trattamenti.</p>
+                <h4>3. Cookie Policy</h4>
+                <p>Nessun cookie di profilazione o tracciamento pubblicitario di terze parti viene utilizzato.</p>
+            `;
+        }
+
+        function renderLegalDocs() {
+            const html = getLegalHtmlText();
+            document.getElementById('legal-text-container').innerHTML = html;
+            document.getElementById('modal-legal-content').innerHTML = html;
+            const sel = document.getElementById('gdpr-select-client');
+            if (sel) {
+                sel.innerHTML = db.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            }
+        }
+
+        function openLegalPreviewModal() {
+            renderLegalDocs();
+            document.getElementById('legal-preview-modal').classList.add('open');
+        }
+
+        function signClientGdprInSalon() {
+            const cid = document.getElementById('gdpr-select-client').value;
+            const c = db.clients.find(x => x.id == cid);
+            if (!c) return;
+            c.gdprConsent = true;
+            c.gdprDate = todayStr(0);
+            saveDB();
+            alert(`Consenso registrato per ${c.name}!`);
+        }
+
+        function printPaperGdprForm() {
+            const w = window.open('', '_blank');
+            w.document.write(`<html><body><h2>Modulo GDPR - ${db.config.salonName}</h2>${getLegalHtmlText()}<script>window.print();<\/script></body></html>`);
+            w.document.close();
+        }
+
+        function exportBackup() {
+            const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'backup_salone_pro_v4.json';
+            a.click();
+        }
+
+        function importBackup(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    db = JSON.parse(ev.target.result);
+                    saveDB();
+                    loadConfigUI();
+                    renderAll();
+                    alert("Backup ripristinato!");
+                } catch (err) { alert("File non valido."); }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
