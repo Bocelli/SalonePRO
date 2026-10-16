@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Salone PRO</title>
-<meta name="description" content="Gestionale del salone: agenda, clienti, listino, magazzino e prenotazioni online.">
+<meta name="description" content="Salone PRO: gestisci il tuo salone in un click. Agenda, clienti, listino, magazzino e prenotazioni online.">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#fdfdfd" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#18181b" media="(prefers-color-scheme: dark)">
@@ -191,6 +191,27 @@
   .guide summary .ph { font-size: 1.25rem; color: var(--accent-text); }
   .guide ol { display: grid; gap: 10px; padding: 0 16px 16px 38px; font-size: .92rem; }
   .key { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); font-size: .86rem; font-weight: 600; white-space: nowrap; }
+
+  /* Guided setup */
+  .ob { max-width: 600px; }
+  .ob-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .ob-steps span { height: 4px; border-radius: 999px; background: var(--border); transition: background .25s var(--ease); }
+  .ob-steps span.on { background: var(--accent); }
+  .ob-count { margin: 8px 0 14px; }
+  .ob-count:empty { display: none; }
+  .ob-step h2 { font-size: 1.5rem; letter-spacing: -.02em; margin-bottom: 6px; }
+  .ob-step > .muted { margin-bottom: 18px; }
+  .ob-step .hint { margin-top: 14px; }
+  .ob-mark { width: 56px; height: 56px; margin-bottom: 18px; font-size: 1.6rem; }
+  .ob-claim { margin-bottom: 8px; font-size: 1.15rem; font-weight: 600; color: var(--accent-text); }
+  .ob-list { list-style: none; display: grid; gap: 10px; }
+  .ob-list li { display: flex; align-items: center; gap: 12px; font-size: .94rem; }
+  .ob-list .ph { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: var(--r-control); background: var(--accent-soft); color: var(--accent-text); font-size: 1.1rem; }
+  .ob-folders { margin-top: 4px; }
+  .ob .modal-foot { justify-content: flex-start; }
+  #ob-next { margin-left: auto; }
+  .ob-skip { display: block; margin: 14px auto 0; padding: 4px 8px; font: inherit; font-size: .88rem; color: var(--muted); background: none; border: 0; text-decoration: underline; cursor: pointer; }
+  #install-modal { z-index: 110; } /* the install guide opens on top of the guided setup */
 
   /* What's new */
   .news { display: grid; gap: 20px; }
@@ -512,7 +533,10 @@
             <div class="days" id="cfg-closed"></div>
             <span class="hint" style="margin-top:2px">Questi giorni non sono prenotabili online.</span>
           </div>
-          <div class="row-wrap"><button class="btn btn-primary" onclick="saveConfig()"><i class="ph ph-floppy-disk"></i>Salva impostazioni</button></div>
+          <div class="row-wrap">
+            <button class="btn btn-primary" onclick="saveConfig()"><i class="ph ph-floppy-disk"></i>Salva impostazioni</button>
+            <button class="btn btn-ghost" onclick="openOnboarding()"><i class="ph ph-magic-wand"></i>Configurazione guidata</button>
+          </div>
         </div>
 
         <div class="panel pad">
@@ -615,6 +639,81 @@
         </ol>
       </details>
     </div>
+  </div>
+</div>
+
+<!-- First installation: guided setup (also from Impostazioni) -->
+<div class="modal-backdrop" id="ob-modal" data-locked="1">
+  <div class="modal ob" role="dialog" aria-modal="true" aria-labelledby="ob-title">
+    <div class="ob-steps" id="ob-steps" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <p class="muted small ob-count" id="ob-count"></p>
+
+    <section class="ob-step" data-step="0">
+      <span class="brand-mark ob-mark" aria-hidden="true"><i class="ph ph-scissors"></i></span>
+      <h2 id="ob-title">Benvenuto in Salone PRO</h2>
+      <p class="ob-claim">Gestisci il tuo salone in un click.</p>
+      <p class="muted">In un paio di minuti prepariamo tutto: dati del salone, orari, listino e il link di prenotazione per le clienti.</p>
+      <ul class="ob-list">
+        <li><i class="ph ph-calendar-check"></i>Agenda a giorno, settimana e mese, con i promemoria delle clienti</li>
+        <li><i class="ph ph-globe-simple"></i>Prenotazioni online che arrivano da sole in agenda</li>
+        <li><i class="ph ph-whatsapp-logo"></i>Conferme e messaggi su WhatsApp con un tocco</li>
+        <li><i class="ph ph-wifi-slash"></i>Funziona anche quando manca internet</li>
+      </ul>
+    </section>
+
+    <section class="ob-step" data-step="1" hidden>
+      <h2>Il tuo salone</h2>
+      <p class="muted">Compaiono nella pagina di prenotazione e nell'informativa privacy.</p>
+      <div class="form-grid">
+        <div class="field span-2"><label for="ob-name">Nome del salone</label><input type="text" id="ob-name" placeholder="Es. Hair Studio Daniela" autocomplete="organization"></div>
+        <div class="field"><label for="ob-owner">Titolare</label><input type="text" id="ob-owner" placeholder="Nome e cognome" autocomplete="name"></div>
+        <div class="field"><label for="ob-phone">WhatsApp del salone</label><input type="tel" id="ob-phone" placeholder="39 333 123 4567" inputmode="tel"></div>
+        <div class="field span-2"><label for="ob-address">Indirizzo</label><input type="text" id="ob-address" placeholder="Es. Via Roma 1, Palermo" autocomplete="street-address"></div>
+      </div>
+      <p class="hint">Il numero WhatsApp serve per ricevere le richieste delle clienti. Puoi cambiare tutto in Impostazioni.</p>
+    </section>
+
+    <section class="ob-step" data-step="2" hidden>
+      <h2>Orari di apertura</h2>
+      <p class="muted">Le clienti possono prenotare online solo dentro questi orari.</p>
+      <div class="form-grid">
+        <div class="field"><label for="ob-open">Apertura</label><input type="time" id="ob-open"></div>
+        <div class="field"><label for="ob-close">Chiusura</label><input type="time" id="ob-close"></div>
+        <div class="field span-2"><label for="ob-slot">Intervallo degli orari online</label>
+          <select id="ob-slot"><option value="15">Ogni 15 minuti</option><option value="20">Ogni 20 minuti</option><option value="30">Ogni 30 minuti</option><option value="45">Ogni 45 minuti</option><option value="60">Ogni ora</option></select>
+        </div>
+      </div>
+      <div class="field" style="margin-top:16px">
+        <span class="label">Giorni di chiusura</span>
+        <div class="days" id="ob-closed"></div>
+      </div>
+    </section>
+
+    <section class="ob-step" data-step="3" hidden>
+      <h2>Il listino</h2>
+      <p class="muted" id="ob-srv-text"></p>
+      <div class="badges ob-folders" id="ob-folders"></div>
+      <p class="hint">Prezzi, durate e cartelle si cambiano quando vuoi da Listino servizi: le modifiche compaiono subito nella pagina di prenotazione.</p>
+    </section>
+
+    <section class="ob-step" data-step="4" hidden>
+      <h2>Tutto pronto</h2>
+      <p class="muted">Condividi questo link con le clienti: vedono gli orari liberi e prenotano da sole.</p>
+      <div class="link-row">
+        <input id="ob-link" readonly aria-label="Link pagina di prenotazione" onfocus="this.select()">
+        <button class="btn btn-primary" onclick="copyLink()"><i class="ph ph-copy"></i>Copia link</button>
+      </div>
+      <div class="row-wrap">
+        <a class="btn btn-outline" id="ob-share" target="_blank" rel="noopener"><i class="ph ph-whatsapp-logo"></i>Condividi su WhatsApp</a>
+        <button class="btn btn-outline" onclick="installApp()"><i class="ph ph-download-simple"></i>Installa l'app</button>
+      </div>
+    </section>
+
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="ob-back" onclick="obGo(-1)"><i class="ph ph-caret-left"></i>Indietro</button>
+      <button class="btn btn-primary" id="ob-next" onclick="obGo(1)"></button>
+    </div>
+    <button class="ob-skip" id="ob-skip" onclick="obFinish(true)">Lo faccio dopo</button>
   </div>
 </div>
 
@@ -867,13 +966,19 @@
     renderAll();
     updateOfflineBar();
     if (synced.length) warnClashes(synced);
-    if (first && newsSeen() !== NEWS[0].v) openNews();
-    if (first) maybeInstallBanner();
+    const onboarding = first && needsOnboarding();
+    if (onboarding) openOnboarding();
+    else if (first && newsSeen() !== NEWS[0].v) openNews();
+    if (first && !onboarding) maybeInstallBanner();
   }
 
   // ---------- Novità ----------
   // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
   const NEWS = [
+    { v: '1.4', date: '16 ottobre 2026', title: 'Configurazione guidata', items: [
+      ['ph-magic-wand', 'Alla prima installazione una configurazione guidata ti accompagna passo passo: dati del salone, orari, listino e link per le clienti.'],
+      ['ph-gear-six', 'Puoi riaprirla quando vuoi da Impostazioni, con il pulsante "Configurazione guidata".'],
+    ] },
     { v: '1.3', date: '16 ottobre 2026', title: 'Funziona anche senza internet', items: [
       ['ph-wifi-slash', "Senza rete il gestionale si apre lo stesso: vedi gli ultimi dati scaricati e puoi aggiungere o modificare appuntamenti."],
       ['ph-cloud-arrow-up', "Le modifiche fatte offline restano sul dispositivo e partono da sole quando torna la rete. Una barra in alto ti dice quante ne mancano."],
@@ -1628,6 +1733,81 @@
     renderAll();
   }
 
+  // ---------- Configurazione guidata (prima installazione) ----------
+  // Shown once per salon (flag saved in config), while the salon still has the default name.
+  const needsOnboarding = () => !db.config.onboarded && db.config.salonName === 'Il Mio Salone';
+  const OB_LAST = 4;
+  let obStep = 0;
+
+  function openOnboarding() {
+    const c = db.config;
+    $('ob-name').value = c.salonName === 'Il Mio Salone' ? '' : c.salonName || '';
+    $('ob-owner').value = c.ownerName === 'Titolare' ? '' : c.ownerName || '';
+    $('ob-phone').value = c.ownerPhone || '';
+    $('ob-address').value = c.address || '';
+    $('ob-open').value = c.openTime || '09:00';
+    $('ob-close').value = c.closeTime || '19:00';
+    $('ob-slot').value = String(c.slotMinutes || 30);
+    $('ob-closed').innerHTML = DAYS.map(([d, l]) => `<label class="chip"><input type="checkbox" value="${d}" ${(c.closedDays || []).includes(d) ? 'checked' : ''}>${l}</label>`).join('');
+    obShow(0);
+    openModal('ob-modal');
+  }
+
+  function obShow(n) {
+    obStep = n;
+    document.querySelectorAll('.ob-step').forEach((s) => { s.hidden = Number(s.dataset.step) !== n; });
+    document.querySelectorAll('#ob-steps span').forEach((s, i) => s.classList.toggle('on', i < n));
+    $('ob-steps').hidden = !n;
+    $('ob-count').textContent = n ? `Passo ${n} di ${OB_LAST}` : '';
+    $('ob-back').hidden = !n;
+    $('ob-skip').hidden = n === OB_LAST;
+    $('ob-next').innerHTML = n === 0 ? 'Iniziamo' : n === OB_LAST ? '<i class="ph ph-check"></i>Vai all’agenda' : 'Avanti<i class="ph ph-caret-right"></i>';
+    if (n === 3) {
+      const list = folders();
+      $('ob-srv-text').textContent = db.services.length
+        ? `Abbiamo preparato un listino di partenza con ${db.services.length} servizi in ${list.length} cartelle. Controlla i prezzi quando vuoi.`
+        : 'Il listino è vuoto: crea le cartelle (es. PIEGA) e aggiungi i servizi da Listino servizi.';
+      $('ob-folders').innerHTML = list.map((f) => `<span class="badge badge-accent"><i class="ph ph-folder"></i>${esc(f)}, ${db.services.filter((s) => catOf(s) === f).length}</span>`).join('');
+    }
+    if (n === OB_LAST) {
+      $('ob-link').value = $('public-link').value;
+      $('ob-share').href = $('share-wa').href;
+    }
+    $('ob-modal').querySelector('.modal').scrollTop = 0;
+  }
+
+  function obGo(dir) {
+    if (dir > 0 && obStep === 1 && !$('ob-name').value.trim()) return toast('Scrivi il nome del salone', 'error');
+    if (dir > 0 && obStep === 2) {
+      if (($('ob-open').value || '09:00') >= ($('ob-close').value || '19:00')) return toast("La chiusura deve essere dopo l'apertura", 'error');
+      Object.assign(db.config, {
+        salonName: $('ob-name').value.trim(),
+        ownerName: $('ob-owner').value.trim() || 'Titolare',
+        ownerPhone: $('ob-phone').value.trim(),
+        address: $('ob-address').value.trim(),
+        openTime: $('ob-open').value || '09:00',
+        closeTime: $('ob-close').value || '19:00',
+        slotMinutes: Number($('ob-slot').value),
+        closedDays: [...document.querySelectorAll('#ob-closed input:checked')].map((i) => Number(i.value)),
+      });
+      persist('config', { ...db.config, id: 1 });
+      loadConfigUI();
+      renderAll();
+    }
+    if (dir > 0 && obStep === OB_LAST) return obFinish(false);
+    obShow(obStep + dir);
+  }
+
+  function obFinish(skipped) {
+    db.config.onboarded = true;
+    persist('config', { ...db.config, id: 1 });
+    try { localStorage.setItem('sp_news', NEWS[0].v); } catch {} // a new salon does not need the changelog
+    closeModal('ob-modal');
+    showTab('agenda');
+    toast(skipped ? 'Puoi riprendere la configurazione guidata da Impostazioni' : 'Tutto pronto, buon lavoro!');
+    if (!skipped) maybeInstallBanner();
+  }
+
   function exportBackup() {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' }));
@@ -1669,7 +1849,7 @@
   function maybeInstallBanner() {
     let off;
     try { off = localStorage.getItem('sp_install_off'); } catch {}
-    if (isStandalone || off || (!installPrompt && !isIOS)) return;
+    if (isStandalone || off || (!installPrompt && !isIOS) || $('ob-modal').classList.contains('open')) return; // guided setup offers install at its last step
     $('ib-sub').innerHTML = installPrompt ? "Si apre a schermo intero, come un'app." : 'Tocca <i class="ph ph-export"></i> Condividi, poi "Aggiungi a Home".';
     $('ib-action').innerHTML = installPrompt ? '<i class="ph ph-download-simple"></i>Installa' : 'Come fare';
     $('install-banner').hidden = false;

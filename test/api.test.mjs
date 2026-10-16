@@ -48,16 +48,18 @@ test('admin API needs login', async () => {
 test('first run seeds config and price list', async () => {
   const r = await call(data, { cookie });
   assert.equal(r.status, 200);
-  assert.equal(r.body.services.length, 7);
+  assert.equal(r.body.services.length, 8);
+  assert.deepEqual(r.body.config.serviceFolders, ['PIEGA', 'TAGLIO', 'COLORE & TECNICI', 'TRATTAMENTI']);
+  assert.equal(r.body.config.onboarded, undefined); // a new salon gets the guided setup
   assert.deepEqual(r.body.config.closedDays, [0, 1]);
 });
 
 test('public booking: overlaps, hours, closed days', async () => {
-  assert.equal((await book({ time: '10:00', serviceIds: [5] })).status, 200); // 90 min -> 11:30
+  assert.equal((await book({ time: '10:00', serviceIds: [6] })).status, 200); // Balayage, 90 min -> 11:30
   assert.equal((await book({ time: '11:00' })).status, 409);
-  assert.equal((await book({ time: '09:30', serviceIds: [3] })).status, 409); // 09:30-10:30 overlaps
+  assert.equal((await book({ time: '09:30', serviceIds: [4] })).status, 409); // 09:30-10:30 overlaps
   assert.equal((await book({ time: '11:30' })).status, 200); // touching is fine
-  assert.equal((await book({ time: '18:30', serviceIds: [3] })).status, 400); // ends after 19:00
+  assert.equal((await book({ time: '18:30', serviceIds: [4] })).status, 400); // ends after 19:00
   assert.equal((await book({ time: '10:00', date: nextWeekday(0) })).status, 400); // Sunday closed
   assert.equal((await book({ time: '10:00', date: '2020-01-01' })).status, 400);
   assert.equal((await book({ time: '15:00', privacy: false })).status, 400);

@@ -59,6 +59,7 @@
 .ph.ph-signature:before { content: "\ebac"; }
 .ph.ph-printer:before { content: "\e3dc"; }
 .ph.ph-floppy-disk:before { content: "\e248"; }
+.ph.ph-magic-wand:before { content: "\e6b6"; }
 .ph.ph-download-simple:before { content: "\e20c"; }
 .ph.ph-upload-simple:before { content: "\e4c0"; }
 .ph.ph-question:before { content: "\e3e8"; }
@@ -72,6 +73,7 @@
 .ph.ph-android-logo:before { content: "\e008"; }
 .ph.ph-dots-three-vertical:before { content: "\e208"; }
 .ph.ph-desktop:before { content: "\e560"; }
+.ph.ph-calendar-check:before { content: "\e712"; }
 .ph.ph-chat-text:before { content: "\e17a"; }
 .ph.ph-lightning:before { content: "\e2de"; }
 .ph.ph-cloud-slash:before { content: "\e1b6"; }
@@ -89,7 +91,6 @@
 .ph.ph-trash:before { content: "\e4a6"; }
 .ph.ph-shield-warning:before { content: "\e412"; }
 .ph.ph-minus:before { content: "\e32a"; }
-.ph.ph-calendar-check:before { content: "\e712"; }
 .ph.ph-map-pin:before { content: "\e316"; }
 .ph.ph-caret-down:before { content: "\e136"; }
 .ph.ph-warning-circle:before { content: "\e4e2"; }

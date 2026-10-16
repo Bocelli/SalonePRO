@@ -8,14 +8,17 @@ export const DEFAULT_CONFIG = {
   openTime: '09:00', closeTime: '19:00', slotMinutes: 30, closedDays: [0, 1],
 };
 
+// Starting price list for a new salon (same folders as salone_pro_v9).
+const DEFAULT_FOLDERS = ['PIEGA', 'TAGLIO', 'COLORE & TECNICI', 'TRATTAMENTI'];
 const DEFAULT_SERVICES = [
-  { id: 1, name: 'Piega Classica', cat: 'Taglio & Piega', price: 18, duration: 30 },
-  { id: 2, name: 'Taglio Donna', cat: 'Taglio & Piega', price: 22, duration: 30 },
-  { id: 3, name: 'Taglio + Piega', cat: 'Taglio & Piega', price: 35, duration: 60 },
-  { id: 4, name: 'Colore Ricrescita', cat: 'Colore & Tecnici', price: 30, duration: 45 },
-  { id: 5, name: 'Balayage / Schiariture', cat: 'Colore & Tecnici', price: 65, duration: 90 },
-  { id: 6, name: 'Tonalizzante / Gloss', cat: 'Colore & Tecnici', price: 20, duration: 30 },
-  { id: 7, name: 'Trattamento Cheratina', cat: 'Trattamenti', price: 25, duration: 30 },
+  { id: 1, name: 'Piega Classica', cat: 'PIEGA', price: 18, duration: 30 },
+  { id: 2, name: 'Piega Onde / Glamour', cat: 'PIEGA', price: 22, duration: 40 },
+  { id: 3, name: 'Taglio Donna', cat: 'TAGLIO', price: 22, duration: 30 },
+  { id: 4, name: 'Taglio + Piega', cat: 'TAGLIO', price: 35, duration: 60 },
+  { id: 5, name: 'Colore Ricrescita', cat: 'COLORE & TECNICI', price: 30, duration: 45 },
+  { id: 6, name: 'Balayage / Schiariture', cat: 'COLORE & TECNICI', price: 65, duration: 90 },
+  { id: 7, name: 'Tonalizzante / Gloss', cat: 'COLORE & TECNICI', price: 20, duration: 30 },
+  { id: 8, name: 'Trattamento Cheratina', cat: 'TRATTAMENTI', price: 25, duration: 30 },
 ];
 
 export function fail(status, message) {
@@ -47,7 +50,7 @@ export async function db() {
     sql`INSERT INTO docs (col, id, data)
         SELECT 'services', (s->>'id')::bigint, s FROM jsonb_array_elements(${JSON.stringify(DEFAULT_SERVICES)}::jsonb) s
         WHERE NOT EXISTS (SELECT 1 FROM docs WHERE col = 'config')`,
-    sql`INSERT INTO docs (col, id, data) VALUES ('config', 1, ${JSON.stringify(DEFAULT_CONFIG)}::jsonb) ON CONFLICT DO NOTHING`,
+    sql`INSERT INTO docs (col, id, data) VALUES ('config', 1, ${JSON.stringify({ ...DEFAULT_CONFIG, serviceFolders: DEFAULT_FOLDERS })}::jsonb) ON CONFLICT DO NOTHING`,
   ]).catch((e) => { ready = undefined; throw e; });
   await ready;
   return sql;

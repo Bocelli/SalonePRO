@@ -4,6 +4,8 @@
 
 <h1 align="center">Salone PRO</h1>
 
+<h3 align="center">Gestisci il tuo salone in un click.</h3>
+
 <p align="center">
   Gestionale per parrucchieri con prenotazione online, promemoria su WhatsApp e funzionamento offline.<br>
   <sub>Salon management web app for hair salons: online booking, WhatsApp reminders, works offline. Italian UI.</sub>
@@ -51,6 +53,7 @@ Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel 
 - La cliente può mandare la richiesta su WhatsApp e il salone la inserisce in agenda incollando il messaggio.
 
 **App e offline**
+- Configurazione guidata alla prima installazione: dati del salone, orari, listino e link per le clienti in 4 passi.
 - PWA installabile su tablet, telefono e computer, con tema chiaro e scuro automatico.
 - Senza rete si apre lo stesso: le modifiche restano sul dispositivo e partono da sole al ritorno della connessione.
 
@@ -63,6 +66,8 @@ Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel 
 | ![Listino servizi a cartelle](docs/screenshots/listino.png) | ![Schede clienti con formule e consensi](docs/screenshots/clienti.png) |
 | **Prenotazione online** | **Tema scuro** |
 | ![Pagina di prenotazione per le clienti](docs/screenshots/prenota.png) | ![Agenda in tema scuro](docs/screenshots/agenda-dark.png) |
+| **Configurazione guidata** | **Dati del salone** |
+| ![Benvenuto della configurazione guidata](docs/screenshots/onboarding.png) | ![Primo passo: dati del salone](docs/screenshots/onboarding-salone.png) |
 
 <p align="center">
   <img src="docs/screenshots/mobile-agenda.png" width="260" alt="Agenda su telefono">
@@ -110,7 +115,7 @@ legacy/            la versione originale in un solo file HTML (v6)
 1. **Deploy:** usa il pulsante qui sopra, oppure importa il repository su [vercel.com/new](https://vercel.com/new) con Framework Preset **Other**.
 2. **Password:** imposta `ADMIN_PASSWORD` (almeno 10 caratteri, meglio una frase lunga) tra le Environment Variables.
 3. **Database:** nel progetto apri **Storage > Create Database > Neon**, piano Free, regione **Frankfurt**, e collegalo al progetto. Vercel aggiunge `DATABASE_URL` da solo.
-4. **Redeploy**, poi entra nel gestionale e compila **Impostazioni & dati**: nome del salone, numero WhatsApp, orari e giorni di chiusura.
+4. **Redeploy**, poi entra nel gestionale con la password: parte la **configurazione guidata** (nome del salone, WhatsApp, orari, giorni di chiusura, listino e link per le clienti). Si può saltare e riaprire da **Impostazioni & dati**.
 
 Le funzioni girano a Francoforte (`vercel.json`) e il database va creato a Francoforte, così i dati restano in Unione Europea.
 
