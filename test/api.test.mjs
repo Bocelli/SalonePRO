@@ -156,3 +156,17 @@ test('price-list folders: validated, public, restored from v9 backups', async ()
   assert.equal(all.appointments[0].reminderSent, true);
   assert.equal(all.appointments[0].end, '10:30');
 });
+
+test('missing Vercel setup returns a hint, not a crash', async () => {
+  const url = process.env.DATABASE_URL, pw = process.env.ADMIN_PASSWORD;
+  delete process.env.DATABASE_URL;
+  const noDb = await call(pub);
+  assert.equal(noDb.status, 503);
+  assert.equal(noDb.body.setup, 'database');
+  process.env.DATABASE_URL = url;
+
+  process.env.ADMIN_PASSWORD = 'corta';
+  assert.equal((await call(data)).body.setup, 'password');
+  assert.equal((await call(login, { method: 'POST', ip: '5.5.5.5', body: { password: 'corta' } })).body.setup, 'password');
+  process.env.ADMIN_PASSWORD = pw;
+});

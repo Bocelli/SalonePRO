@@ -77,11 +77,13 @@
 .ph.ph-chat-text:before { content: "\e17a"; }
 .ph.ph-lightning:before { content: "\e2de"; }
 .ph.ph-cloud-slash:before { content: "\e1b6"; }
+.ph.ph-link:before { content: "\e2e2"; }
+.ph.ph-lock-simple:before { content: "\e308"; }
+.ph.ph-lifebuoy:before { content: "\e63a"; }
 .ph.ph-cloud-arrow-up:before { content: "\e1ae"; }
 .ph.ph-warning-octagon:before { content: "\e4e4"; }
 .ph.ph-megaphone:before { content: "\e324"; }
 .ph.ph-pencil-simple:before { content: "\e3b4"; }
-.ph.ph-lock-simple:before { content: "\e308"; }
 .ph.ph-cloud-check:before { content: "\e1b0"; }
 .ph.ph-clock:before { content: "\e19a"; }
 .ph.ph-warning:before { content: "\e4e0"; }

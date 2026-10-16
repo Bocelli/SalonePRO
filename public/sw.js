@@ -1,6 +1,8 @@
 // Offline support: pages and assets are network-first with a cache fallback, so updates arrive at once when online.
 // The API is never cached here: the admin app keeps its own data copy and change queue (see offline.js).
-const CACHE = 'salone-pro-v1';
+const CACHE = 'salone-pro-v2';
+// Admin sections share one page (see vercel.json rewrites): offline they all open the cached "/".
+const SECTIONS = /^\/(agenda|listino|clienti|magazzino|prenotazione-web|privacy|impostazioni)\/?$/;
 const SHELL = ['/', '/base.css', '/common.js', '/offline.js', '/vendor/phosphor.css', '/vendor/phosphor.woff2', '/vendor/geist.woff2', '/manifest.webmanifest', '/favicon.svg', '/icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {
@@ -24,5 +26,5 @@ self.addEventListener('fetch', (e) => {
       }
       return res;
     })
-    .catch(() => caches.match(e.request, { ignoreSearch: true }).then((hit) => hit || Response.error())));
+    .catch(() => caches.match(SECTIONS.test(url.pathname) ? '/' : e.request, { ignoreSearch: true }).then((hit) => hit || Response.error())));
 });

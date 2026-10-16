@@ -28,7 +28,9 @@ Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel 
 
 | Indirizzo | Cosa c'è |
 |---|---|
-| `/` | Gestionale del salone, protetto da password e installabile come app |
+| `/` | Gestionale del salone (agenda), protetto da password e installabile come app |
+| `/listino` `/clienti` `/magazzino` | Sezioni del gestionale, ognuna con il suo link |
+| `/prenotazione-web` `/privacy` `/impostazioni` | Link per le clienti, privacy e GDPR, impostazioni e backup |
 | `/prenota` | Pagina pubblica di prenotazione da condividere con le clienti |
 
 ## Funzioni
@@ -115,7 +117,7 @@ legacy/            la versione originale in un solo file HTML (v6)
 1. **Deploy:** usa il pulsante qui sopra, oppure importa il repository su [vercel.com/new](https://vercel.com/new) con Framework Preset **Other**.
 2. **Password:** imposta `ADMIN_PASSWORD` (almeno 10 caratteri, meglio una frase lunga) tra le Environment Variables.
 3. **Database:** nel progetto apri **Storage > Create Database > Neon**, piano Free, regione **Frankfurt**, e collegalo al progetto. Vercel aggiunge `DATABASE_URL` da solo.
-4. **Redeploy**, poi entra nel gestionale con la password: parte la **configurazione guidata** (nome del salone, WhatsApp, orari, giorni di chiusura, listino e link per le clienti). Si può saltare e riaprire da **Impostazioni & dati**.
+4. **Redeploy**, poi entra nel gestionale con la password (se manca qualcosa, una schermata spiega cosa fare): parte la **configurazione guidata** (nome del salone, WhatsApp, orari, giorni di chiusura, listino e link per le clienti). Si può saltare e riaprire da **Impostazioni & dati**.
 
 Le funzioni girano a Francoforte (`vercel.json`) e il database va creato a Francoforte, così i dati restano in Unione Europea.
 

@@ -21,8 +21,9 @@ const DEFAULT_SERVICES = [
   { id: 8, name: 'Trattamento Cheratina', cat: 'TRATTAMENTI', price: 25, duration: 30 },
 ];
 
-export function fail(status, message) {
-  throw Object.assign(new Error(message), { status });
+// `setup` ('database' | 'password') tells the pages that Vercel is not configured yet, so they can explain how to fix it.
+export function fail(status, message, setup) {
+  throw Object.assign(new Error(message), { status, setup });
 }
 
 // Wraps a Vercel handler: every thrown error becomes a JSON response, never an HTML crash page.
@@ -32,14 +33,14 @@ export const handle = (fn) => async (req, res) => {
   } catch (e) {
     if (!e.status) console.error(e);
     const status = e.status || (e.code === '23505' ? 400 : 500);
-    res.status(status).json({ error: e.status ? e.message : e.code === '23505' ? 'Dati duplicati (ID già presenti)' : 'Errore del server, riprova' });
+    res.status(status).json({ error: e.status ? e.message : e.code === '23505' ? 'Dati duplicati (ID già presenti)' : 'Errore del server, riprova', setup: e.setup });
   }
 };
 
 let ready;
 export async function db() {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) fail(500, 'Database non collegato: aggiungi Neon dal tab Storage del progetto Vercel');
+  if (!url) fail(503, 'Database non collegato: aggiungi Neon dal tab Storage del progetto Vercel', 'database');
   const sql = neon(url);
   ready ??= sql.transaction([
     sql`CREATE TABLE IF NOT EXISTS docs (col text NOT NULL, id bigint NOT NULL, data jsonb NOT NULL, PRIMARY KEY (col, id))`,
@@ -108,8 +109,12 @@ const COOKIE = 'sp_session';
 const MAX_AGE = 30 * 86400;
 export const CLEAR_COOKIE = `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
 
+const requirePasswordSet = () => {
+  if ((process.env.ADMIN_PASSWORD || '').length < 10) fail(503, 'Imposta ADMIN_PASSWORD (almeno 10 caratteri) nelle variabili d\'ambiente Vercel', 'password');
+};
+
 export function checkPassword(pw) {
-  if ((process.env.ADMIN_PASSWORD || '').length < 10) fail(500, 'Imposta ADMIN_PASSWORD (almeno 10 caratteri) nelle variabili d\'ambiente Vercel');
+  requirePasswordSet();
   return typeof pw === 'string' && same(sign('pw:' + pw), sign('pw:' + process.env.ADMIN_PASSWORD));
 }
 
@@ -124,7 +129,8 @@ export function sessionCookie(epoch) {
 }
 
 export async function requireAdmin(req, sql) {
+  requirePasswordSet();
   const m = new RegExp(`(?:^|;\\s*)${COOKIE}=(\\d+)\\.(\\d+)\\.([\\w-]+)`).exec(req.headers.cookie || '');
-  if (!process.env.ADMIN_PASSWORD || !m || Number(m[1]) < Date.now() || !same(m[3], sign(`${m[1]}.${m[2]}`))
+  if (!m || Number(m[1]) < Date.now() || !same(m[3], sign(`${m[1]}.${m[2]}`))
     || Number(m[2]) !== await sessionEpoch(sql)) fail(401, 'Accesso richiesto');
 }

@@ -3,6 +3,9 @@
   "outputDirectory": "public",
   "cleanUrls": true,
   "regions": ["fra1"],
+  "rewrites": [
+    { "source": "/:section(agenda|listino|clienti|magazzino|prenotazione-web|privacy|impostazioni)", "destination": "/" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

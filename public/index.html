@@ -20,6 +20,10 @@
 <link rel="stylesheet" href="/base.css">
 <style>
   .app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100dvh; }
+  body:not(.ready) .app, body:not(.ready) .install-banner { visibility: hidden; }
+  .boot { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--bg); }
+  body.ready .boot { display: none; }
+  .boot .brand-mark { width: 56px; height: 56px; font-size: 1.6rem; animation: fade .6s var(--ease) both .15s; }
 
   /* Sidebar (desktop + landscape tablet) */
   .sidebar { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; gap: 24px; padding: 20px 14px; background: var(--surface); border-right: 1px solid var(--border); }
@@ -30,7 +34,7 @@
   .nav { display: flex; flex-direction: column; gap: 2px; }
   .nav-sep { height: 1px; background: var(--border); margin: 10px 12px; }
   .nav-bottom { margin-top: auto; }
-  .nav-item { font: inherit; font-size: .93rem; font-weight: 550; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: 0; border-radius: var(--r-control); background: transparent; color: var(--muted); cursor: pointer; text-align: left; transition: background .16s var(--ease), color .16s var(--ease); }
+  .nav-item { font: inherit; font-size: .93rem; font-weight: 550; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: 0; border-radius: var(--r-control); background: transparent; color: var(--muted); cursor: pointer; text-align: left; text-decoration: none; transition: background .16s var(--ease), color .16s var(--ease); }
   .nav-item .ph { font-size: 1.25rem; }
   .nav-item:hover { background: var(--surface-2); color: var(--text); }
   .nav-item.active { background: var(--accent-soft); color: var(--accent-text); }
@@ -242,14 +246,18 @@
   .phone-frame iframe { width: 100%; height: 720px; border: 1px solid var(--border); border-radius: 28px; background: var(--bg); box-shadow: var(--shadow); }
 
   /* Login */
-  #login { background: var(--bg); }
+  #login, #setup { background: var(--bg); }
+  .setup-card { max-width: 540px; display: flex; flex-direction: column; gap: 16px; }
+  .setup-card h2 { margin-bottom: 4px; }
+  .setup-steps { display: grid; gap: 10px; padding-left: 22px; font-size: .94rem; line-height: 1.5; }
+  .setup-steps code { padding: 1px 6px; border-radius: 6px; background: var(--surface-2); font-size: .86em; }
   .login-card { max-width: 380px; display: flex; flex-direction: column; gap: 14px; }
   .login-card .brand-mark { width: 44px; height: 44px; font-size: 1.25rem; }
   .error-text { min-height: 1.3em; color: var(--danger); font-size: .88rem; }
 
   /* Bottom tab bar (phones + portrait tablets) */
   .tabbar { display: none; }
-  .tab { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border: 0; border-radius: var(--r-control); background: none; color: var(--muted); font-size: .7rem; font-weight: 600; cursor: pointer; }
+  .tab { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border: 0; border-radius: var(--r-control); background: none; color: var(--muted); font-size: .7rem; font-weight: 600; cursor: pointer; text-decoration: none; }
   .tab .ph { font-size: 1.45rem; }
   .tab.active { color: var(--accent-text); }
 
@@ -309,6 +317,8 @@
 </style>
 </head>
 <body>
+<!-- Boot screen: covers the app until we know whether the session is valid, so nothing shows before login -->
+<div class="boot" aria-hidden="true"><span class="brand-mark"><i class="ph ph-scissors"></i></span></div>
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
@@ -316,14 +326,14 @@
       <div><strong>Salone PRO</strong><small id="brand-salon">&nbsp;</small></div>
     </div>
     <nav class="nav" aria-label="Sezioni">
-      <button class="nav-item active" data-tab="agenda"><i class="ph ph-calendar-blank"></i>Agenda</button>
-      <button class="nav-item" data-tab="listino"><i class="ph ph-scissors"></i>Listino servizi</button>
-      <button class="nav-item" data-tab="clienti"><i class="ph ph-users"></i>Schede clienti</button>
-      <button class="nav-item" data-tab="magazzino"><i class="ph ph-package"></i>Magazzino</button>
+      <a class="nav-item active" href="/" data-tab="agenda"><i class="ph ph-calendar-blank"></i>Agenda</a>
+      <a class="nav-item" href="/listino" data-tab="listino"><i class="ph ph-scissors"></i>Listino servizi</a>
+      <a class="nav-item" href="/clienti" data-tab="clienti"><i class="ph ph-users"></i>Schede clienti</a>
+      <a class="nav-item" href="/magazzino" data-tab="magazzino"><i class="ph ph-package"></i>Magazzino</a>
       <div class="nav-sep"></div>
-      <button class="nav-item" data-tab="webbooking"><i class="ph ph-globe-simple"></i>Prenotazione web</button>
-      <button class="nav-item" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</button>
-      <button class="nav-item" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</button>
+      <a class="nav-item" href="/prenotazione-web" data-tab="webbooking"><i class="ph ph-globe-simple"></i>Prenotazione web</a>
+      <a class="nav-item" href="/privacy" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</a>
+      <a class="nav-item" href="/impostazioni" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</a>
     </nav>
     <button class="nav-item nav-bottom" onclick="openNews()"><i class="ph ph-sparkle"></i>Novità</button>
   </aside>
@@ -571,10 +581,10 @@
   </main>
 
   <nav class="tabbar" aria-label="Sezioni">
-    <button class="tab active" data-tab="agenda"><i class="ph ph-calendar-blank"></i>Agenda</button>
-    <button class="tab" data-tab="listino"><i class="ph ph-scissors"></i>Listino</button>
-    <button class="tab" data-tab="clienti"><i class="ph ph-users"></i>Clienti</button>
-    <button class="tab" data-tab="magazzino"><i class="ph ph-package"></i>Magazzino</button>
+    <a class="tab active" href="/" data-tab="agenda"><i class="ph ph-calendar-blank"></i>Agenda</a>
+    <a class="tab" href="/listino" data-tab="listino"><i class="ph ph-scissors"></i>Listino</a>
+    <a class="tab" href="/clienti" data-tab="clienti"><i class="ph ph-users"></i>Clienti</a>
+    <a class="tab" href="/magazzino" data-tab="magazzino"><i class="ph ph-package"></i>Magazzino</a>
     <button class="tab" id="more-btn" onclick="openModal('more-sheet')"><i class="ph ph-dots-three-outline"></i>Altro</button>
   </nav>
 </div>
@@ -583,9 +593,9 @@
 <div class="modal-backdrop" id="more-sheet">
   <div class="modal" role="dialog" aria-modal="true" aria-label="Altre sezioni">
     <nav class="nav">
-      <button class="nav-item" data-tab="webbooking"><i class="ph ph-globe-simple"></i>Prenotazione web</button>
-      <button class="nav-item" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</button>
-      <button class="nav-item" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</button>
+      <a class="nav-item" href="/prenotazione-web" data-tab="webbooking"><i class="ph ph-globe-simple"></i>Prenotazione web</a>
+      <a class="nav-item" href="/privacy" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</a>
+      <a class="nav-item" href="/impostazioni" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</a>
       <button class="nav-item" onclick="openNews()"><i class="ph ph-sparkle"></i>Novità</button>
     </nav>
   </div>
@@ -818,6 +828,22 @@
   </div>
 </div>
 
+<!-- Setup missing on Vercel (database or password): explains what to do instead of an error -->
+<div class="modal-backdrop" id="setup" data-locked="1">
+  <div class="modal setup-card" role="dialog" aria-modal="true" aria-labelledby="setup-title">
+    <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors"></i></span>
+    <div>
+      <h2 id="setup-title"></h2>
+      <p class="muted" id="setup-text"></p>
+    </div>
+    <ol class="setup-steps" id="setup-steps"></ol>
+    <div class="modal-foot">
+      <a class="btn btn-outline" href="https://vercel.com/dashboard" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Apri Vercel</a>
+      <button class="btn btn-primary" onclick="location.reload()"><i class="ph ph-arrow-clockwise"></i>Ho fatto, riprova</button>
+    </div>
+  </div>
+</div>
+
 <!-- Login -->
 <div class="modal-backdrop" id="login" data-locked="1">
   <form class="modal login-card" onsubmit="login(event)">
@@ -865,7 +891,7 @@
     offline = false;
     const data = await r.json().catch(() => ({}));
     if (r.status === 401) { openModal('login'); throw Object.assign(new Error('Sessione scaduta, accedi di nuovo'), { status: 401 }); }
-    if (!r.ok) throw Object.assign(new Error(data.error || 'Errore ' + r.status), { status: r.status });
+    if (!r.ok) throw Object.assign(new Error(data.error || 'Errore ' + r.status), { status: r.status, setup: data.setup });
     return data;
   }
 
@@ -950,7 +976,9 @@
       if (!loaded && isNetwork(e) && (fresh = readJSON('sp_cache'))) {
         // start offline from the copy saved on this device (queued changes are already inside it)
       } else {
+        if (e.setup) return showSetup(e.setup);
         if (!loaded && !$('login').classList.contains('open')) {
+          document.body.classList.add('ready'); // show the app only to explain the problem
           $('agenda-list').innerHTML = isNetwork(e)
             ? empty('ph-wifi-slash', 'Sei offline', 'Su questo dispositivo non ci sono ancora dati salvati: collegati a internet una volta per usarlo anche offline.', '<button class="btn btn-outline btn-sm" onclick="reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button>')
             : empty('ph-cloud-slash', 'Impossibile caricare i dati', esc(e.message), '<button class="btn btn-outline btn-sm" onclick="reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button>');
@@ -964,6 +992,7 @@
     const first = !loaded;
     if (first) { loaded = true; loadConfigUI(); }
     renderAll();
+    document.body.classList.add('ready');
     updateOfflineBar();
     if (synced.length) warnClashes(synced);
     const onboarding = first && needsOnboarding();
@@ -975,6 +1004,11 @@
   // ---------- Novità ----------
   // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
   const NEWS = [
+    { v: '1.5', date: '16 ottobre 2026', title: 'Ogni sezione ha il suo indirizzo', items: [
+      ['ph-link', 'Agenda, clienti, listino e le altre sezioni hanno un indirizzo proprio (es. /clienti): aggiornando la pagina resti dove sei, Indietro funziona e puoi salvarle nei preferiti.'],
+      ['ph-lock-simple', "All'apertura il gestionale resta nascosto finché l'accesso non è verificato."],
+      ['ph-lifebuoy', 'Se su Vercel mancano il database o la password, una schermata spiega passo passo come sistemare.'],
+    ] },
     { v: '1.4', date: '16 ottobre 2026', title: 'Configurazione guidata', items: [
       ['ph-magic-wand', 'Alla prima installazione una configurazione guidata ti accompagna passo passo: dati del salone, orari, listino e link per le clienti.'],
       ['ph-gear-six', 'Puoi riaprirla quando vuoi da Impostazioni, con il pulsante "Configurazione guidata".'],
@@ -1028,6 +1062,37 @@
     try { localStorage.setItem('sp_news', NEWS[0].v); } catch {}
   }
 
+  // ---------- Setup missing on Vercel ----------
+  const SETUP = {
+    database: {
+      title: 'Collega il database',
+      text: 'Il sito è online ma non ha ancora un database dove salvare agenda e clienti. Si collega gratis in un paio di minuti:',
+      steps: [
+        'Apri il progetto su <strong>vercel.com</strong> e vai nel tab <strong>Storage</strong>.',
+        'Premi <strong>Create Database</strong> e scegli <strong>Neon</strong>, piano <strong>Free</strong>, regione <strong>Frankfurt</strong>.',
+        'Collegalo a questo progetto per tutti gli ambienti: Vercel aggiunge da solo <code>DATABASE_URL</code>.',
+        "Vai in <strong>Deployments</strong>, apri il menu dell'ultimo deploy e scegli <strong>Redeploy</strong>.",
+      ],
+    },
+    password: {
+      title: 'Imposta la password',
+      text: 'Il gestionale non ha ancora una password di accesso. Si imposta su Vercel:',
+      steps: [
+        'Apri il progetto su <strong>vercel.com</strong>, poi <strong>Settings &gt; Environment Variables</strong>.',
+        'Aggiungi <code>ADMIN_PASSWORD</code> con almeno 10 caratteri: meglio una frase lunga che solo tu conosci.',
+        "Vai in <strong>Deployments</strong> e fai <strong>Redeploy</strong> dell'ultimo deploy.",
+      ],
+    },
+  };
+  function showSetup(kind) {
+    const s = SETUP[kind] || SETUP.database;
+    $('setup-title').textContent = s.title;
+    $('setup-text').textContent = s.text;
+    $('setup-steps').innerHTML = s.steps.map((t) => `<li>${t}</li>`).join('');
+    closeModal('login');
+    openModal('setup');
+  }
+
   async function login(e) {
     e.preventDefault();
     const btn = e.submitter;
@@ -1036,6 +1101,7 @@
     try {
       const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('login-pw').value }) });
       const d = await r.json().catch(() => ({}));
+      if (d.setup) return showSetup(d.setup);
       if (!r.ok) throw new Error(d.error || 'Accesso non riuscito');
       $('login-pw').value = '';
       closeModal('login');
@@ -1068,20 +1134,31 @@
   window.addEventListener('offline', () => { offline = true; updateOfflineBar(); });
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 
-  // ---------- Navigation ----------
-  function showTab(tab) {
+  // ---------- Navigation: one address per section (rewritten to this page in vercel.json) ----------
+  const ROUTES = { agenda: '/', listino: '/listino', clienti: '/clienti', magazzino: '/magazzino', webbooking: '/prenotazione-web', gdpr: '/privacy', backup: '/impostazioni' };
+  function tabFromPath() {
+    const path = location.pathname.replace(/\/$/, '') || '/';
+    return Object.keys(ROUTES).find((t) => ROUTES[t] === path) || 'agenda'; // "/agenda" and unknown paths open the agenda
+  }
+
+  function showTab(tab, push = true) {
     document.querySelectorAll('.section').forEach((s) => s.classList.toggle('active', s.id === 'tab-' + tab));
     document.querySelectorAll('.nav-item[data-tab], .tab[data-tab]').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
     $('more-btn').classList.toggle('active', ['webbooking', 'gdpr', 'backup'].includes(tab));
     $('page-title').textContent = TITLES[tab];
+    document.title = tab === 'agenda' ? 'Salone PRO' : `${TITLES[tab]} · Salone PRO`;
+    if (push && location.pathname !== ROUTES[tab]) history.pushState(null, '', ROUTES[tab]);
     closeModal('more-sheet');
     window.scrollTo(0, 0);
     if (tab === 'webbooking') $('preview-frame').src = '/prenota';
   }
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-tab]');
-    if (b) showTab(b.dataset.tab);
+    if (!b || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; // let ctrl/cmd-click open the section in a new tab
+    e.preventDefault();
+    showTab(b.dataset.tab);
   });
+  window.addEventListener('popstate', () => showTab(tabFromPath(), false));
 
   function renderAll() {
     renderAgenda();
@@ -1887,6 +1964,7 @@
   $('agenda-day').textContent = cap(dayLabel(todayStr()));
   $('agenda-list').innerHTML = Array.from({ length: 3 }, () =>
     '<div class="sk-row"><div class="skeleton" style="height:36px"></div><div style="display:grid;gap:8px"><div class="skeleton" style="height:16px;width:40%"></div><div class="skeleton" style="height:14px;width:65%"></div></div></div>').join('');
+  showTab(tabFromPath(), false);
   reload();
 </script>
 </body>

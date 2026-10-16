@@ -231,7 +231,7 @@
   async function fetchDay(date) {
     const r = await fetch('/api/public' + (date ? '?date=' + date : ''));
     const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(d.error || 'Prenotazione online non disponibile');
+    if (!r.ok) throw Object.assign(new Error(d.error || 'Prenotazione online non disponibile'), { setup: d.setup });
     ({ config: cfg, services, busy, now } = d);
   }
 
@@ -239,7 +239,10 @@
     try {
       await fetchDay();
     } catch (e) {
-      $('app').innerHTML = `<section class="block down" style="grid-column:1/-1"><i class="ph ph-cloud-slash"></i><h2>Prenotazione online non disponibile</h2><p class="muted">${esc(e.message)}. Riprova tra poco.</p><button class="btn btn-outline" onclick="location.reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button></section>`;
+      // Not configured yet on Vercel: clients get a plain message, the owner a pointer to the admin page that explains the fix.
+      $('app').innerHTML = e.setup
+        ? `<section class="block down" style="grid-column:1/-1"><i class="ph ph-calendar-blank"></i><h2>Prenotazioni online non ancora attive</h2><p class="muted">Per prenotare contatta direttamente il salone. Torna a trovarci presto!</p><p class="muted small">Sei il titolare? <a href="/">Apri il gestionale</a> per completare la configurazione.</p></section>`
+        : `<section class="block down" style="grid-column:1/-1"><i class="ph ph-cloud-slash"></i><h2>Prenotazione online non disponibile</h2><p class="muted">${esc(e.message)}. Riprova tra poco.</p><button class="btn btn-outline" onclick="location.reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button></section>`;
       return;
     }
     document.title = 'Prenota da ' + cfg.salonName;
