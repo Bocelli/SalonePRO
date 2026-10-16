@@ -38,7 +38,8 @@ export default handle(async (req, res) => {
     if (typeof b.config !== 'object' || !b.config || COLS.slice(1).some((c) => b[c] !== undefined && !Array.isArray(b[c]))) {
       fail(400, 'Backup non valido');
     }
-    const rows = [{ col: 'config', id: 1, data: checkConfig({ ...DEFAULT_CONFIG, ...b.config, id: 1 }) }];
+    // v9 backups keep the folder list next to config, not inside it
+    const rows = [{ col: 'config', id: 1, data: checkConfig({ serviceFolders: b.serviceFolders, ...DEFAULT_CONFIG, ...b.config, id: 1 }) }];
     for (const col of COLS.slice(1)) {
       for (const item of b[col] || []) {
         if (!Number.isSafeInteger(item?.id)) fail(400, `Backup non valido: elemento senza id in "${col}"`);

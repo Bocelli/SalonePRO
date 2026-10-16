@@ -32,6 +32,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.ph.ph-folder:before { content: "\e24a"; }
 .ph.ph-scissors:before { content: "\eae0"; }
 .ph.ph-calendar-blank:before { content: "\e10a"; }
 .ph.ph-users:before { content: "\e4d6"; }
@@ -43,9 +44,11 @@
 .ph.ph-plus:before { content: "\e3d4"; }
 .ph.ph-caret-left:before { content: "\e138"; }
 .ph.ph-caret-right:before { content: "\e13a"; }
+.ph.ph-bell-ringing:before { content: "\e5e8"; }
 .ph.ph-clipboard-text:before { content: "\e198"; }
 .ph.ph-plus-circle:before { content: "\e3d6"; }
 .ph.ph-check:before { content: "\e182"; }
+.ph.ph-folder-plus:before { content: "\e258"; }
 .ph.ph-user-plus:before { content: "\e4d0"; }
 .ph.ph-magnifying-glass:before { content: "\e30c"; }
 .ph.ph-copy:before { content: "\e1ca"; }
@@ -67,21 +70,24 @@
 .ph.ph-android-logo:before { content: "\e008"; }
 .ph.ph-dots-three-vertical:before { content: "\e208"; }
 .ph.ph-desktop:before { content: "\e560"; }
+.ph.ph-chat-text:before { content: "\e17a"; }
 .ph.ph-lightning:before { content: "\e2de"; }
 .ph.ph-cloud-slash:before { content: "\e1b6"; }
 .ph.ph-arrow-clockwise:before { content: "\e036"; }
+.ph.ph-megaphone:before { content: "\e324"; }
+.ph.ph-pencil-simple:before { content: "\e3b4"; }
 .ph.ph-lock-simple:before { content: "\e308"; }
 .ph.ph-cloud-check:before { content: "\e1b0"; }
 .ph.ph-clock:before { content: "\e19a"; }
 .ph.ph-warning:before { content: "\e4e0"; }
-.ph.ph-chat-text:before { content: "\e17a"; }
+.ph.ph-bell:before { content: "\e0ce"; }
 .ph.ph-note:before { content: "\e348"; }
 .ph.ph-palette:before { content: "\e6c8"; }
-.ph.ph-pencil-simple:before { content: "\e3b4"; }
 .ph.ph-trash:before { content: "\e4a6"; }
 .ph.ph-shield-warning:before { content: "\e412"; }
 .ph.ph-minus:before { content: "\e32a"; }
 .ph.ph-calendar-check:before { content: "\e712"; }
 .ph.ph-map-pin:before { content: "\e316"; }
+.ph.ph-caret-down:before { content: "\e136"; }
 .ph.ph-warning-circle:before { content: "\e4e2"; }
 .ph.ph-check-circle:before { content: "\e184"; }

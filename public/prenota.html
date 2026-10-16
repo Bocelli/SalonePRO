@@ -38,8 +38,15 @@
   .col { display: grid; gap: 20px; }
   .block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-surface); padding: 22px; }
   .block h2 { font-size: 1.08rem; margin-bottom: 14px; }
-  .group-title { font-size: .8rem; font-weight: 600; color: var(--muted); margin-bottom: 8px; }
-  .srv-group + .srv-group { margin-top: 20px; }
+  .srv-group { border: 1px solid var(--border); border-radius: var(--r-control); }
+  .srv-group + .srv-group { margin-top: 10px; }
+  .srv-group summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 10px 14px; font-weight: 650; cursor: pointer; border-radius: var(--r-control); }
+  .srv-group summary::-webkit-details-marker { display: none; }
+  .srv-group summary:hover { background: var(--surface-2); }
+  .srv-group summary .muted { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
+  .srv-group summary .ph { transition: transform .2s var(--ease); }
+  .srv-group[open] summary .ph { transform: rotate(180deg); }
+  .srv-items { padding: 2px 10px 10px; }
 
   .srv { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: var(--r-control); cursor: pointer; transition: border-color .16s var(--ease), background .16s var(--ease); }
   .srv + .srv { margin-top: 8px; }
@@ -270,18 +277,24 @@
   }
 
   // ---------- Services ----------
+  // One folder per category, in the salon's folder order; only the first starts open.
   function renderServices() {
-    const cats = [...new Set(services.map((s) => s.cat || 'Altro'))];
-    $('srv-list').innerHTML = cats.map((cat) => `
-      <div class="srv-group">
-        <h3 class="group-title">${esc(cat)}</h3>
-        ${services.filter((s) => (s.cat || 'Altro') === cat).map((s) => `
+    const catOf = (s) => s.cat || 'ALTRO';
+    const cats = [...new Set([...(cfg.serviceFolders || []), ...services.map(catOf)])].filter((c) => services.some((s) => catOf(s) === c));
+    $('srv-list').innerHTML = cats.map((cat, i) => {
+      const items = services.filter((s) => catOf(s) === cat);
+      return `
+      <details class="srv-group" ${i ? '' : 'open'}>
+        <summary><span>${esc(cat)}</span><span class="muted small">${items.length} ${items.length === 1 ? 'servizio' : 'servizi'}<i class="ph ph-caret-down"></i></span></summary>
+        <div class="srv-items">${items.map((s) => `
           <label class="srv">
             <input type="checkbox" ${picked.has(s.id) ? 'checked' : ''} onchange="toggleService(${s.id}, this.checked)">
             <span class="srv-name">${esc(s.name)}<small><i class="ph ph-clock"></i>${Number(s.duration) || 0} min</small></span>
             <strong class="num">${price(s.price)}</strong>
           </label>`).join('')}
-      </div>`).join('') || '<p class="muted">Il listino non è ancora disponibile.</p>';
+        </div>
+      </details>`;
+    }).join('') || '<p class="muted">Il listino non è ancora disponibile.</p>';
   }
 
   function toggleService(id, on) {

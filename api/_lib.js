@@ -78,8 +78,10 @@ const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 export function checkConfig(c) {
   if (!HHMM.test(c.openTime) || !HHMM.test(c.closeTime) || c.openTime >= c.closeTime
     || ![15, 20, 30, 45, 60].includes(Number(c.slotMinutes))
-    || !Array.isArray(c.closedDays) || c.closedDays.some((d) => !Number.isInteger(d) || d < 0 || d > 6)) {
-    fail(400, 'Impostazioni non valide (orari, intervallo o giorni di chiusura)');
+    || !Array.isArray(c.closedDays) || c.closedDays.some((d) => !Number.isInteger(d) || d < 0 || d > 6)
+    || (c.serviceFolders !== undefined && (!Array.isArray(c.serviceFolders) || c.serviceFolders.length > 100
+      || c.serviceFolders.some((f) => typeof f !== 'string' || !f.trim() || f.length > 60)))) {
+    fail(400, 'Impostazioni non valide (orari, intervallo, giorni di chiusura o cartelle)');
   }
   return c;
 }

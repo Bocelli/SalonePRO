@@ -132,3 +132,25 @@ test('logout from all devices revokes every cookie, also after a restore', async
   assert.equal((await call(data, { cookie })).status, 401, 'restore must not bring old sessions back');
   assert.equal((await call(data, { cookie: fresh })).status, 200);
 });
+
+test('price-list folders: validated, public, restored from v9 backups', async () => {
+  const fresh = (await call(login, { method: 'POST', ip: '9.9.9.8', body: { password: process.env.ADMIN_PASSWORD } })).headers['set-cookie'].split(';')[0];
+  const config = (await call(data, { cookie: fresh })).body.config;
+  assert.equal((await call(data, { method: 'PUT', cookie: fresh, body: { col: 'config', item: { ...config, serviceFolders: ['PIEGA', 42] } } })).status, 400);
+  assert.equal((await call(data, { method: 'PUT', cookie: fresh, body: { col: 'config', item: { ...config, serviceFolders: ['PIEGA', 'SPOSA'] } } })).status, 200);
+  assert.deepEqual((await call(pub)).body.config.serviceFolders, ['PIEGA', 'SPOSA']);
+
+  const v9 = { // shape of a salone_pro_v9.html backup
+    config: { salonName: 'Salone v9', openTime: '09:00', closeTime: '19:00', slotMinutes: 30 },
+    serviceFolders: ['PIEGA', 'TAGLIO', 'VUOTA'],
+    services: [{ id: 1, name: 'Piega Classica', cat: 'PIEGA', price: 18, duration: 30 }],
+    clients: [],
+    inventory: [],
+    appointments: [{ id: 5, clientName: 'Anna', date: wed, time: '10:00', services: ['Piega Classica'], price: 18, reminderSent: true, lastAttemptChannel: 'WhatsApp' }],
+  };
+  assert.equal((await call(data, { method: 'POST', cookie: fresh, body: v9 })).status, 200);
+  const all = (await call(data, { cookie: fresh })).body;
+  assert.deepEqual(all.config.serviceFolders, ['PIEGA', 'TAGLIO', 'VUOTA']);
+  assert.equal(all.appointments[0].reminderSent, true);
+  assert.equal(all.appointments[0].end, '10:30');
+});

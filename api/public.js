@@ -1,6 +1,6 @@
 import { handle, fail, db, addMin, romeNow, limit, hit, clientIp, DEFAULT_CONFIG } from './_lib.js';
 
-const PUBLIC_CONFIG = ['salonName', 'ownerName', 'address', 'vat', 'email', 'ownerPhone', 'openTime', 'closeTime', 'slotMinutes', 'closedDays'];
+const PUBLIC_CONFIG = ['salonName', 'ownerName', 'address', 'vat', 'email', 'ownerPhone', 'openTime', 'closeTime', 'slotMinutes', 'closedDays', 'serviceFolders'];
 const pick = (o, keys) => Object.fromEntries(keys.map((k) => [k, o[k]]));
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
