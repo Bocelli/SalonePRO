@@ -112,12 +112,12 @@ legacy/            la versione originale in un solo file HTML (v6)
 
 ## Installazione
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fthe0x1d3%2FFlavioSalone&project-name=salone-pro&repository-name=salone-pro&env=ADMIN_PASSWORD&envDescription=Password%20del%20gestionale%2C%20almeno%2010%20caratteri)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fthe0x1d3%2FFlavioSalone&project-name=salone-pro&repository-name=salone-pro&env=ADMIN_PASSWORD&envDescription=Password%20del%20gestionale%2C%20almeno%2010%20caratteri&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%2C%22protocol%22%3A%22storage%22%7D%5D)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fthe0x1d3%2FFlavioSalone&project-name=salone-pro&repository-name=salone-pro&env=ADMIN_PASSWORD&envDescription=Password%20del%20gestionale%2C%20almeno%2010%20caratteri)
 
-1. **Deploy:** usa il pulsante qui sopra, oppure importa il repository su [vercel.com/new](https://vercel.com/new) con Framework Preset **Other**.
-2. **Password:** imposta `ADMIN_PASSWORD` (almeno 10 caratteri, meglio una frase lunga) tra le Environment Variables.
-3. **Database:** nel progetto apri **Storage > Create Database > Neon**, piano Free, regione **Frankfurt**, e collegalo al progetto. Vercel aggiunge `DATABASE_URL` da solo.
-4. **Redeploy**, poi entra nel gestionale con la password (se manca qualcosa, una schermata spiega cosa fare): parte la **configurazione guidata** (nome del salone, WhatsApp, orari, giorni di chiusura, listino e link per le clienti). Si può saltare e riaprire da **Impostazioni & dati**.
+1. **Deploy con un clic:** il pulsante qui sopra copia il repository, crea il progetto e **crea anche il database Neon** (scegli piano **Free** e regione **Frankfurt**), collegandolo da solo con `DATABASE_URL`.
+2. **Password:** nella stessa schermata ti chiede `ADMIN_PASSWORD` (almeno 10 caratteri, meglio una frase lunga).
+3. **Senza pulsante:** importa il repository su [vercel.com/new](https://vercel.com/new) con Framework Preset **Other**, aggiungi `ADMIN_PASSWORD`, poi **Storage > Create Database > Neon** (oppure da terminale `npx vercel integration add neon --plan free_v3 -m region=fra1 -m auth=false`) e fai **Redeploy**.
+4. **Primo accesso:** entra nel gestionale con la password (se manca qualcosa, una schermata spiega cosa fare): parte la **configurazione guidata** (nome del salone, WhatsApp, orari, giorni di chiusura, listino e link per le clienti). Si può saltare e riaprire da **Impostazioni & dati**.
 
 Le funzioni girano a Francoforte (`vercel.json`) e il database va creato a Francoforte, così i dati restano in Unione Europea.
 
