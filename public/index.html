@@ -75,7 +75,6 @@
   .wl-line { font-size: .92rem; line-height: 1.75; margin-top: 2px; }
   .wl-line .badge { margin-right: 2px; }
   .wl-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
-  #reminders { scroll-margin-top: 84px; } /* below the sticky top bar */
   .day-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
   .day-title { font-size: 1.75rem; letter-spacing: -.025em; }
   .day-tools { display: flex; align-items: center; gap: 8px; }
@@ -85,9 +84,7 @@
   .metrics > * + * { border-left: 1px solid var(--border); }
   .metric-val { font-size: 1.5rem; font-weight: 650; letter-spacing: -.02em; }
   .metric-lbl { font-size: .84rem; color: var(--muted); }
-  .metric-link { cursor: pointer; transition: background .16s var(--ease); }
-  .metric-link:hover { background: var(--surface-2); }
-  .metric-link.alert .metric-val { color: var(--danger); }
+  .metrics.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .appt { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 16px; padding: 16px 20px; align-items: start; }
   .appt + .appt { border-top: 1px solid var(--border); }
@@ -443,10 +440,9 @@
           <div id="rem-list"></div>
         </div>
 
-        <div class="metrics">
-          <div><span class="metric-val num" id="stat-count">0</span><span class="metric-lbl">appuntamenti</span></div>
+        <div class="metrics two" id="metrics">
+          <div><span class="metric-val num" id="stat-count">0</span><span class="metric-lbl" id="stat-count-lbl">appuntamenti</span></div>
           <div><span class="metric-val num" id="stat-revenue">€ 0,00</span><span class="metric-lbl" id="stat-rev-lbl">incasso previsto</span></div>
-          <button class="metric-link" id="stat-lowstock-box" data-tab="magazzino"><span class="metric-val num" id="stat-lowstock">0</span><span class="metric-lbl">da riordinare</span></button>
         </div>
 
         <div class="panel">
@@ -1159,9 +1155,9 @@
   // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
   const NEWS = [
     { v: '1.8', date: '16 ottobre 2026', title: 'Il riepilogo della giornata', items: [
-      ['ph-sun', "In cima all'agenda trovi il saluto e il riepilogo di oggi: quanti appuntamenti, quanti già fatti e l'incasso previsto."],
+      ['ph-sun', "In cima all'agenda trovi il saluto e il riepilogo di oggi: quanti appuntamenti, quanti già fatti e l'incasso. I riquadri con i numeri compaiono quando guardi un altro giorno, la settimana o il mese."],
       ['ph-clock', "Vedi subito chi arriva dopo e tra quanto, o chi è in poltrona adesso: tocca il nome per aprire la sua scheda."],
-      ['ph-bell-ringing', 'Con un tocco vai alle clienti da avvisare o da richiamare.'],
+      ['ph-package', 'Con un tocco vai alle clienti da richiamare o ai prodotti da riordinare. I promemoria non mostrano più gli appuntamenti già passati.'],
     ] },
     { v: '1.7', date: '16 ottobre 2026', title: 'Le prenotazioni online arrivano da sole', items: [
       ['ph-bell-ringing', 'Con il gestionale aperto, una nuova prenotazione dalla pagina web arriva entro 20 secondi con un bip e un avviso in alto: tocca "Vedi" per aprire quel giorno in agenda.'],
@@ -1403,10 +1399,11 @@
 
   // ---------- Benvenuto: always about today, whatever day the agenda shows ----------
   const GREETINGS = [[13, 'Buongiorno', 'ph-sun'], [18, 'Buon pomeriggio', 'ph-sun-horizon'], [24, 'Buonasera', 'ph-moon']];
+  const nowHHMM = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
   const toMin = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
   const inMin = (m) => (m < 60 ? `tra ${m} min` : `tra ${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}`);
   function renderWelcome() {
-    const now = new Date(), today = todayStr(), hhmm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const now = new Date(), today = todayStr(), hhmm = nowHHMM();
     const [, hello, icon] = GREETINGS.find(([h]) => now.getHours() < h);
     const owner = db.config.ownerName && db.config.ownerName !== 'Titolare' ? `, ${db.config.ownerName.trim().split(' ')[0]}` : '';
     $('wl-icon').className = 'ph ' + icon;
@@ -1415,7 +1412,7 @@
     const list = apptsOn(today), done = list.filter((a) => endOf(a) <= hhmm).length, closure = closureOn(today);
     $('wl-today').textContent = !list.length
       ? (isClosedDay(today) ? `Oggi il salone è chiuso${closure?.note ? ` (${closure.note})` : ''}.` : 'Oggi nessun appuntamento in agenda.')
-      : `Oggi ${list.length === 1 ? '1 appuntamento' : `${list.length} appuntamenti`}${done ? `, ${done} già ${done === 1 ? 'fatto' : 'fatti'}` : ''}, ${euro(revenue(list))} previsti.`;
+      : `Oggi ${list.length === 1 ? '1 appuntamento' : `${list.length} appuntamenti`}${done && done < list.length ? `, ${done} già ${done === 1 ? 'fatto' : 'fatti'}` : ''}, ${euro(revenue(list))} di incasso.`;
 
     const who = (a) => { const c = findClient(a); return c ? `<button class="link" onclick="openClientCard(${c.id})">${esc(a.clientName)}</button>` : `<strong>${esc(a.clientName)}</strong>`; };
     const what = (a) => (a.services?.length ? `, <span class="muted">${esc(a.services.join(' + '))}</span>` : '');
@@ -1428,15 +1425,14 @@
     else if (!cur && list.length) lines.push('Per oggi hai finito.');
     $('wl-next').innerHTML = lines.map((l) => `<p class="wl-line">${l}</p>`).join('');
 
-    const days = [today, todayStr(1), todayStr(2)];
-    const toNotify = db.appointments.filter((a) => days.includes(a.date) && !a.reminderSent).length;
+    const low = db.inventory.filter((p) => Number(p.qty) <= Number(p.min)).length;
     const toRecall = recallList(db.clients, db.appointments, today, Number(db.config.recallWeeks ?? 6)).length;
     $('wl-chips').innerHTML = [
-      toNotify && `<button class="btn btn-outline btn-sm" onclick="$('reminders').scrollIntoView({ behavior: 'smooth', block: 'start' })"><i class="ph ph-bell-ringing"></i>${toNotify} da avvisare</button>`,
       toRecall && `<a class="btn btn-outline btn-sm" href="/clienti" data-tab="clienti"><i class="ph ph-clock-counter-clockwise"></i>${toRecall} da richiamare</a>`,
+      low && `<a class="btn btn-outline btn-sm" href="/magazzino" data-tab="magazzino"><i class="ph ph-package"></i>${low} da riordinare</a>`,
     ].filter(Boolean).join('');
   }
-  setInterval(() => { if (loaded) renderWelcome(); }, 60000); // keeps "tra 25 min" and the greeting current, no network
+  setInterval(() => { if (loaded) { renderWelcome(); renderReminders(); } }, 60000); // keeps "tra 25 min" and the reminders current, no network
 
   function setQuickDate(offset) { $('agenda-date').value = todayStr(offset); renderAgenda(); }
   function setView(v) {
@@ -1482,11 +1478,10 @@
     $('agenda-list-title').textContent = { day: 'Appuntamenti del giorno', week: 'Appuntamenti della settimana', month: 'Appuntamenti del mese' }[view];
     $('stat-rev-lbl').textContent = { day: 'incasso previsto', week: 'incasso settimana', month: 'incasso mese' }[view];
 
-    const low = db.inventory.filter((p) => Number(p.qty) <= Number(p.min)).length;
+    $('metrics').hidden = view === 'day' && sel === todayStr(); // the welcome bar already sums up today
     $('stat-count').textContent = period.length;
+    $('stat-count-lbl').textContent = period.length === 1 ? 'appuntamento' : 'appuntamenti';
     $('stat-revenue').textContent = euro(revenue(period));
-    $('stat-lowstock').textContent = low;
-    $('stat-lowstock-box').classList.toggle('alert', low > 0);
     renderReminders();
     renderWelcome();
     if (view === 'week') return renderWeek(days);
@@ -1579,8 +1574,8 @@
   const reminderText = (a) => `Ciao ${a.clientName}! Ti ricordiamo il tuo appuntamento presso ${db.config.salonName} per ${dayLabel(a.date)} alle ore ${a.time} (${(a.services || []).join(', ')}). A presto!`;
 
   function renderReminders() {
-    const days = [todayStr(), todayStr(1), todayStr(2)];
-    const all = db.appointments.filter((a) => days.includes(a.date)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    const days = [todayStr(), todayStr(1), todayStr(2)], now = nowHHMM();
+    const all = db.appointments.filter((a) => days.includes(a.date) && (a.date !== days[0] || a.time > now)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
     const todo = all.filter((a) => !a.reminderSent).length;
     $('reminders').hidden = !all.length;
     $('rem-count').textContent = todo ? `${todo} da avvisare` : 'Tutte avvisate';

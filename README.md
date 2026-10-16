@@ -36,7 +36,7 @@ Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel 
 ## Funzioni
 
 **Agenda**
-- In cima il riepilogo di oggi: saluto, appuntamenti e incasso previsto, chi è in poltrona e chi arriva dopo (tra quanto), clienti da avvisare o richiamare.
+- In cima il riepilogo di oggi: saluto, appuntamenti e incasso previsto, chi è in poltrona e chi arriva dopo (tra quanto), clienti da richiamare e prodotti da riordinare.
 - Vista Giorno, Settimana e Mese, con numero di appuntamenti e incasso del periodo.
 - Promemoria delle clienti di oggi, domani e dopodomani da avvisare, con stato "Avvisata".
 - Durata dei servizi, orari di fine calcolati e avviso degli appuntamenti sovrapposti.
