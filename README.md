@@ -112,7 +112,7 @@ legacy/            la versione originale in un solo file HTML (v6)
 
 ## Installazione
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fthe0x1d3%2FFlavioSalone&project-name=salone-pro&repository-name=salone-pro&env=ADMIN_PASSWORD&envDescription=Password%20del%20gestionale%2C%20almeno%2010%20caratteri&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%2C%22protocol%22%3A%22storage%22%7D%5D)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fthe0x1d3%2FFlavioSalone&project-name=salone-pro&repository-name=salone-pro&env=ADMIN_PASSWORD&envDescription=Password%20del%20gestionale%2C%20almeno%2010%20caratteri)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fthe0x1d3%2FFlavioSalone&project-name=salone-pro&repository-name=salone-pro&env=ADMIN_PASSWORD&envDescription=Password%20del%20gestionale%2C%20almeno%2010%20caratteri&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%2C%22protocol%22%3A%22storage%22%7D%5D)
 
 1. **Deploy con un clic:** il pulsante qui sopra copia il repository, crea il progetto e **crea anche il database Neon** (scegli piano **Free** e regione **Frankfurt**), collegandolo da solo con `DATABASE_URL`.
 2. **Password:** nella stessa schermata ti chiede `ADMIN_PASSWORD` (almeno 10 caratteri, meglio una frase lunga).
