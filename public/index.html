@@ -29,6 +29,7 @@
   .brand small { display: block; color: var(--muted); font-size: .8rem; max-width: 168px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .nav { display: flex; flex-direction: column; gap: 2px; }
   .nav-sep { height: 1px; background: var(--border); margin: 10px 12px; }
+  .nav-bottom { margin-top: auto; }
   .nav-item { font: inherit; font-size: .93rem; font-weight: 550; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: 0; border-radius: var(--r-control); background: transparent; color: var(--muted); cursor: pointer; text-align: left; transition: background .16s var(--ease), color .16s var(--ease); }
   .nav-item .ph { font-size: 1.25rem; }
   .nav-item:hover { background: var(--surface-2); color: var(--text); }
@@ -120,6 +121,32 @@
   .consent { display: grid; gap: 10px; padding: 14px; border-radius: var(--r-control); background: var(--surface-2); }
   .consent label { display: flex; align-items: flex-start; gap: 10px; font-size: .9rem; cursor: pointer; }
 
+  /* Install banner + guide */
+  .install-banner { position: fixed; z-index: 30; left: 16px; right: 16px; bottom: 20px; max-width: 560px; margin-inline: auto; display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-surface); box-shadow: var(--shadow); animation: rise .3s var(--ease); }
+  .install-banner .brand-mark { width: 40px; height: 40px; }
+  .ib-text { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: .88rem; line-height: 1.4; }
+  .ib-text span { color: var(--muted); }
+  .ib-text .ph { vertical-align: -2px; }
+  .guide { display: grid; gap: 8px; margin-top: 18px; }
+  .guide details { border: 1px solid var(--border); border-radius: var(--r-control); }
+  .guide details[open] { border-color: var(--accent); }
+  .guide summary { list-style: none; display: flex; align-items: center; gap: 10px; padding: 12px 14px; font-weight: 600; cursor: pointer; }
+  .guide summary::-webkit-details-marker { display: none; }
+  .guide summary .ph { font-size: 1.25rem; color: var(--accent-text); }
+  .guide ol { display: grid; gap: 10px; padding: 0 16px 16px 38px; font-size: .92rem; }
+  .key { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); font-size: .86rem; font-weight: 600; white-space: nowrap; }
+
+  /* What's new */
+  .news { display: grid; gap: 20px; }
+  .news-ver + .news-ver { padding-top: 18px; border-top: 1px solid var(--border); }
+  .news-ver header { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 12px; }
+  .news-ver h3 { font-size: 1.02rem; }
+  .news-ver ul { list-style: none; display: grid; gap: 10px; }
+  .news-ver li { display: flex; gap: 12px; font-size: .92rem; }
+  .news-ver li .ph { flex-shrink: 0; display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--r-control); background: var(--accent-soft); color: var(--accent-text); font-size: 1.05rem; }
+  .news-ver li span { padding-top: 4px; }
+  .news-ver:not(:first-child) li .ph { background: var(--surface-2); color: var(--muted); }
+
   .empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 44px 20px; text-align: center; }
   .empty > .ph { font-size: 2rem; color: var(--muted); margin-bottom: 6px; }
   .empty p { max-width: 42ch; }
@@ -164,6 +191,8 @@
     .section { gap: 16px; }
     .tabbar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; inset: auto 0 0 0; z-index: 20; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--border); }
     .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+    .install-banner { bottom: calc(80px + env(safe-area-inset-bottom)); }
+    .install-banner .brand-mark { display: none; }
     .day-head { flex-direction: column; align-items: stretch; gap: 12px; }
     .day-title { font-size: 1.4rem; }
     .day-tools input[type="date"] { flex: 1; }
@@ -204,6 +233,7 @@
       <button class="nav-item" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</button>
       <button class="nav-item" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</button>
     </nav>
+    <button class="nav-item nav-bottom" onclick="openNews()"><i class="ph ph-sparkle"></i>Novità</button>
   </aside>
 
   <main class="main">
@@ -408,9 +438,11 @@
 
         <div class="panel pad">
           <h3>Installa l'app</h3>
-          <p class="muted">Aggiungi Salone PRO alla schermata Home del tablet, del telefono o del computer: si apre a schermo intero come un'app.</p>
-          <div class="row-wrap" id="install-row" hidden><button class="btn btn-primary" onclick="installApp()"><i class="ph ph-download-simple"></i>Installa Salone PRO</button></div>
-          <p class="hint" id="install-hint">Su iPhone e iPad: apri il sito in Safari, tocca Condividi e poi "Aggiungi alla schermata Home". Su Android e computer usa il menu del browser, voce "Installa app".</p>
+          <p class="muted" id="install-status">Aggiungi Salone PRO alla schermata Home del tablet, del telefono o del computer: si apre a schermo intero come un'app.</p>
+          <div class="row-wrap">
+            <button class="btn btn-primary" data-install hidden onclick="installApp()"><i class="ph ph-download-simple"></i>Installa Salone PRO</button>
+            <button class="btn btn-outline" onclick="openInstallGuide()"><i class="ph ph-question"></i>Come si installa</button>
+          </div>
         </div>
 
         <div class="panel pad">
@@ -441,7 +473,71 @@
       <button class="nav-item" data-tab="webbooking"><i class="ph ph-globe-simple"></i>Prenotazione web</button>
       <button class="nav-item" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</button>
       <button class="nav-item" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</button>
+      <button class="nav-item" onclick="openNews()"><i class="ph ph-sparkle"></i>Novità</button>
     </nav>
+  </div>
+</div>
+
+<!-- Install banner: shown after login when the device can install the app, until dismissed -->
+<div class="install-banner" id="install-banner" role="region" aria-label="Installa l'app" hidden>
+  <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors"></i></span>
+  <div class="ib-text">
+    <strong>Installa Salone PRO</strong>
+    <span id="ib-sub"></span>
+  </div>
+  <button class="btn btn-primary btn-sm" id="ib-action" onclick="installApp()"></button>
+  <button class="btn-icon" onclick="dismissInstall()" aria-label="Non ora"><i class="ph ph-x"></i></button>
+</div>
+
+<!-- Install guide -->
+<div class="modal-backdrop" id="install-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="install-title">
+    <div class="modal-head">
+      <h2 id="install-title">Come installare l'app</h2>
+      <button class="btn-icon" onclick="closeModal('install-modal')" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+    </div>
+    <p class="muted">Una volta installata, Salone PRO compare tra le tue app e si apre a schermo intero, senza la barra del browser.</p>
+    <button class="btn btn-primary" data-install hidden onclick="installApp()" style="margin-top:16px"><i class="ph ph-download-simple"></i>Installa ora</button>
+    <div class="guide">
+      <details data-os="ios">
+        <summary><i class="ph ph-device-mobile"></i>iPhone e iPad</summary>
+        <ol>
+          <li>Apri questo sito con <strong>Safari</strong>.</li>
+          <li>Tocca <span class="key"><i class="ph ph-export"></i>Condividi</span> nella barra in basso (su iPad in alto a destra).</li>
+          <li>Scorri e tocca <span class="key"><i class="ph ph-plus-square"></i>Aggiungi alla schermata Home</span>.</li>
+          <li>Tocca <strong>Aggiungi</strong> in alto a destra.</li>
+        </ol>
+      </details>
+      <details data-os="android">
+        <summary><i class="ph ph-android-logo"></i>Android</summary>
+        <ol>
+          <li>Apri questo sito con <strong>Chrome</strong>.</li>
+          <li>Tocca il menu <span class="key"><i class="ph ph-dots-three-vertical"></i></span> in alto a destra.</li>
+          <li>Tocca <span class="key">Installa app</span> oppure <span class="key">Aggiungi a schermata Home</span>.</li>
+          <li>Conferma con <strong>Installa</strong>.</li>
+        </ol>
+      </details>
+      <details data-os="desktop">
+        <summary><i class="ph ph-desktop"></i>Computer (Chrome o Edge)</summary>
+        <ol>
+          <li>Apri questo sito con <strong>Chrome</strong> o <strong>Edge</strong>.</li>
+          <li>Clicca l'icona <span class="key"><i class="ph ph-download-simple"></i>Installa</span> a destra nella barra degli indirizzi, oppure cerca "Installa Salone PRO" nel menu del browser.</li>
+          <li>Conferma con <strong>Installa</strong>: l'app compare nel menu Start o nel Dock.</li>
+        </ol>
+      </details>
+    </div>
+  </div>
+</div>
+
+<!-- What's new: pops up once per device for every new version -->
+<div class="modal-backdrop" id="news-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="news-title">
+    <div class="modal-head">
+      <h2 id="news-title">Novità di Salone PRO</h2>
+      <button class="btn-icon" onclick="closeModal('news-modal')" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="news" id="news-list"></div>
+    <div class="modal-foot"><button class="btn btn-primary" onclick="closeModal('news-modal')">Ho capito</button></div>
   </div>
 </div>
 
@@ -547,8 +643,49 @@
       }
       return;
     }
-    if (!loaded) { loaded = true; loadConfigUI(); }
+    const first = !loaded;
+    if (first) { loaded = true; loadConfigUI(); }
     renderAll();
+    if (first && newsSeen() !== NEWS[0].v) openNews();
+    if (first) maybeInstallBanner();
+  }
+
+  // ---------- Novità ----------
+  // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
+  const NEWS = [
+    { v: '1.1', date: '16 ottobre 2026', title: 'Più sicurezza e app installabile', items: [
+      ['ph-download-simple', "Installa Salone PRO sulla schermata Home di tablet, telefono e computer: usa il banner in basso o la guida in Impostazioni."],
+      ['ph-lock-simple', "Dopo 5 password sbagliate l'accesso da quel dispositivo si blocca per 15 minuti."],
+      ['ph-devices', 'Hai perso un tablet? In Impostazioni usa "Esci da tutti i dispositivi" per scollegarlo subito.'],
+      ['ph-shield-check', "Prenotazioni online protette dai bot: massimo 10 tentativi all'ora per dispositivo."],
+      ['ph-whatsapp-logo', 'Il link di prenotazione condiviso su WhatsApp ora mostra immagine e descrizione.'],
+    ] },
+    { v: '1.0', date: '16 ottobre 2026', title: 'Salone PRO è online', items: [
+      ['ph-cloud-check', 'I dati sono nel database online: li vedi da qualsiasi dispositivo, non solo dal tablet.'],
+      ['ph-globe-simple', "Le clienti prenotano da sole su /prenota e l'appuntamento arriva subito in agenda con il badge Web."],
+      ['ph-clock', 'Gli orari occupati tengono conto della durata dei servizi, niente più sovrapposizioni.'],
+      ['ph-calendar-blank', 'Giorni di chiusura e intervallo degli orari online si impostano in Impostazioni.'],
+      ['ph-device-mobile', 'Funziona su computer, tablet e telefono, con tema scuro automatico.'],
+    ] },
+  ];
+
+  function newsSeen() {
+    try { return localStorage.getItem('sp_news'); } catch { return null; }
+  }
+
+  function openNews() {
+    $('news-list').innerHTML = NEWS.map((n, i) => `
+      <section class="news-ver">
+        <header>
+          <h3>${n.title}</h3>
+          ${i ? '' : '<span class="badge badge-accent">Nuovo</span>'}
+          <span class="muted small">Versione ${n.v}, ${n.date}</span>
+        </header>
+        <ul>${n.items.map(([icon, text]) => `<li><i class="ph ${icon}" aria-hidden="true"></i><span>${text}</span></li>`).join('')}</ul>
+      </section>`).join('');
+    closeModal('more-sheet');
+    openModal('news-modal');
+    try { localStorage.setItem('sp_news', NEWS[0].v); } catch {}
   }
 
   async function login(e) {
@@ -1039,20 +1176,48 @@
   }
 
   // ---------- Installazione PWA ----------
+  const isStandalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  // iPadOS reports itself as a Mac: touch points tell them apart.
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const deviceOs = isIOS ? 'ios' : /android/i.test(navigator.userAgent) ? 'android' : 'desktop';
   let installPrompt;
+
+  // Android/desktop Chrome and Edge offer a native prompt; iOS only allows Share > Add to Home Screen, so we explain it.
+  function maybeInstallBanner() {
+    let off;
+    try { off = localStorage.getItem('sp_install_off'); } catch {}
+    if (isStandalone || off || (!installPrompt && !isIOS)) return;
+    $('ib-sub').innerHTML = installPrompt ? "Si apre a schermo intero, come un'app." : 'Tocca <i class="ph ph-export"></i> Condividi, poi "Aggiungi a Home".';
+    $('ib-action').innerHTML = installPrompt ? '<i class="ph ph-download-simple"></i>Installa' : 'Come fare';
+    $('install-banner').hidden = false;
+  }
+  function dismissInstall() {
+    $('install-banner').hidden = true;
+    try { localStorage.setItem('sp_install_off', '1'); } catch {}
+  }
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     installPrompt = e;
-    $('install-row').hidden = false;
+    document.querySelectorAll('[data-install]').forEach((b) => { b.hidden = false; });
+    if (loaded) maybeInstallBanner();
+  });
+  window.addEventListener('appinstalled', () => {
+    $('install-banner').hidden = true;
+    toast('Salone PRO installata');
   });
   async function installApp() {
-    if (!installPrompt) return;
+    if (!installPrompt) return openInstallGuide();
     installPrompt.prompt();
-    await installPrompt.userChoice;
+    const { outcome } = await installPrompt.userChoice;
     installPrompt = null;
-    $('install-row').hidden = true;
+    document.querySelectorAll('[data-install]').forEach((b) => { b.hidden = true; });
+    if (outcome === 'accepted') $('install-banner').hidden = true;
   }
-  if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) $('install-hint').textContent = "L'app è già installata su questo dispositivo.";
+  function openInstallGuide() {
+    document.querySelectorAll('#install-modal details').forEach((d) => { d.open = d.dataset.os === deviceOs; });
+    openModal('install-modal');
+  }
+  if (isStandalone) $('install-status').textContent = "L'app è già installata su questo dispositivo.";
 
   // ---------- Start ----------
   $('agenda-date').value = todayStr();

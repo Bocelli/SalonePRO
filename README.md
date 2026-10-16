@@ -50,7 +50,13 @@ Da fare sugli account (fuori dal codice): attiva la verifica in due passaggi su 
 
 `manifest.webmanifest` e le icone in `public/icons/` rendono il gestionale installabile: Impostazioni > "Installa l'app" su Android e computer, oppure Safari > Condividi > "Aggiungi alla schermata Home" su iPhone e iPad. Non c'è modalità offline: i dati arrivano sempre dal database.
 
+Dopo il login compare un banner in basso: su Android e computer ha il pulsante **Installa**, su iPhone e iPad spiega i passaggi di Safari. Si chiude con la X e non ricompare su quel dispositivo; la guida completa resta in Impostazioni > "Come si installa".
+
 L'anteprima del link `/prenota` su WhatsApp e social usa `public/og.png` e i meta `og:` in `prenota.html`, con indirizzi assoluti su `salone-pro.vercel.app`: se colleghi un dominio tuo, aggiornali.
+
+## Novità (changelog)
+
+Al primo accesso dopo un aggiornamento il gestionale mostra "Novità di Salone PRO", riapribile dal menu (Novità). Per annunciare un aggiornamento aggiungi una voce **in cima** all'array `NEWS` in `public/index.html` con un nuovo `v`: comparirà una volta su ogni dispositivo.
 
 ## Configurazione su Vercel
 
