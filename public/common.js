@@ -10,7 +10,7 @@ const addMin = (t, m) => {
 const localDate = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const fmtDate = (s) => (s || '').split('-').reverse().join('/');
 const dayLabel = (s, opts = { weekday: 'long', day: 'numeric', month: 'long' }) => new Date(s + 'T12:00').toLocaleDateString('it-IT', opts);
-const euro = (n) => '€ ' + Number(n || 0).toFixed(2).replace('.', ',');
+const euro = (n) => '€ ' +Number(n || 0).toFixed(2).replace('.', ',');
 // Italian numbers without prefix get +39; 10-digit mobiles starting with 39x (e.g. 393...) are still local numbers.
 const waNumber = (p) => {
   const d = String(p || '').replace(/\D/g, '').replace(/^00/, '');

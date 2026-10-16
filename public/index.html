@@ -68,6 +68,14 @@
   .add-body .btn { justify-self: start; }
 
   /* Agenda */
+  .welcome { display: flex; align-items: center; gap: 14px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-surface); }
+  .wl-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: 1.35rem; flex-shrink: 0; align-self: flex-start; }
+  .wl-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .wl-main h2 { font-size: 1.1rem; letter-spacing: -.01em; }
+  .wl-line { font-size: .92rem; line-height: 1.75; margin-top: 2px; }
+  .wl-line .badge { margin-right: 2px; }
+  .wl-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  #reminders { scroll-margin-top: 84px; } /* below the sticky top bar */
   .day-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
   .day-title { font-size: 1.75rem; letter-spacing: -.025em; }
   .day-tools { display: flex; align-items: center; gap: 8px; }
@@ -326,6 +334,8 @@
     .install-banner { bottom: calc(80px + env(safe-area-inset-bottom)); }
     .install-banner .brand-mark { display: none; }
     .day-head { flex-direction: column; align-items: stretch; gap: 12px; }
+    .welcome { flex-wrap: wrap; padding: 14px 16px; }
+    .wl-chips { width: 100%; justify-content: flex-start; padding-left: 58px; }
     .day-title { font-size: 1.4rem; }
     .day-tools input[type="date"] { flex: 1; }
     .metrics > * { padding: 12px 14px; }
@@ -397,6 +407,16 @@
     <div class="content">
       <!-- AGENDA -->
       <section id="tab-agenda" class="section active">
+        <div class="welcome">
+          <span class="wl-icon" aria-hidden="true"><i class="ph ph-sun" id="wl-icon"></i></span>
+          <div class="wl-main">
+            <h2 id="wl-hello">&nbsp;</h2>
+            <p class="muted" id="wl-today"></p>
+            <div id="wl-next"></div>
+          </div>
+          <div class="wl-chips" id="wl-chips"></div>
+        </div>
+
         <div class="day-head">
           <div>
             <h2 class="day-title" id="agenda-day">&nbsp;</h2>
@@ -1138,6 +1158,11 @@
   // ---------- Novità ----------
   // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
   const NEWS = [
+    { v: '1.8', date: '16 ottobre 2026', title: 'Il riepilogo della giornata', items: [
+      ['ph-sun', "In cima all'agenda trovi il saluto e il riepilogo di oggi: quanti appuntamenti, quanti già fatti e l'incasso previsto."],
+      ['ph-clock', "Vedi subito chi arriva dopo e tra quanto, o chi è in poltrona adesso: tocca il nome per aprire la sua scheda."],
+      ['ph-bell-ringing', 'Con un tocco vai alle clienti da avvisare o da richiamare.'],
+    ] },
     { v: '1.7', date: '16 ottobre 2026', title: 'Le prenotazioni online arrivano da sole', items: [
       ['ph-bell-ringing', 'Con il gestionale aperto, una nuova prenotazione dalla pagina web arriva entro 20 secondi con un bip e un avviso in alto: tocca "Vedi" per aprire quel giorno in agenda.'],
       ['ph-wifi-high', 'Se il dispositivo era in standby, l\'avviso compare appena riapri l\'app.'],
@@ -1376,6 +1401,43 @@
   const revenue = (list) => list.reduce((s, a) => s + Number(a.price || 0), 0);
   const apptsOn = (ds) => db.appointments.filter((a) => a.date === ds).sort((a, b) => a.time.localeCompare(b.time));
 
+  // ---------- Benvenuto: always about today, whatever day the agenda shows ----------
+  const GREETINGS = [[13, 'Buongiorno', 'ph-sun'], [18, 'Buon pomeriggio', 'ph-sun-horizon'], [24, 'Buonasera', 'ph-moon']];
+  const toMin = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  const inMin = (m) => (m < 60 ? `tra ${m} min` : `tra ${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}`);
+  function renderWelcome() {
+    const now = new Date(), today = todayStr(), hhmm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const [, hello, icon] = GREETINGS.find(([h]) => now.getHours() < h);
+    const owner = db.config.ownerName && db.config.ownerName !== 'Titolare' ? `, ${db.config.ownerName.trim().split(' ')[0]}` : '';
+    $('wl-icon').className = 'ph ' + icon;
+    $('wl-hello').textContent = hello + owner;
+
+    const list = apptsOn(today), done = list.filter((a) => endOf(a) <= hhmm).length, closure = closureOn(today);
+    $('wl-today').textContent = !list.length
+      ? (isClosedDay(today) ? `Oggi il salone è chiuso${closure?.note ? ` (${closure.note})` : ''}.` : 'Oggi nessun appuntamento in agenda.')
+      : `Oggi ${list.length === 1 ? '1 appuntamento' : `${list.length} appuntamenti`}${done ? `, ${done} già ${done === 1 ? 'fatto' : 'fatti'}` : ''}, ${euro(revenue(list))} previsti.`;
+
+    const who = (a) => { const c = findClient(a); return c ? `<button class="link" onclick="openClientCard(${c.id})">${esc(a.clientName)}</button>` : `<strong>${esc(a.clientName)}</strong>`; };
+    const what = (a) => (a.services?.length ? `, <span class="muted">${esc(a.services.join(' + '))}</span>` : '');
+    const cur = list.find((a) => a.time <= hhmm && hhmm < endOf(a)), next = list.find((a) => a.time > hhmm);
+    const later = db.appointments.filter((a) => a.date > today).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
+    const lines = [];
+    if (cur) lines.push(`<span class="badge badge-ok">In corso</span> ${who(cur)} fino alle ${esc(endOf(cur))}`);
+    if (next) lines.push(`<span class="badge badge-accent">${inMin(toMin(next.time) - toMin(hhmm))}</span> ${who(next)} alle ${esc(next.time)}${what(next)}`);
+    else if (!cur && later) lines.push(`${list.length ? 'Per oggi hai finito. ' : ''}Il prossimo appuntamento è ${later.date === todayStr(1) ? 'domani' : esc(dayLabel(later.date))} alle ${esc(later.time)} con ${who(later)}`);
+    else if (!cur && list.length) lines.push('Per oggi hai finito.');
+    $('wl-next').innerHTML = lines.map((l) => `<p class="wl-line">${l}</p>`).join('');
+
+    const days = [today, todayStr(1), todayStr(2)];
+    const toNotify = db.appointments.filter((a) => days.includes(a.date) && !a.reminderSent).length;
+    const toRecall = recallList(db.clients, db.appointments, today, Number(db.config.recallWeeks ?? 6)).length;
+    $('wl-chips').innerHTML = [
+      toNotify && `<button class="btn btn-outline btn-sm" onclick="$('reminders').scrollIntoView({ behavior: 'smooth', block: 'start' })"><i class="ph ph-bell-ringing"></i>${toNotify} da avvisare</button>`,
+      toRecall && `<a class="btn btn-outline btn-sm" href="/clienti" data-tab="clienti"><i class="ph ph-clock-counter-clockwise"></i>${toRecall} da richiamare</a>`,
+    ].filter(Boolean).join('');
+  }
+  setInterval(() => { if (loaded) renderWelcome(); }, 60000); // keeps "tra 25 min" and the greeting current, no network
+
   function setQuickDate(offset) { $('agenda-date').value = todayStr(offset); renderAgenda(); }
   function setView(v) {
     view = v;
@@ -1426,6 +1488,7 @@
     $('stat-lowstock').textContent = low;
     $('stat-lowstock-box').classList.toggle('alert', low > 0);
     renderReminders();
+    renderWelcome();
     if (view === 'week') return renderWeek(days);
     if (view === 'month') return renderMonth(sel);
 

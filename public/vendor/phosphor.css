@@ -44,6 +44,7 @@
 .ph.ph-sparkle:before { content: "\e6a2"; }
 .ph.ph-plus:before { content: "\e3d4"; }
 .ph.ph-arrow-clockwise:before { content: "\e036"; }
+.ph.ph-sun:before { content: "\e472"; }
 .ph.ph-caret-left:before { content: "\e138"; }
 .ph.ph-caret-right:before { content: "\e13a"; }
 .ph.ph-bell-ringing:before { content: "\e5e8"; }
@@ -80,6 +81,7 @@
 .ph.ph-trash:before { content: "\e4a6"; }
 .ph.ph-lightning:before { content: "\e2de"; }
 .ph.ph-cloud-slash:before { content: "\e1b6"; }
+.ph.ph-clock:before { content: "\e19a"; }
 .ph.ph-wifi-high:before { content: "\e4ea"; }
 .ph.ph-identification-card:before { content: "\e2c8"; }
 .ph.ph-camera-plus:before { content: "\ec58"; }
@@ -92,7 +94,8 @@
 .ph.ph-megaphone:before { content: "\e324"; }
 .ph.ph-pencil-simple:before { content: "\e3b4"; }
 .ph.ph-cloud-check:before { content: "\e1b0"; }
-.ph.ph-clock:before { content: "\e19a"; }
+.ph.ph-sun-horizon:before { content: "\e5b6"; }
+.ph.ph-moon:before { content: "\e330"; }
 .ph.ph-warning:before { content: "\e4e0"; }
 .ph.ph-bell:before { content: "\e0ce"; }
 .ph.ph-note:before { content: "\e348"; }
