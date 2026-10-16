@@ -99,6 +99,13 @@
   /* Offline bar */
   .offline-bar { display: flex; align-items: center; gap: 10px; padding: 10px 32px; background: var(--warn-soft); color: var(--warn); border-bottom: 1px solid var(--border); font-size: .9rem; font-weight: 550; }
   .offline-bar[hidden] { display: none; }
+  .app-ver { margin-left: auto; font-size: .78rem; font-weight: 500; color: var(--muted); }
+
+  /* New web booking notice: above dialogs, so it is seen whatever is open */
+  .booking-alert { position: fixed; z-index: 150; top: 16px; right: 16px; width: min(420px, calc(100vw - 32px)); display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--surface); border: 1px solid var(--accent); border-radius: var(--r-surface); box-shadow: var(--shadow); animation: rise .3s var(--ease); }
+  .booking-alert > .ph { font-size: 1.4rem; color: var(--accent); flex-shrink: 0; }
+  .ba-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .ba-text span { font-size: .86rem; color: var(--muted); }
   .offline-bar span { flex: 1; }
   .offline-bar .ph-wifi-slash { font-size: 1.2rem; }
   .mini.clash { border-left-color: var(--danger); }
@@ -373,7 +380,7 @@
       <a class="nav-item" href="/privacy" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</a>
       <a class="nav-item" href="/impostazioni" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</a>
     </nav>
-    <button class="nav-item nav-bottom" onclick="openNews()"><i class="ph ph-sparkle"></i>Novità</button>
+    <button class="nav-item nav-bottom" onclick="openNews()"><i class="ph ph-sparkle"></i>Novità<span class="app-ver num"></span></button>
   </aside>
 
   <main class="main">
@@ -660,12 +667,19 @@
       <a class="nav-item" href="/prenotazione-web" data-tab="webbooking"><i class="ph ph-globe-simple"></i>Prenotazione web</a>
       <a class="nav-item" href="/privacy" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</a>
       <a class="nav-item" href="/impostazioni" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</a>
-      <button class="nav-item" onclick="openNews()"><i class="ph ph-sparkle"></i>Novità</button>
+      <button class="nav-item" onclick="openNews()"><i class="ph ph-sparkle"></i>Novità<span class="app-ver num"></span></button>
     </nav>
   </div>
 </div>
 
 <!-- Install banner: shown after login when the device can install the app, until dismissed -->
+<div class="booking-alert" id="booking-alert" role="status" hidden>
+  <i class="ph ph-bell-ringing" aria-hidden="true"></i>
+  <div class="ba-text"><strong id="ba-title"></strong><span id="ba-detail"></span></div>
+  <button class="btn btn-primary btn-sm" onclick="showNewBookings()">Vedi</button>
+  <button class="btn-icon" onclick="dismissBookings()" aria-label="Chiudi avviso"><i class="ph ph-x"></i></button>
+</div>
+
 <div class="install-banner" id="install-banner" role="region" aria-label="Installa l'app" hidden>
   <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors"></i></span>
   <div class="ib-text">
@@ -1104,11 +1118,14 @@
       }
     }
     outbox.forEach((op) => applyOp(fresh, op));
+    const known = loaded && new Set(db.appointments.map((a) => a.id));
     db = fresh;
     saveCache();
     const first = !loaded;
     if (first) { loaded = true; loadConfigUI(); }
     renderAll();
+    // createdAt check: a restored backup full of old web bookings must not ring
+    if (known) announce(db.appointments.filter((a) => a.source === 'web' && !known.has(a.id) && Date.now() - Date.parse(a.createdAt) < 864e5));
     document.body.classList.add('ready');
     updateOfflineBar();
     if (synced.length) warnClashes(synced);
@@ -1121,6 +1138,11 @@
   // ---------- Novità ----------
   // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
   const NEWS = [
+    { v: '1.7', date: '16 ottobre 2026', title: 'Le prenotazioni online arrivano da sole', items: [
+      ['ph-bell-ringing', 'Con il gestionale aperto, una nuova prenotazione dalla pagina web arriva entro 20 secondi con un bip e un avviso in alto: tocca "Vedi" per aprire quel giorno in agenda.'],
+      ['ph-wifi-high', 'Se il dispositivo era in standby, l\'avviso compare appena riapri l\'app.'],
+      ['ph-sparkle', 'Accanto a Novità ora vedi la versione dell\'app che stai usando.'],
+    ] },
     { v: '1.6', date: '16 ottobre 2026', title: 'Scheda cliente, foto e richiami', items: [
       ['ph-identification-card', 'Tocca il nome di una cliente (anche in agenda) per aprire la sua scheda: dati, formula, note, quanto ha speso e lo storico delle visite.'],
       ['ph-camera-plus', 'Allega foto alla scheda (prima e dopo, colore): vengono ridotte a 480p sul dispositivo, quindi occupano pochissimo. Le foto non sono incluse nel file di backup.'],
@@ -1253,6 +1275,61 @@
   // shortcut: polling every 2 min keeps the tablet in sync with web bookings; switch to push if Neon compute hours run short.
   setInterval(() => { if (loaded && !document.hidden && !anyModalOpen()) reload(); }, 120000);
   document.addEventListener('visibilitychange', () => { if (loaded && !document.hidden && !anyModalOpen()) reload(); });
+  document.querySelectorAll('.app-ver').forEach((e) => { e.textContent = 'v' + NEWS[0].v; });
+
+  // ---------- Nuove prenotazioni online ----------
+  // While the app is on screen it asks every 20 s whether a web booking newer than its last one exists (a tiny query)
+  // and reloads only then, also with a dialog open. Hidden app: nothing runs, so Neon can sleep; it catches up on return.
+  const maxWebId = () => db.appointments.reduce((m, a) => (a.source === 'web' && a.id > m ? a.id : m), 0);
+  setInterval(async () => {
+    if (!loaded || document.hidden || flushing || $('login').classList.contains('open')) return;
+    const wasOffline = offline;
+    try {
+      if ((await api('GET', `/api/data?newweb=${maxWebId()}`)).n || wasOffline) reload(); // back online: send the queue now
+    } catch {} // offline or session expired: the offline bar and the login already say so
+  }, 20000);
+
+  let newBookings = [], audio;
+  // Browsers play sound only after the first touch or click on the page.
+  document.addEventListener('pointerdown', () => { try { (audio ||= new AudioContext()).resume(); } catch {} }, { once: true });
+  function beep() {
+    try {
+      (audio ||= new AudioContext()).resume();
+      [880, 1320].forEach((hz, i) => {
+        const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime + i * 0.18;
+        o.frequency.value = hz;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+        o.connect(g).connect(audio.destination);
+        o.start(t);
+        o.stop(t + 0.42);
+      });
+    } catch {} // no sound on this device: the notice on screen is enough
+    navigator.vibrate?.(200);
+  }
+  function announce(list) {
+    if (!list.length) return;
+    newBookings = [...newBookings, ...list].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    const a = newBookings[0], more = newBookings.length - 1;
+    $('ba-title').textContent = more ? `${more + 1} nuove prenotazioni online` : 'Nuova prenotazione online';
+    $('ba-detail').textContent = `${a.clientName}, ${dayLabel(a.date)} alle ${a.time}${more ? ` e altre ${more}` : `: ${(a.services || []).join(' + ')}`}`;
+    $('booking-alert').hidden = false;
+    beep();
+  }
+  function dismissBookings() {
+    newBookings = [];
+    $('booking-alert').hidden = true;
+  }
+  function showNewBookings() {
+    const a = newBookings[0];
+    dismissBookings();
+    if (!a) return;
+    document.querySelectorAll('.modal-backdrop.open:not([data-locked])').forEach((m) => closeModal(m.id));
+    showTab('agenda');
+    $('agenda-date').value = a.date;
+    setView('day');
+  }
   window.addEventListener('online', () => { if (loaded) reload(); });
   window.addEventListener('offline', () => { offline = true; updateOfflineBar(); });
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});

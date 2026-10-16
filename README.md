@@ -51,7 +51,7 @@ Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel 
 **Prenotazione online**
 - Le clienti scelgono servizi, giorno e orario: gli orari occupati sono bloccati in base alla durata.
 - Giorni di chiusura, pausa pranzo, ferie, orari e intervallo degli slot si impostano dal gestionale.
-- Ogni prenotazione arriva subito in agenda con il badge "Web"; due clienti non possono prendere lo stesso orario.
+- Ogni prenotazione arriva in agenda con il badge "Web" e, con il gestionale aperto, entro 20 secondi suona un bip con un avviso; due clienti non possono prendere lo stesso orario.
 
 **WhatsApp senza API**
 - Conferme, promemoria e messaggi liberi con un tocco tramite link `wa.me` (anche via SMS).
@@ -174,7 +174,7 @@ La versione originale (`legacy/salone_pro_v6.html`, e la successiva v9) salvava 
 
 ## Limiti noti
 
-- Il gestionale si aggiorna ogni 2 minuti e quando torni sulla scheda: una prenotazione web compare entro quel tempo.
+- Le prenotazioni web arrivano entro 20 secondi solo con il gestionale aperto sullo schermo; in standby o in una scheda nascosta non suona nulla e l'avviso compare quando lo riapri. Le modifiche fatte da altri dispositivi arrivano entro 2 minuti.
 - Offline, due dispositivi che modificano la stessa voce si sovrascrivono: vale l'ultima modifica inviata.
 - Le icone sono ridotte a quelle usate: aggiungendo una nuova icona (`ph-...`) va rigenerato `public/vendor/phosphor.*`.
 - Le foto non sono nel file di backup: restano solo nel database Neon (0,5 GB gratuiti, qualche migliaio di foto).

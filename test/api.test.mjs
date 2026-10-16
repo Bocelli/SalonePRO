@@ -219,3 +219,17 @@ test('client photos: private, validated, outside the main load and the backup', 
   assert.equal((await call(data, { method: 'DELETE', cookie: fresh, query: { col: 'clients', id: '101' } })).status, 200);
   assert.equal((await call(data, { cookie: fresh, query: { photos: '101' } })).body.photos.length, 0, 'deleting the client deletes the photos');
 });
+
+test('new web bookings check: counts only web bookings after the given id', async () => {
+  const fresh = (await call(login, { method: 'POST', ip: '9.9.9.5', body: { password: process.env.ADMIN_PASSWORD } })).headers['set-cookie'].split(';')[0];
+  const check = (newweb) => call(data, { cookie: fresh, query: { newweb } });
+  assert.equal((await call(data, { query: { newweb: '0' } })).status, 401);
+  assert.equal((await check('abc')).status, 400);
+  const web = (await call(data, { cookie: fresh })).body.appointments.filter((a) => a.source === 'web');
+  const last = Math.max(0, ...web.map((a) => a.id));
+  assert.equal((await check(String(last))).body.n, 0);
+  await call(data, { method: 'PUT', cookie: fresh, body: { col: 'appointments', item: { id: last + 10 ** 9, clientName: 'Banco', date: wed, time: '18:00', services: [], price: 0 } } });
+  assert.equal((await check(String(last))).body.n, 0, 'bookings made in the salon do not count');
+  assert.equal((await book({ time: '16:00' })).status, 200);
+  assert.equal((await check(String(last))).body.n, 1);
+});

@@ -17,6 +17,15 @@ export default handle(async (req, res) => {
   const sql = await db();
   await requireAdmin(req, sql);
 
+  // Cheap check the open app runs every few seconds: web bookings newer than the last one it has (ids grow with time).
+  if (req.method === 'GET' && req.query.newweb !== undefined) {
+    const after = Number(req.query.newweb);
+    if (!Number.isSafeInteger(after)) fail(400, 'Dati non validi');
+    const [{ n }] = await sql`SELECT count(*)::int AS n FROM docs WHERE col = 'appointments' AND id > ${after} AND data->>'source' = 'web'`;
+    res.setHeader('Cache-Control', 'no-store');
+    return res.json({ n });
+  }
+
   if (req.method === 'GET' && req.query.photos) {
     const rows = await sql`SELECT data FROM docs WHERE col = 'photos' AND data->>'clientId' = ${String(Number(req.query.photos))} ORDER BY id DESC`;
     res.setHeader('Cache-Control', 'no-store');
