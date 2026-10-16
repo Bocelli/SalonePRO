@@ -1,95 +1,168 @@
-# Salone PRO
+<p align="center">
+  <img src="public/icons/icon-192.png" width="84" alt="Logo Salone PRO">
+</p>
 
-Gestionale per salone (agenda, listino, schede clienti, magazzino, privacy) più la pagina di prenotazione online per le clienti. HTML/CSS/JS senza build, API serverless su Vercel, database Postgres su Neon (piano gratuito).
+<h1 align="center">Salone PRO</h1>
+
+<p align="center">
+  Gestionale per parrucchieri con prenotazione online, promemoria su WhatsApp e funzionamento offline.<br>
+  <sub>Salon management web app for hair salons: online booking, WhatsApp reminders, works offline. Italian UI.</sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/the0x1d3/FlavioSalone/actions/workflows/test.yml"><img src="https://github.com/the0x1d3/FlavioSalone/actions/workflows/test.yml/badge.svg" alt="Test"></a>
+  <img src="https://img.shields.io/badge/Vercel-serverless-18181b?logo=vercel&logoColor=white" alt="Vercel">
+  <img src="https://img.shields.io/badge/Neon-Postgres-00e599?logo=postgresql&logoColor=white" alt="Neon Postgres">
+  <img src="https://img.shields.io/badge/PWA-installabile%20e%20offline-b02a5b" alt="PWA">
+  <img src="https://img.shields.io/badge/JavaScript-senza%20build-f7df1e?logo=javascript&logoColor=black" alt="JavaScript senza build">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/hero.png" alt="Gestionale Salone PRO su computer e pagina di prenotazione su telefono">
+</p>
+
+Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel browser del tablet. Ora i dati stanno in un database online, le clienti prenotano da sole con gli orari liberi in tempo reale e il salone continua a lavorare anche quando manca internet.
 
 | Indirizzo | Cosa c'è |
 |---|---|
-| `/` | Gestionale del salone, protetto da password |
-| `/prenota` | Pagina pubblica di prenotazione da dare alle clienti |
+| `/` | Gestionale del salone, protetto da password e installabile come app |
+| `/prenota` | Pagina pubblica di prenotazione da condividere con le clienti |
 
-## Come è fatto
+## Funzioni
+
+**Agenda**
+- Vista Giorno, Settimana e Mese, con numero di appuntamenti e incasso del periodo.
+- Promemoria delle clienti di oggi, domani e dopodomani da avvisare, con stato "Avvisata".
+- Durata dei servizi, orari di fine calcolati e avviso degli appuntamenti sovrapposti.
+
+**Clienti e listino**
+- Schede clienti con formule colore, allergie (con consenso art. 9 GDPR) e consenso privacy.
+- Listino a cartelle (PIEGA, TAGLIO, COLORE...) da creare, rinominare ed eliminare; servizi modificabili.
+- Magazzino con soglia minima e avviso dei prodotti da riordinare.
+
+**Prenotazione online**
+- Le clienti scelgono servizi, giorno e orario: gli orari occupati sono bloccati in base alla durata.
+- Giorni di chiusura, orari e intervallo degli slot si impostano dal gestionale.
+- Ogni prenotazione arriva subito in agenda con il badge "Web"; due clienti non possono prendere lo stesso orario.
+
+**WhatsApp senza API**
+- Conferme, promemoria e messaggi liberi con un tocco tramite link `wa.me` (anche via SMS).
+- La cliente può mandare la richiesta su WhatsApp e il salone la inserisce in agenda incollando il messaggio.
+
+**App e offline**
+- PWA installabile su tablet, telefono e computer, con tema chiaro e scuro automatico.
+- Senza rete si apre lo stesso: le modifiche restano sul dispositivo e partono da sole al ritorno della connessione.
+
+## Screenshot
+
+| Settimana | Mese |
+|---|---|
+| ![Agenda in vista settimana](docs/screenshots/settimana.png) | ![Agenda in vista mese](docs/screenshots/mese.png) |
+| **Listino a cartelle** | **Schede clienti** |
+| ![Listino servizi a cartelle](docs/screenshots/listino.png) | ![Schede clienti con formule e consensi](docs/screenshots/clienti.png) |
+| **Prenotazione online** | **Tema scuro** |
+| ![Pagina di prenotazione per le clienti](docs/screenshots/prenota.png) | ![Agenda in tema scuro](docs/screenshots/agenda-dark.png) |
+
+<p align="center">
+  <img src="docs/screenshots/mobile-agenda.png" width="260" alt="Agenda su telefono">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/mobile-prenota.png" width="260" alt="Prenotazione su telefono in tema scuro">
+</p>
+
+<sub>Dati, nomi e numeri di telefono negli screenshot sono di fantasia.</sub>
+
+## Come funziona
+
+```mermaid
+flowchart LR
+  subgraph Dispositivi
+    A["Gestionale (PWA)<br/>tablet, telefono, PC"]
+    C["Pagina /prenota<br/>clienti"]
+  end
+  A -- "API con login" --> F["Funzioni Vercel<br/>Francoforte"]
+  C -- "API pubblica" --> F
+  F --> D[("Neon Postgres<br/>Francoforte")]
+  A -. "link wa.me / sms:" .-> W["WhatsApp e SMS"]
+  A <-. "copia dati e coda offline" .-> L["Dispositivo"]
+```
+
+- **Frontend:** HTML, CSS e JavaScript senza framework né build. Font Geist e icone Phosphor ospitati sul sito e ridotti ai caratteri usati.
+- **Backend:** tre funzioni serverless Node su Vercel (`login`, `data`, `public`) nella regione `fra1`.
+- **Database:** Neon Postgres (piano gratuito), una sola tabella `docs (col, id, data jsonb)` creata da sola alla prima richiesta.
+- **Test:** le API girano davvero su un Postgres in memoria (PGlite), senza account né rete.
 
 ```
-public/            pagine statiche (index.html = gestionale, prenota.html = clienti)
-  base.css         colori, font e componenti condivisi (chiaro e scuro automatici)
+public/            gestionale (index.html), prenotazione (prenota.html), stili, icone, service worker
   common.js        funzioni condivise (date, euro, WhatsApp, informativa privacy)
-  vendor/          font Geist e icone Phosphor, ospitati sul sito e ridotti ai caratteri usati
-api/
-  _lib.js          database, sessione admin, orari (fuso Europe/Rome)
-  login.js         POST login, DELETE logout (cookie HttpOnly firmato, 30 giorni)
-  data.js          API del gestionale (serve il login)
-  public.js        API della pagina clienti: listino, orari occupati (senza nomi), prenotazione
-test/              test delle API su un Postgres in memoria (`npm test`)
+  offline.js       logica offline: coda delle modifiche e sovrapposizioni
+  sw.js            service worker: pagine dalla rete, cache come riserva
+api/               funzioni serverless (sessione, dati del gestionale, prenotazioni pubbliche)
+test/              test delle API e della logica offline (npm test)
+docs/screenshots/  immagini di questo README
+legacy/            la versione originale in un solo file HTML (v6)
 ```
 
-Tutti i dati stanno in una sola tabella `docs (col, id, data jsonb)`, creata in automatico alla prima richiesta insieme a un listino di partenza.
+## Installazione
 
-## WhatsApp (senza API)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fthe0x1d3%2FFlavioSalone&project-name=salone-pro&repository-name=salone-pro&env=ADMIN_PASSWORD&envDescription=Password%20del%20gestionale%2C%20almeno%2010%20caratteri)
 
-Tutto passa da link `wa.me`, nessun account business o API:
-- dall'agenda: conferma o promemoria alla cliente con un tocco (anche SMS);
-- la cliente può inviare la richiesta di prenotazione su WhatsApp invece di prenotare online;
-- dopo una prenotazione online la cliente può avvisare il salone su WhatsApp;
-- "Inserisci da messaggio" trasforma un messaggio di prenotazione incollato in un appuntamento;
-- "Condividi su WhatsApp" manda il link della pagina di prenotazione.
+1. **Deploy:** usa il pulsante qui sopra, oppure importa il repository su [vercel.com/new](https://vercel.com/new) con Framework Preset **Other**.
+2. **Password:** imposta `ADMIN_PASSWORD` (almeno 10 caratteri, meglio una frase lunga) tra le Environment Variables.
+3. **Database:** nel progetto apri **Storage > Create Database > Neon**, piano Free, regione **Frankfurt**, e collegalo al progetto. Vercel aggiunge `DATABASE_URL` da solo.
+4. **Redeploy**, poi entra nel gestionale e compila **Impostazioni & dati**: nome del salone, numero WhatsApp, orari e giorni di chiusura.
 
-## Sicurezza
+Le funzioni girano a Francoforte (`vercel.json`) e il database va creato a Francoforte, così i dati restano in Unione Europea.
 
-- **Password** solo come variabile d'ambiente `ADMIN_PASSWORD` (tipo Sensitive su Vercel), mai nel codice.
-- **Sessione**: cookie HttpOnly, Secure, SameSite=Strict, firmato HMAC-SHA256, scade dopo 30 giorni.
-- **Tentativi di login**: dopo 5 password sbagliate quell'IP è bloccato per 15 minuti.
-- **Esci da tutti i dispositivi** (Impostazioni): invalida subito ogni sessione aperta, per un tablet perso o rubato. Anche cambiare `ADMIN_PASSWORD` + Redeploy scollega tutti.
-- **Prenotazioni online**: massimo 10 tentativi all'ora per IP, più un campo nascosto anti-bot.
-- **API pubblica**: non restituisce mai nomi o telefoni, solo gli orari occupati.
-- **Header**: Content-Security-Policy (nessuno script o connessione verso altri siti), anti-clickjacking, HSTS di Vercel.
-- **Dati in UE**: funzioni a Francoforte (`fra1`), database Neon a Francoforte.
-
-Da fare sugli account (fuori dal codice): attiva la verifica in due passaggi su GitHub, Vercel e Neon, perché chi entra lì vede tutto.
-
-## App installabile (PWA)
-
-`manifest.webmanifest` e le icone in `public/icons/` rendono il gestionale installabile: Impostazioni > "Installa l'app" su Android e computer, oppure Safari > Condividi > "Aggiungi alla schermata Home" su iPhone e iPad. Non c'è modalità offline: i dati arrivano sempre dal database.
-
-Dopo il login compare un banner in basso: su Android e computer ha il pulsante **Installa**, su iPhone e iPad spiega i passaggi di Safari. Si chiude con la X e non ricompare su quel dispositivo; la guida completa resta in Impostazioni > "Come si installa".
-
-L'anteprima del link `/prenota` su WhatsApp e social usa `public/og.png` e i meta `og:` in `prenota.html`, con indirizzi assoluti su `salone-pro.vercel.app`: se colleghi un dominio tuo, aggiornali.
-
-## Modalità offline
-
-Il gestionale funziona anche senza internet, se su quel dispositivo è già stato fatto l'accesso almeno una volta con la rete:
-- `public/sw.js` (service worker) tiene in cache pagine e risorse: prima prova la rete, poi la cache. Le API non passano mai dalla cache.
-- Dopo ogni caricamento i dati vengono copiati sul dispositivo (`localStorage`, chiave `sp_cache`).
-- Le modifiche fatte senza rete (o con la sessione scaduta) finiscono in una coda (`sp_outbox`) e partono in ordine al ritorno della rete: evento `online`, ritorno sulla scheda, ogni 2 minuti o con "Riprova".
-- Dopo l'invio, gli appuntamenti inseriti offline che si sovrappongono ad altri (per esempio una prenotazione web arrivata nel frattempo) vengono segnalati e marcati "Sovrapposto" in agenda.
-- "Esci" cancella copia e coda dal dispositivo; se la sessione è scaduta o revocata, la copia viene cancellata appena il dispositivo torna online.
-
-Limiti: due dispositivi che modificano la stessa voce offline si sovrascrivono (vale l'ultima inviata); ripristino backup ed "Esci" richiedono la rete; la pagina `/prenota` per le clienti resta solo online.
-
-## Novità (changelog)
-
-Al primo accesso dopo un aggiornamento il gestionale mostra "Novità di Salone PRO", riapribile dal menu (Novità). Per annunciare un aggiornamento aggiungi una voce **in cima** all'array `NEWS` in `public/index.html` con un nuovo `v`: comparirà una volta su ogni dispositivo.
-
-## Configurazione su Vercel
-
-1. **Database:** progetto Vercel, tab **Storage**, **Create Database**, scegli **Neon** (piano Free), regione **Frankfurt (eu-central-1)**, collegalo al progetto. Vercel aggiunge da solo `DATABASE_URL`.
-2. **Password:** in **Settings > Environment Variables** imposta `ADMIN_PASSWORD` (almeno 10 caratteri, meglio una frase lunga).
-3. **Redeploy** dal tab Deployments, così le nuove variabili vengono lette.
-
-Le funzioni girano in `fra1` (Francoforte, vedi `vercel.json`) così i dati restano in UE.
-
-## Portare i dati dalla versione v6
-
-La v6 salvava tutto nel browser del tablet. Apri `salone_pro_v6.html` su quel dispositivo, **Impostazioni & Dati > Scarica Backup**, poi nel nuovo gestionale **Impostazioni & dati > Ripristina da backup**. Il ripristino sostituisce tutti i dati attuali.
-
-## Test
+### Sviluppo e test
 
 ```bash
 npm install
 npm test
 ```
 
+Per provare il sito in locale con il database vero: `npx vercel link`, `npx vercel env pull`, `npx vercel dev`.
+
+## Sicurezza
+
+- **Password** solo come variabile d'ambiente `ADMIN_PASSWORD` (tipo Sensitive su Vercel), mai nel codice.
+- **Sessione:** cookie HttpOnly, Secure, SameSite=Strict, firmato HMAC-SHA256, valido 30 giorni.
+- **Tentativi di login:** dopo 5 password sbagliate quell'IP è bloccato per 15 minuti.
+- **Esci da tutti i dispositivi:** invalida subito ogni sessione aperta, per un tablet perso o rubato.
+- **Prenotazioni online:** massimo 10 tentativi all'ora per IP, più un campo nascosto anti-bot.
+- **API pubblica:** non restituisce mai nomi o telefoni, solo gli orari occupati.
+- **Header:** Content-Security-Policy (nessuno script o connessione verso altri siti), anti-clickjacking, HSTS.
+- **Dati in UE:** funzioni e database a Francoforte.
+
+Attiva la verifica in due passaggi su GitHub, Vercel e Neon: chi entra in quegli account vede tutti i dati.
+
+## Modalità offline
+
+Il gestionale funziona anche senza internet, se su quel dispositivo è già stato fatto l'accesso almeno una volta con la rete.
+
+- `public/sw.js` tiene in cache pagine e risorse: prima prova la rete, poi la cache. Le API non passano mai dalla cache.
+- Dopo ogni caricamento i dati vengono copiati sul dispositivo (`localStorage`, chiave `sp_cache`).
+- Le modifiche fatte senza rete, o con la sessione scaduta, finiscono in una coda (`sp_outbox`) e partono in ordine al ritorno della rete.
+- Dopo l'invio, gli appuntamenti inseriti offline che si sovrappongono ad altri vengono segnalati e marcati "Sovrapposto".
+- "Esci" cancella copia e coda dal dispositivo; una sessione scaduta o revocata cancella la copia appena il dispositivo torna online.
+
+## App installabile
+
+Dopo il login compare un banner: su Android e computer ha il pulsante **Installa**, su iPhone e iPad spiega i passaggi di Safari (Condividi, "Aggiungi alla schermata Home"). La guida completa è in **Impostazioni > Come si installa**.
+
+L'anteprima del link `/prenota` su WhatsApp e social usa `public/og.png` e i meta `og:` di `prenota.html`, che contengono indirizzi assoluti: se colleghi un tuo dominio, aggiornali.
+
+## Novità nell'app
+
+Al primo accesso dopo un aggiornamento il gestionale mostra **Novità di Salone PRO**, riapribile dal menu. Per annunciare un aggiornamento aggiungi una voce in cima all'array `NEWS` in `public/index.html` con un nuovo `v`.
+
+## Portare i dati dalla versione originale
+
+La versione originale (`legacy/salone_pro_v6.html`, e la successiva v9) salvava tutto nel browser del tablet. Aprila su quel dispositivo, usa **Impostazioni & Dati > Scarica Backup**, poi nel nuovo gestionale **Impostazioni & dati > Ripristina da backup**. Il ripristino sostituisce tutti i dati attuali e porta con sé anche le cartelle del listino e lo stato dei promemoria.
+
 ## Limiti noti
 
-- Il gestionale ricarica i dati ogni 2 minuti e quando torni sulla scheda: una prenotazione web compare entro quel tempo.
-- Le icone sono ridotte a quelle usate: se ne aggiungi una nuova (`ph-...`) va rigenerato `public/vendor/phosphor.*`.
-- L'informativa privacy è un modello generico: falla verificare prima di affidartici.
+- Il gestionale si aggiorna ogni 2 minuti e quando torni sulla scheda: una prenotazione web compare entro quel tempo.
+- Offline, due dispositivi che modificano la stessa voce si sovrascrivono: vale l'ultima modifica inviata.
+- Le icone sono ridotte a quelle usate: aggiungendo una nuova icona (`ph-...`) va rigenerato `public/vendor/phosphor.*`.
+- L'informativa privacy è un modello generico: va fatta verificare prima di affidarcisi.
+- Il piano Hobby di Vercel è per uso non commerciale: per un'attività serve il piano Pro.
