@@ -15,6 +15,7 @@
   <img src="https://img.shields.io/badge/Neon-Postgres-00e599?logo=postgresql&logoColor=white" alt="Neon Postgres">
   <img src="https://img.shields.io/badge/PWA-installabile%20e%20offline-b02a5b" alt="PWA">
   <img src="https://img.shields.io/badge/JavaScript-senza%20build-f7df1e?logo=javascript&logoColor=black" alt="JavaScript senza build">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licenza-MIT-3f3f46" alt="Licenza MIT"></a>
 </p>
 
 <p align="center">
@@ -166,3 +167,11 @@ La versione originale (`legacy/salone_pro_v6.html`, e la successiva v9) salvava 
 - Le icone sono ridotte a quelle usate: aggiungendo una nuova icona (`ph-...`) va rigenerato `public/vendor/phosphor.*`.
 - L'informativa privacy è un modello generico: va fatta verificare prima di affidarcisi.
 - Il piano Hobby di Vercel è per uso non commerciale: per un'attività serve il piano Pro.
+
+## Licenza
+
+Il codice è rilasciato con licenza [MIT](LICENSE): puoi usarlo, modificarlo e ridistribuirlo, anche per uso commerciale, mantenendo l'avviso di copyright.
+
+Risorse di terze parti incluse in `public/vendor/`:
+- font [Geist](https://vercel.com/font) di Vercel, licenza [SIL Open Font License 1.1](public/vendor/LICENSE-geist.txt);
+- icone [Phosphor](https://phosphoricons.com), licenza [MIT](public/vendor/LICENSE-phosphor.txt).
