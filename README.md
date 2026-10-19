@@ -55,7 +55,7 @@ Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel 
 **Prenotazione online**
 - Le clienti scelgono servizi, giorno e orario: gli orari occupati sono bloccati in base alla durata.
 - Giorni di chiusura, pausa pranzo, ferie, orari e intervallo degli slot si impostano dal gestionale.
-- Nella conferma la cliente aggiunge l'appuntamento al suo calendario: Calendario Google (su Android apre direttamente l'app) o Calendario Apple, con promemoria 2 ore prima.
+- Nella conferma la cliente aggiunge l'appuntamento al suo calendario: Calendario Google (su Android apre direttamente l'app) oppure il file .ics, che si apre nel Calendario su iPhone, nel Calendario Samsung su Android e in Outlook su computer; promemoria 2 ore prima. L'app Google Calendar per Android non importa file .ics, per questo il pulsante Google resta.
 - Ogni prenotazione arriva in agenda con il badge "Web" e, con il gestionale aperto, entro 20 secondi suona un bip con un avviso; due clienti non possono prendere lo stesso orario.
 
 **WhatsApp senza API**

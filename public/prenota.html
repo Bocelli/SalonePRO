@@ -215,7 +215,7 @@
     <div class="summary" id="done-summary"></div>
     <div class="cal-actions">
       <a class="btn btn-outline" id="btn-google-cal" rel="noopener"><i class="ph ph-google-logo"></i>Aggiungi su Calendario Google</a>
-      <a class="btn btn-outline" id="btn-apple-cal" rel="noopener"><i class="ph ph-apple-logo"></i>Aggiungi su Calendario Apple</a>
+      <a class="btn btn-outline" id="btn-apple-cal" rel="noopener"><i class="ph ph-apple-logo"></i><span>Aggiungi su Calendario Apple</span></a>
     </div>
     <a class="btn btn-outline btn-lg" id="done-wa" target="_blank" rel="noopener" hidden><i class="ph ph-whatsapp-logo"></i>Avvisa il salone su WhatsApp</a>
     <button class="btn btn-primary btn-lg" onclick="location.reload()">Fatto</button>
@@ -450,10 +450,15 @@
       const at = (t) => `${selDate.replace(/-/g, '')}T${t.replace(':', '')}00`, enc = encodeURIComponent;
       const details = `Servizi: ${list.map((s) => s.name).join(' + ')}\nTotale indicativo: ${price(tot)}${cfg.ownerPhone ? `\nPer spostarlo o annullarlo: ${cfg.ownerPhone}` : ''}`;
       const params = `action=TEMPLATE&text=${enc(`Appuntamento da ${cfg.salonName}`)}&dates=${at(selTime)}/${at(d.appointment.end)}&ctz=Europe/Rome&details=${enc(details)}&location=${enc(cfg.address || '')}`;
-      Object.assign($('btn-google-cal'), /android/i.test(navigator.userAgent)
+      const ua = navigator.userAgent, android = /android/i.test(ua), ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1); // iPad says "Macintosh"
+      Object.assign($('btn-google-cal'), android
         ? { href: `intent://calendar.google.com/calendar/r/eventedit?${params}#Intent;scheme=https;package=com.google.android.calendar;end`, target: '' }
         : { href: `https://calendar.google.com/calendar/r/eventedit?${params}`, target: '_blank' });
+      // The same .ics: Calendar opens it on iPhone, Samsung Calendar on Samsung phones (Google Calendar's app cannot), Outlook & co. on a computer.
+      const [icon, label] = ios ? ['ph-apple-logo', 'Aggiungi su Calendario Apple'] : android ? ['ph-calendar-plus', 'Aggiungi su Calendario Samsung o altro'] : ['ph-download-simple', 'Scarica il file calendario (.ics)'];
       $('btn-apple-cal').href = `/api/public?ics=1&date=${selDate}&time=${selTime}&s=${list.map((s) => s.id).join(',')}`;
+      $('btn-apple-cal').querySelector('i').className = 'ph ' + icon;
+      $('btn-apple-cal').querySelector('span').textContent = label;
       openModal('done-modal');
     } catch {
       toast('Connessione assente, riprova', 'error');
