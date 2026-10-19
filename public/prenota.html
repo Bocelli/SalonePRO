@@ -445,16 +445,15 @@
       const note = `Ciao! Sono ${name}, ho appena prenotato online ${list.map((s) => s.name).join(' + ')} per ${dayLabel(selDate)} alle ${selTime}. A presto!`;
       $('done-wa').href = 'https://wa.me/' + waNumber(cfg.ownerPhone) + '?text=' + encodeURIComponent(note);
       $('done-wa').hidden = !cfg.ownerPhone;
-      // Google: on Android straight into the Calendar app, elsewhere the web page. Apple: the .ics built by the server
-      // (same text, reminder 2 hours before), which iPhone opens directly in Calendar; a downloaded file would end up in Files.
-      const at = (t) => `${selDate.replace(/-/g, '')}T${t.replace(':', '')}00`, enc = encodeURIComponent;
+      const at =(t) => `${selDate.replace(/-/g, '')}T${t.replace(':', '')}00`, enc = encodeURIComponent;
       const details = `Servizi: ${list.map((s) => s.name).join(' + ')}\nTotale indicativo: ${price(tot)}${cfg.ownerPhone ? `\nPer spostarlo o annullarlo: ${cfg.ownerPhone}` : ''}`;
       const params = `action=TEMPLATE&text=${enc(`Appuntamento da ${cfg.salonName}`)}&dates=${at(selTime)}/${at(d.appointment.end)}&ctz=Europe/Rome&details=${enc(details)}&location=${enc(cfg.address || '')}`;
       const ua = navigator.userAgent, android = /android/i.test(ua), ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1); // iPad says "Macintosh"
-      Object.assign($('btn-google-cal'), android
-        ? { href: `intent://calendar.google.com/calendar/r/eventedit?${params}#Intent;scheme=https;package=com.google.android.calendar;end`, target: '' }
-        : { href: `https://calendar.google.com/calendar/r/eventedit?${params}`, target: '_blank' });
-      // The same .ics: Calendar opens it on iPhone, Samsung Calendar on Samsung phones (Google Calendar's app cannot), Outlook & co. on a computer.
+      // Google's documented "add to calendar" link on every device: forcing the Android app (intent:// to r/eventedit)
+      // opened it without the event. Android picks the app or the browser by itself.
+      Object.assign($('btn-google-cal'), { href: `https://calendar.google.com/calendar/render?${params}`, target: '_blank' });
+      // The .ics comes from the server (same text, reminder 2 hours before), so iPhone opens it straight in Calendar instead of
+      // saving it to Files. Samsung Calendar opens it on Samsung phones (Google Calendar's app cannot), Outlook & co. on a computer.
       const [icon, label] = ios ? ['ph-apple-logo', 'Aggiungi su Calendario Apple'] : android ? ['ph-calendar-plus', 'Aggiungi su Calendario Samsung o altro'] : ['ph-download-simple', 'Scarica il file calendario (.ics)'];
       $('btn-apple-cal').href = `/api/public?ics=1&date=${selDate}&time=${selTime}&s=${list.map((s) => s.id).join(',')}`;
       $('btn-apple-cal').querySelector('i').className = 'ph ' + icon;
