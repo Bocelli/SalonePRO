@@ -46,7 +46,7 @@ Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel 
 **Clienti e listino**
 - Scheda cliente con formule colore, note, allergie (con consenso art. 9 GDPR), consenso privacy, spesa totale e storico delle visite.
 - Foto nella scheda (prima e dopo, colore), ridotte a 480p sul dispositivo: circa 50 KB l'una.
-- Importa ed esporta le clienti in CSV (Excel): riconosce il nostro formato, le liste "Nome; Cognome; Telefono" e i contatti Google, e salta le clienti già presenti.
+- Importa ed esporta le clienti in CSV (Excel): riconosce il nostro formato, le liste "Nome; Cognome; Telefono", i contatti Google e i file senza intestazione; esclude chi non ha telefono e aggiorna le clienti già presenti (stesso nome e stesso numero).
 - Selezione multipla ed eliminazione in blocco, con il filtro "Senza telefono" per fare pulizia.
 - Lista "Da richiamare": chi non viene da N settimane e non ha appuntamenti, con messaggio WhatsApp già scritto.
 - Listino a cartelle (PIEGA, TAGLIO, COLORE...) da creare, rinominare ed eliminare; servizi modificabili.
@@ -55,7 +55,7 @@ Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel 
 **Prenotazione online**
 - Le clienti scelgono servizi, giorno e orario: gli orari occupati sono bloccati in base alla durata.
 - Giorni di chiusura, pausa pranzo, ferie, orari e intervallo degli slot si impostano dal gestionale.
-- Nella conferma la cliente aggiunge l'appuntamento al suo calendario con un tocco: file iCalendar su iPhone, Google Calendar su Android.
+- Nella conferma la cliente aggiunge l'appuntamento al suo calendario: Calendario Google (su Android apre direttamente l'app) o Calendario Apple, con promemoria 2 ore prima.
 - Ogni prenotazione arriva in agenda con il badge "Web" e, con il gestionale aperto, entro 20 secondi suona un bip con un avviso; due clienti non possono prendere lo stesso orario.
 
 **WhatsApp senza API**

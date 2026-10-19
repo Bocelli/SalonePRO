@@ -286,6 +286,8 @@ test('booking page: calendar file for the client, built from the price list', as
   assert.match(r.headers['content-type'], /text\/calendar/);
   const body = r.body.replace(/\r\n /g, '');
   assert.ok(body.includes(`DTEND;TZID=Europe/Rome:${wed.replace(/-/g, '')}T103000`)); // 30 min from the price list
-  assert.ok(body.includes('SUMMARY:Piega Classica da '));
+  assert.ok(body.includes('SUMMARY:Appuntamento da '));
+  assert.ok(body.includes('DESCRIPTION:Servizi: Piega Classica\\nTotale indicativo: € 18'));
+  assert.ok(body.includes('BEGIN:VALARM\r\nTRIGGER:-PT120M'), 'reminder 2 hours before');
   assert.ok(!body.includes('X-WR-CALNAME'), 'a single event, not a calendar to subscribe');
 });

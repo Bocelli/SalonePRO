@@ -234,9 +234,14 @@
   /* Install banner + guide */
   /* Client list tools and bulk actions */
   .err-log { display: grid; max-height: 300px; overflow-y: auto; margin-top: 14px; border: 1px solid var(--border); border-radius: var(--r-control); }
-  .err-log > p { padding: 12px 14px; }
-  .err-row { display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 10px 14px; font-size: .88rem; overflow-wrap: anywhere; }
+  .err-log > p { display: flex; align-items: center; gap: 8px; padding: 12px 14px; }
+  .err-log > p .ph { color: var(--ok); font-size: 1.1rem; }
+  .err-row { display: flex; gap: 12px; padding: 12px 14px; font-size: .88rem; border-left: 3px solid var(--warn); }
   .err-row + .err-row { border-top: 1px solid var(--border); }
+  .err-row > .ph { font-size: 1.25rem; color: var(--warn); margin-top: 1px; flex-shrink: 0; }
+  .err-row > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .err-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .err-detail { margin-top: 3px; font-family: ui-monospace, Consolas, monospace; font-size: .78rem; color: var(--muted); overflow-wrap: anywhere; }
   .cli-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; padding: 10px 20px; border-bottom: 1px solid var(--border); }
   .chk { display: inline-flex; align-items: center; gap: 10px; padding-right: 6px; font-size: .9rem; cursor: pointer; }
   .btn.on { background: var(--accent-soft); color: var(--accent-text); }
@@ -1085,16 +1090,26 @@
     try {
       r = await fetch(url, { method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
     } catch (e) {
+      // Once per outage: the 20-second check would otherwise fill the log while offline.
+      if (!offline) logError('Rete', 'Connessione internet assente o instabile: la richiesta non ha raggiunto il server. Le modifiche restano sul dispositivo e partono al ritorno della rete.', e.message);
       offline = true;
       updateOfflineBar();
       throw e;
     }
     offline = false;
     const data = await r.json().catch(() => ({}));
-    if (r.status === 401) { openModal('login'); throw Object.assign(new Error('Sessione scaduta, accedi di nuovo'), { status: 401 }); }
+    const where = `${r.status} ${method} ${url.split('?')[0]}${data.error ? ': ' + data.error : ''}`;
+    if (r.status === 401) {
+      if (loaded) logError('Accesso', 'Sessione scaduta o revocata ("Esci da tutti i dispositivi"): serve di nuovo la password.', where);
+      openModal('login');
+      throw Object.assign(new Error('Sessione scaduta, accedi di nuovo'), { status: 401 });
+    }
     if (!r.ok) {
-      logError(r.status >= 500 ? `Errore del server (${r.status})` : data.error || 'Errore ' + r.status,
-        `${method} ${url.slice(0, 100)}${r.status >= 500 ? ': i dettagli sono nei log di Vercel (Logs del progetto)' : ''}`);
+      logError('Server', r.status >= 500 ? 'Il server o il database online ha avuto un errore imprevisto. Se succede ancora, i dettagli sono nei log del progetto su Vercel.'
+        : r.status === 503 ? 'Vercel non è configurato del tutto: manca il database o la password.'
+        : r.status === 429 ? 'Troppe richieste ravvicinate: il server ha bloccato le operazioni per qualche minuto.'
+        : r.status === 400 ? 'I dati inviati non sono stati accettati dal server: la modifica non è stata salvata.'
+        : 'Il server ha risposto con un errore.', where);
       throw Object.assign(new Error(data.error || 'Errore ' + r.status), { status: r.status, setup: data.setup });
     }
     return data;
@@ -1108,30 +1123,38 @@
 
   // ---------- Registro errori ----------
   // shortcut: kept on each device (last 100, localStorage); move it to the database if several devices need one shared log.
-  function logError(msg, detail = '') {
+  // Each entry: a category, a plain-language explanation for the salon and the technical detail for whoever helps.
+  const ERR_ICONS = { Rete: 'ph-wifi-slash', Server: 'ph-cloud-slash', Accesso: 'ph-lock-simple', Pagina: 'ph-bug' };
+  function logError(cat, msg, detail = '') {
     const log = readJSON('sp_errors') || [];
-    log.unshift({ at: new Date().toISOString(), msg: String(msg).slice(0, 300), detail: String(detail).slice(0, 300) });
+    log.unshift({ at: new Date().toISOString(), cat, msg: String(msg).slice(0, 300), detail: String(detail).slice(0, 300) });
     writeJSON('sp_errors', log.slice(0, 100));
     if ($('tab-backup').classList.contains('active')) renderErrorLog();
   }
   // "Script error." comes from scripts of other sites or extensions, with no details to show.
-  window.addEventListener('error', (e) => e.message !== 'Script error.' && logError(e.message, `${(e.filename || 'pagina').split('/').pop() || 'pagina'}:${e.lineno}`));
-  window.addEventListener('unhandledrejection', (e) => logError(e.reason?.message || String(e.reason)));
+  window.addEventListener('error', (e) => e.message !== 'Script error.' && logError('Pagina', "Errore imprevisto nella pagina: se qualcosa non funziona, ricarica l'app.", `${e.message} (${(e.filename || 'pagina').split('/').pop() || 'pagina'}:${e.lineno})`));
+  window.addEventListener('unhandledrejection', (e) => logError('Pagina', "Un'operazione non è andata a buon fine.", e.reason?.message || String(e.reason)));
   function renderErrorLog() {
     const when = (iso) => new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
     $('err-log').innerHTML = (readJSON('sp_errors') || []).map((e) => `
-      <div class="err-row"><span class="num muted">${esc(when(e.at))}</span><span>${esc(e.msg)}${e.detail ? `<br><span class="muted small">${esc(e.detail)}</span>` : ''}</span></div>`).join('')
-      || '<p class="muted small">Nessun errore registrato su questo dispositivo.</p>';
+      <div class="err-row">
+        <i class="ph ${ERR_ICONS[e.cat] || 'ph-warning-circle'}" aria-hidden="true"></i>
+        <div><div class="err-head"><strong>${esc(e.cat || 'Errore')}</strong><span class="muted small num">${esc(when(e.at))}</span></div>
+        <span>${esc(e.msg)}</span>${e.detail ? `<span class="err-detail">${esc(e.detail)}</span>` : ''}</div>
+      </div>`).join('')
+      || '<p class="muted small"><i class="ph ph-check-circle"></i>Nessun problema recente: il gestionale comunica regolarmente con il server.</p>';
   }
   function copyErrorLog() {
-    const lines = (readJSON('sp_errors') || []).map((e) => `${e.at}  ${e.msg}${e.detail ? '  |  ' + e.detail : ''}`);
+    const lines = (readJSON('sp_errors') || []).map((e) => `${e.at}  [${e.cat || 'Errore'}] ${e.msg}${e.detail ? '  |  ' + e.detail : ''}`);
     navigator.clipboard.writeText([`Salone PRO v${NEWS[0].v}, ${navigator.userAgent}`, ...lines].join('\n'))
       .then(() => toast(lines.length ? 'Registro copiato' : 'Registro vuoto copiato'))
       .catch(() => toast('Copia non riuscita', 'error'));
   }
   function clearErrorLog() {
+    if (!confirm('Svuotare il registro degli errori di questo dispositivo?')) return;
     forget('sp_errors');
     renderErrorLog();
+    toast('Registro svuotato');
   }
   let outbox = readJSON('sp_outbox') || [];
   const saveCache = () => writeJSON('sp_cache', db);
@@ -1246,6 +1269,11 @@
   // ---------- Novità ----------
   // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
   const NEWS = [
+    { v: '1.11', date: '19 ottobre 2026', title: 'Import più furbo e registro più chiaro', items: [
+      ['ph-file-csv', "L'import CSV esclude le persone senza numero di telefono e aggiorna le clienti già in archivio invece di saltarle. Due persone con lo stesso numero ma nomi diversi (mamma e figlia) restano due schede."],
+      ['ph-calendar-plus', 'Dopo la prenotazione online la cliente sceglie tra Calendario Google e Calendario Apple; su Android si apre direttamente l\'app Google Calendar. Il calendario la avvisa 2 ore prima.'],
+      ['ph-bug', 'Il registro errori dice in parole semplici cosa è successo (rete, server, accesso) e registra anche quando manca la connessione.'],
+    ] },
     { v: '1.10', date: '19 ottobre 2026', title: 'Clienti in blocco e registro errori', items: [
       ['ph-file-csv', "In Schede clienti puoi importare ed esportare le clienti in CSV (si apre con Excel). All'import le clienti già presenti vengono saltate."],
       ['ph-check-square', 'Seleziona più clienti con le caselle, o tutte insieme, ed eliminale in un colpo solo.'],
@@ -2030,11 +2058,13 @@
 
   // ---------- CSV clienti ----------
   function exportClientsCsv() {
+    if (!db.clients.length) return toast('Nessuna cliente da esportare', 'error');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([toCsv([CLIENT_CSV_HEAD, ...sortedClients().map(clientCsvRow)])], { type: 'text/csv;charset=utf-8' }));
     a.download = `clienti_${todayStr()}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
+    toast(db.clients.length === 1 ? '1 cliente esportata' : `${db.clients.length} clienti esportate`);
   }
   async function importClientsCsv(input) {
     const file = input.files[0];
@@ -2045,14 +2075,17 @@
     let text, r;
     try { text = new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch { text = new TextDecoder('windows-1252').decode(buf); } // Excel's plain "CSV" is not UTF-8
     try { r = clientsFromCsv(text, db.clients); } catch (e) { return toast(e.message, 'error'); }
-    const skipped = [r.dup && `${r.dup} già in archivio`, r.noName && `${r.noName} senza nome`].filter(Boolean).join(', ');
-    if (!r.clients.length) return toast(`Nessuna cliente nuova nel file${skipped ? ` (${skipped})` : ''}`, 'error');
-    if (!confirm(`Importare ${r.clients.length === 1 ? '1 cliente' : `${r.clients.length} clienti`}?${skipped ? `\nSaltate: ${skipped}.` : ''}`)) return;
-    const base = newId(), list = r.clients.map((c, i) => ({ ...c, id: base + i }));
-    db.clients.push(...list);
-    persistMany('clients', list).then((res) => res.every(Boolean) && toast(list.length === 1 ? '1 cliente importata' : `${list.length} clienti importate`));
+    const skipped = [r.noPhone && `${r.noPhone} senza telefono`, r.noName && `${r.noName} senza nome`].filter(Boolean).join(', ');
+    const what = [r.added.length && `${r.added.length} ${r.added.length === 1 ? 'nuova' : 'nuove'}`, r.updated.length && `${r.updated.length} da aggiornare`].filter(Boolean).join(' e ');
+    if (!what) return toast(`Nessuna cliente da importare${skipped ? ` (escluse: ${skipped})` : ''}`, 'error');
+    if (!confirm(`Importare dal file ${what}?${skipped ? `\nEscluse: ${skipped}.` : ''}`)) return;
+    const base = newId(), added = r.added.map((c, i) => ({ ...c, id: base + i })), changed = new Map(r.updated.map((c) => [c.id, c]));
+    db.clients = [...db.clients.map((c) => changed.get(c.id) || c), ...added];
+    persistMany('clients', [...added, ...r.updated]).then((res) => res.every(Boolean)
+      && toast(`Importazione completata: ${[added.length && `${added.length} ${added.length === 1 ? 'nuova' : 'nuove'}`, r.updated.length && `${r.updated.length} ${r.updated.length === 1 ? 'aggiornata' : 'aggiornate'}`].filter(Boolean).join(', ')}`));
     renderClients();
     renderGdpr();
+    renderAgenda();
   }
 
   function renderClients() {

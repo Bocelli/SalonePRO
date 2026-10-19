@@ -22,15 +22,37 @@ test('toCsv: Excel formulas neutralised, phones kept, round trip', () => {
   same(parseCsv(csv), [[`'=HYPERLINK("http://x")`, '+39 333 1234567', "'-2+3", 'a;b']]);
 });
 
-test('clientsFromCsv: our export round trip, Nome + Cognome, duplicates, missing names', () => {
+test('clientsFromCsv: our export round trip, Nome + Cognome, no phone left out, twins in the file', () => {
   const ours = { name: '=Anna Bianchi', phone: '333 111 2222', allergy: 'Nichel', formula: '6.0 + 6.35', notes: 'ok', gdprConsent: true, gdprDate: '2026-03-02', healthConsent: true };
-  const back = clientsFromCsv(toCsv([CLIENT_CSV_HEAD, clientCsvRow(ours)]), []).clients[0];
-  same({ ...back, source: undefined }, { ...ours, source: undefined }); // apostrophe removed again on import
+  const back = clientsFromCsv(toCsv([CLIENT_CSV_HEAD, clientCsvRow(ours)]), []).added[0];
+  const fields = (o) => Object.entries(o).filter(([k]) => k !== 'source').sort();
+  same(fields(back), fields(ours)); // apostrophe removed again on import
 
-  const excel = 'Nome;Cognome;Cellulare\nMaria;Rossi;333-444 5555\nLuca;Verdi;\n;;333\nMaria;Rossi;3334445555\nElena;Rizzo;3331122334';
-  const r = clientsFromCsv(excel, [{ name: 'Elena Rizzo', phone: '+39 333 112 2334' }]);
-  same(r.clients.map((c) => `${c.name}|${c.phone}`), ['Maria Rossi|333444 5555', 'Luca Verdi|']);
-  assert.equal(r.dup, 2); // Maria twice in the file, Elena already in the archive
+  const excel = 'Nome;Cognome;Cellulare;Note\nMaria;Rossi;333-444 5555;\nLuca;Verdi;;\n;;333 1234567;\nMaria;Rossi;3334445555;preferisce il sabato';
+  const r = clientsFromCsv(excel, []);
+  same(r.added.map((c) => `${c.name}|${c.phone}|${c.notes}`), ['Maria Rossi|3334445555|preferisce il sabato']); // second row completes the first
+  assert.equal(r.noPhone, 1); // Luca
   assert.equal(r.noName, 1);
-  assert.throws(() => clientsFromCsv('Telefono\n333', []), /Nome/);
+  assert.equal(r.added[0].gdprConsent, false, 'a file never invents a privacy consent');
+  assert.throws(() => clientsFromCsv('Telefono;Note\n333 1234567;x', []), /Nome/);
+});
+
+test('clientsFromCsv: updates clients already in the archive, keeps family members apart', () => {
+  const existing = [
+    { id: 1, name: 'Elena Rizzo', phone: '+39 333 112 2334', formula: '5.0', notes: 'vecchia nota', gdprConsent: true },
+    { id: 2, name: 'Maria Bianchi', phone: '', formula: '' },
+    { id: 3, name: 'Paola Neri', phone: '347 000 1111' },
+  ];
+  const csv = 'Nome;Telefono;Formula;Note;Consenso GDPR\nelena  rizzo;3331122334;6.0;;\nMaria Bianchi;333 888 9999;;;SI\nGiulia Neri;347 000 1111;;;';
+  const r = clientsFromCsv(csv, existing);
+  same(r.updated.map((c) => `${c.id}|${c.name}|${c.phone}|${c.formula}|${c.notes}|${c.gdprConsent}`), [
+    '1|Elena Rizzo|3331122334|6.0|vecchia nota|true', // empty cells keep what was there, the name keeps its spelling
+    '2|Maria Bianchi|333 888 9999||undefined|true', // had no phone: same person, now with a number
+  ]);
+  same(r.added.map((c) => c.name), ['Giulia Neri']); // same phone as Paola, different person
+});
+
+test('clientsFromCsv: file without a header row, in the order of our export', () => {
+  const r = clientsFromCsv('Anna Bianchi;333 1234567;Nichel\nBea Verdi;347 7654321', []);
+  same(r.added.map((c) => `${c.name}|${c.phone}|${c.allergy}`), ['Anna Bianchi|333 1234567|Nichel', 'Bea Verdi|347 7654321|Nessuna']);
 });

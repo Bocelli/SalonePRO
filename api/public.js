@@ -24,13 +24,14 @@ export default handle(async (req, res) => {
     const ids = String(req.query.s || '').split(',').map(Number);
     const chosen = services.filter((s) => ids.includes(s.id));
     if (!DAY.test(date) || !HHMM.test(time) || !chosen.length) fail(400, 'Dati non validi');
-    const names = chosen.map((s) => s.name).join(' + ');
+    const total = chosen.reduce((s, x) => s + (Number(x.price) || 0), 0);
     res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
     res.setHeader('Content-Disposition', 'inline; filename="appuntamento.ics"');
     return res.send(icsFile(null, [{
       uid: `${date}T${time}-${chosen.map((s) => s.id).join('-')}@salone-pro`, date, time, end: addMin(time, durationOf(chosen, config)),
-      summary: `${names} da ${config.salonName}`, location: config.address,
-      description: `Prenotazione da ${config.salonName}: ${names}.${config.ownerPhone ? `\nPer spostarla o annullarla: ${config.ownerPhone}` : ''}`,
+      summary: `Appuntamento da ${config.salonName}`, location: config.address, alarm: 120, // reminder 2 hours before
+      description: `Servizi: ${chosen.map((s) => s.name).join(' + ')}\nTotale indicativo: € ${Number.isInteger(total) ? total : total.toFixed(2).replace('.', ',')}`
+        + (config.ownerPhone ? `\nPer spostarlo o annullarlo: ${config.ownerPhone}` : ''),
     }]));
   }
 

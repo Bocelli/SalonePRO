@@ -83,7 +83,7 @@ export const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 export const durationOf = (chosen, config) => chosen.reduce((s, x) => s + (Number(x.duration) || 0), 0) || Number(config.slotMinutes) || 30;
 
 // iCalendar file for calendar apps (iPhone, Google, Outlook), in Italian time.
-// events: [{ uid, date, time, end, summary, description?, location? }]
+// events: [{ uid, date, time, end, summary, description?, location?, alarm? (minutes before) }]
 const VTIMEZONE = [ // summer time from the last Sunday of March to the last Sunday of October
   'BEGIN:VTIMEZONE', 'TZID:Europe/Rome',
   'BEGIN:DAYLIGHT', 'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0200', 'TZNAME:CEST', 'DTSTART:19700329T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU', 'END:DAYLIGHT',
@@ -101,6 +101,7 @@ export function icsFile(name, events) {
       'BEGIN:VEVENT', `UID:${e.uid}`, `DTSTAMP:${stamp}`,
       `DTSTART;TZID=Europe/Rome:${icsAt(e.date, e.time)}`, `DTEND;TZID=Europe/Rome:${icsAt(e.date, e.end)}`,
       `SUMMARY:${icsText(e.summary)}`, e.description && `DESCRIPTION:${icsText(e.description)}`, e.location && `LOCATION:${icsText(e.location)}`,
+      ...(e.alarm ? ['BEGIN:VALARM', `TRIGGER:-PT${e.alarm}M`, 'ACTION:DISPLAY', `DESCRIPTION:${icsText(e.summary)}`, 'END:VALARM'] : []),
       'END:VEVENT',
     ].filter(Boolean)),
     'END:VCALENDAR',
