@@ -41,6 +41,7 @@ Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel 
 - Promemoria delle clienti di oggi, domani e dopodomani da avvisare, con stato "Avvisata".
 - Durata dei servizi, orari di fine calcolati e avviso degli appuntamenti sovrapposti.
 - Pausa pranzo, ferie e festivi visibili in agenda e bloccati sulla pagina di prenotazione.
+- Appuntamenti nel calendario del telefono (Google Calendar, quindi Android) con un link privato in formato iCalendar.
 
 **Clienti e listino**
 - Scheda cliente con formule colore, note, allergie (con consenso art. 9 GDPR), consenso privacy, spesa totale e storico delle visite.
@@ -99,7 +100,7 @@ flowchart LR
 ```
 
 - **Frontend:** HTML, CSS e JavaScript senza framework né build. Font Geist e icone Phosphor ospitati sul sito e ridotti ai caratteri usati.
-- **Backend:** tre funzioni serverless Node su Vercel (`login`, `data`, `public`) nella regione `fra1`.
+- **Backend:** quattro funzioni serverless Node su Vercel (`login`, `data`, `public`, `calendar`) nella regione `fra1`.
 - **Database:** Neon Postgres (piano gratuito), una sola tabella `docs (col, id, data jsonb)` creata da sola alla prima richiesta.
 - **Test:** le API girano davvero su un Postgres in memoria (PGlite), senza account né rete.
 
@@ -109,7 +110,7 @@ public/            gestionale (index.html), prenotazione (prenota.html), stili, 
   offline.js       logica offline: coda delle modifiche e sovrapposizioni
   history.js       storico visite e lista "Da richiamare"
   sw.js            service worker: pagine dalla rete, cache come riserva
-api/               funzioni serverless (sessione, dati del gestionale, prenotazioni pubbliche)
+api/               funzioni serverless (sessione, dati del gestionale, prenotazioni pubbliche, calendario)
 test/              test delle API, della logica offline e dello storico (npm test)
 docs/screenshots/  immagini di questo README
 legacy/            la versione originale in un solo file HTML (v6)
@@ -143,6 +144,7 @@ Per provare il sito in locale con il database vero: `npx vercel link`, `npx verc
 - **Esci da tutti i dispositivi:** invalida subito ogni sessione aperta, per un tablet perso o rubato.
 - **Prenotazioni online:** massimo 10 tentativi all'ora per IP, più un campo nascosto anti-bot.
 - **API pubblica:** non restituisce mai nomi o telefoni, solo gli orari occupati.
+- **Link del calendario:** contiene una chiave segreta firmata HMAC (i calendari non possono fare login); "Esci da tutti i dispositivi" lo cambia.
 - **Header:** Content-Security-Policy (nessuno script o connessione verso altri siti), anti-clickjacking, HSTS.
 - **Dati in UE:** funzioni e database a Francoforte.
 
@@ -178,6 +180,7 @@ La versione originale (`legacy/salone_pro_v6.html`, e la successiva v9) salvava 
 - Le prenotazioni web arrivano entro 20 secondi solo con il gestionale aperto sullo schermo; in standby o in una scheda nascosta non suona nulla e l'avviso compare quando lo riapri. Le modifiche fatte da altri dispositivi arrivano entro 2 minuti.
 - Offline, due dispositivi che modificano la stessa voce si sovrascrivono: vale l'ultima modifica inviata.
 - Le icone sono ridotte a quelle usate: aggiungendo una nuova icona (`ph-...`) va rigenerato `public/vendor/phosphor.*`.
+- Google Calendar rilegge il link del calendario quando vuole, di solito ogni qualche ora: non è in tempo reale.
 - Le foto non sono nel file di backup: restano solo nel database Neon (0,5 GB gratuiti, qualche migliaio di foto).
 - L'informativa privacy è un modello generico: va fatta verificare prima di affidarcisi.
 - Il piano Hobby di Vercel è per uso non commerciale: per un'attività serve il piano Pro.

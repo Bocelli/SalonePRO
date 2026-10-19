@@ -11,6 +11,7 @@ process.env.ADMIN_PASSWORD = 'password-di-prova-123';
 const { default: login } = await import('../api/login.js');
 const { default: data } = await import('../api/data.js');
 const { default: pub } = await import('../api/public.js');
+const { default: calendar } = await import('../api/calendar.js');
 const { romeNow } = await import('../api/_lib.js');
 
 function call(handler, { method = 'GET', query = {}, body, cookie, ip = '10.0.0.1' } = {}) {
@@ -20,6 +21,7 @@ function call(handler, { method = 'GET', query = {}, body, cookie, ip = '10.0.0.
       status(c) { this.statusCode = c; return this; },
       setHeader(k, v) { this.headers[k.toLowerCase()] = v; },
       json(b) { resolve({ status: this.statusCode, body: b, headers: this.headers }); },
+      send(b) { resolve({ status: this.statusCode, body: b, headers: this.headers }); },
     };
     handler({ method, query, body, headers: { cookie, 'x-real-ip': ip } }, res);
   });
@@ -232,4 +234,27 @@ test('new web bookings check: counts only web bookings after the given id', asyn
   assert.equal((await check(String(last))).body.n, 0, 'bookings made in the salon do not count');
   assert.equal((await book({ time: '16:00' })).status, 200);
   assert.equal((await check(String(last))).body.n, 1);
+});
+
+test('calendar feed: secret link, Italian time, escaped text, revoked by logout-all', async () => {
+  const fresh = (await call(login, { method: 'POST', ip: '9.9.9.4', body: { password: process.env.ADMIN_PASSWORD } })).headers['set-cookie'].split(';')[0];
+  assert.equal((await call(data, { query: { calendar: '' } })).status, 401);
+  const { token } = (await call(data, { cookie: fresh, query: { calendar: '' } })).body;
+  assert.equal((await call(calendar, { query: { k: 'sbagliato' } })).status, 401);
+  assert.equal((await call(calendar, {})).status, 401);
+
+  await call(data, { method: 'PUT', cookie: fresh, body: { col: 'appointments', item: { id: 777, clientName: 'Anna, Bianchi', phone: '333 1', date: wed, time: '09:30', duration: 45, services: ['Piega; Onde'], price: 20, notes: 'riga 1\nriga 2' } } });
+  const ics = await call(calendar, { query: { k: token } });
+  assert.equal(ics.status, 200);
+  assert.match(ics.headers['content-type'], /text\/calendar/);
+  const body = ics.body.replace(/\r\n /g, ''); // undo line folding
+  assert.ok(ics.body.endsWith('END:VCALENDAR\r\n'));
+  assert.ok(ics.body.split('\r\n').every((l) => l.length <= 75), 'lines folded');
+  assert.ok(body.includes(`DTSTART;TZID=Europe/Rome:${wed.replace(/-/g, '')}T093000`));
+  assert.ok(body.includes(`DTEND;TZID=Europe/Rome:${wed.replace(/-/g, '')}T101500`));
+  assert.ok(body.includes('SUMMARY:Anna\\, Bianchi: Piega\\; Onde'));
+  assert.ok(body.includes('DESCRIPTION:Tel. 333 1\\nriga 1\\nriga 2'));
+
+  assert.equal((await call(login, { method: 'DELETE', query: { all: '1' }, cookie: fresh })).status, 200);
+  assert.equal((await call(calendar, { query: { k: token } })).status, 401, 'old link stops working');
 });

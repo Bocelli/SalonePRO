@@ -289,6 +289,7 @@
   .web-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
   .link-row { display: flex; gap: 8px; margin-top: 18px; }
   .link-row input { font-size: .92rem; }
+  .steps { display: grid; gap: 8px; padding-left: 22px; margin-top: 14px; font-size: .92rem; }
   .checks { list-style: none; display: grid; gap: 10px; margin-top: 20px; color: var(--muted); font-size: .9rem; }
   .checks li { display: flex; gap: 10px; }
   .checks .ph { color: var(--ok); margin-top: 3px; }
@@ -637,6 +638,21 @@
         </div>
 
         <div class="panel pad">
+          <h3>Calendario del telefono</h3>
+          <p class="muted">Gli appuntamenti, anche quelli prenotati online, compaiono da soli in Google Calendar e quindi nel calendario di Android. Google rilegge il calendario per conto suo, di solito ogni qualche ora: le prenotazioni nuove le vedi subito qui nel gestionale.</p>
+          <ol class="steps">
+            <li>Da un <strong>computer</strong> tocca "Aggiungi a Google Calendar" e conferma con lo stesso account Google del telefono.</li>
+            <li>Sul telefono apri Google Calendar, vai in <strong>Impostazioni</strong>, tocca il calendario del salone e attiva <strong>Sincronizzazione</strong>.</li>
+          </ol>
+          <div class="link-row">
+            <input id="cal-link" readonly aria-label="Link del calendario" onfocus="this.select()">
+            <button class="btn btn-primary" onclick="copyLink('cal-link')"><i class="ph ph-copy"></i>Copia link</button>
+          </div>
+          <div class="row-wrap"><a class="btn btn-outline" id="cal-google" target="_blank" rel="noopener"><i class="ph ph-google-logo"></i>Aggiungi a Google Calendar</a></div>
+          <p class="muted small" style="margin-top:14px">Il link è segreto: chi lo ha vede nomi e telefoni delle clienti, quindi non condividerlo. Se finisce in mani sbagliate usa "Esci da tutti i dispositivi": il link cambia e va aggiunto di nuovo.</p>
+        </div>
+
+        <div class="panel pad">
           <h3>Backup dei dati</h3>
           <p class="muted">I dati sono nel database online. Scarica comunque un backup ogni tanto.</p>
           <div class="row-wrap">
@@ -657,7 +673,7 @@
 
         <div class="panel pad">
           <h3>Sessione</h3>
-          <p class="muted">Esci da questo dispositivo. Se perdi un tablet o un telefono, esci da tutti: servirà di nuovo la password ovunque.</p>
+          <p class="muted">Esci da questo dispositivo. Se perdi un tablet o un telefono, esci da tutti: servirà di nuovo la password ovunque e il link del calendario cambia.</p>
           <div class="row-wrap">
             <button class="btn btn-outline" onclick="logout()"><i class="ph ph-sign-out"></i>Esci</button>
             <button class="btn btn-danger" onclick="logout(true)"><i class="ph ph-devices"></i>Esci da tutti i dispositivi</button>
@@ -1139,6 +1155,7 @@
     saveCache();
     const first = !loaded;
     if (first) { loaded = true; loadConfigUI(); }
+    if (first && $('tab-backup').classList.contains('active')) loadCalendarLink();
     renderAll();
     // createdAt check: a restored backup full of old web bookings must not ring
     if (known) announce(db.appointments.filter((a) => a.source === 'web' && !known.has(a.id) && Date.now() - Date.parse(a.createdAt) < 864e5));
@@ -1154,6 +1171,10 @@
   // ---------- Novità ----------
   // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
   const NEWS = [
+    { v: '1.9', date: '19 ottobre 2026', title: 'Gli appuntamenti nel calendario del telefono', items: [
+      ['ph-calendar-plus', 'In Impostazioni trovi "Calendario del telefono": aggiungi il link a Google Calendar e gli appuntamenti compaiono da soli nel calendario di Android.'],
+      ['ph-clock', 'Google aggiorna il calendario ogni qualche ora: per le prenotazioni appena arrivate fa fede il gestionale, con il suo bip.'],
+    ] },
     { v: '1.8', date: '16 ottobre 2026', title: 'Il riepilogo della giornata', items: [
       ['ph-sun', "In cima all'agenda trovi il saluto e il riepilogo di oggi: quanti appuntamenti, quanti già fatti e l'incasso. I riquadri con i numeri compaiono quando guardi un altro giorno, la settimana o il mese."],
       ['ph-clock', "Vedi subito chi arriva dopo e tra quanto, o chi è in poltrona adesso: tocca il nome per aprire la sua scheda."],
@@ -1373,6 +1394,7 @@
     window.scrollTo(0, 0);
     if (tab === 'webbooking') $('preview-frame').src = '/prenota';
     if (tab === 'clienti') renderRecall(); // appointments may have changed since the last render
+    if (tab === 'backup') loadCalendarLink();
   }
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-tab]');
@@ -2160,10 +2182,23 @@
     $('share-wa').href = 'https://wa.me/?text=' + encodeURIComponent(`Prenota il tuo appuntamento da ${db.config.salonName}: ${link}`);
   }
 
-  function copyLink() {
-    navigator.clipboard.writeText($('public-link').value)
+  function copyLink(id = 'public-link') {
+    navigator.clipboard.writeText($(id).value)
       .then(() => toast('Link copiato'))
-      .catch(() => { $('public-link').select(); toast('Seleziona il link e copialo', 'error'); });
+      .catch(() => { $(id).select(); toast('Seleziona il link e copialo', 'error'); });
+  }
+
+  // ---------- Calendario del telefono ----------
+  // The link carries a secret token because calendar apps cannot log in; it is fetched only when Impostazioni opens.
+  async function loadCalendarLink() {
+    if (!loaded) return; // opened straight on /impostazioni: reload() calls it after login
+    try {
+      const link = `${location.origin}/api/calendar?k=${(await api('GET', '/api/data?calendar')).token}`;
+      $('cal-link').value = link;
+      $('cal-google').href = 'https://calendar.google.com/calendar/render?cid=' + encodeURIComponent(link.replace('https:', 'webcal:'));
+    } catch (e) {
+      $('cal-link').value = isNetwork(e) ? 'Serve la connessione per vedere il link' : e.message;
+    }
   }
 
   // ---------- Privacy ----------

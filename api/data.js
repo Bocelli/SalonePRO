@@ -1,4 +1,4 @@
-import { handle, fail, db, requireAdmin, withEnd, checkConfig, COLS, DAY, DEFAULT_CONFIG } from './_lib.js';
+import { handle, fail, db, requireAdmin, withEnd, checkConfig, sessionEpoch, calendarToken, COLS, DAY, DEFAULT_CONFIG } from './_lib.js';
 
 // Client photos are shrunk to 480p JPEG in the browser; they live in their own collection, outside the main load and the backup.
 const PHOTO_MAX_CHARS = 220_000; // about 160 KB of JPEG: a 480p photo is usually 40-80 KB
@@ -24,6 +24,10 @@ export default handle(async (req, res) => {
     const [{ n }] = await sql`SELECT count(*)::int AS n FROM docs WHERE col = 'appointments' AND id > ${after} AND data->>'source' = 'web'`;
     res.setHeader('Cache-Control', 'no-store');
     return res.json({ n });
+  }
+
+  if (req.method === 'GET' && req.query.calendar !== undefined) {
+    return res.json({ token: calendarToken(await sessionEpoch(sql)) });
   }
 
   if (req.method === 'GET' && req.query.photos) {

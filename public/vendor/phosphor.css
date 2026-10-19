@@ -62,6 +62,7 @@
 .ph.ph-printer:before { content: "\e3dc"; }
 .ph.ph-floppy-disk:before { content: "\e248"; }
 .ph.ph-magic-wand:before { content: "\e6b6"; }
+.ph.ph-google-logo:before { content: "\e292"; }
 .ph.ph-download-simple:before { content: "\e20c"; }
 .ph.ph-upload-simple:before { content: "\e4c0"; }
 .ph.ph-question:before { content: "\e3e8"; }
@@ -81,6 +82,7 @@
 .ph.ph-trash:before { content: "\e4a6"; }
 .ph.ph-lightning:before { content: "\e2de"; }
 .ph.ph-cloud-slash:before { content: "\e1b6"; }
+.ph.ph-calendar-plus:before { content: "\e714"; }
 .ph.ph-clock:before { content: "\e19a"; }
 .ph.ph-wifi-high:before { content: "\e4ea"; }
 .ph.ph-identification-card:before { content: "\e2c8"; }

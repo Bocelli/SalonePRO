@@ -135,6 +135,10 @@ export const sessionEpoch = async (sql) => Number((await sql`SELECT data->>'epoc
 export const bumpEpoch = (sql) => sql`INSERT INTO docs (col, id, data) VALUES ('auth', 1, '{"epoch":1}')
   ON CONFLICT (col, id) DO UPDATE SET data = jsonb_build_object('epoch', (docs.data->>'epoch')::int + 1)`;
 
+// Secret link for calendar apps, which cannot log in. "Esci da tutti i dispositivi" (new epoch) changes it too.
+export const calendarToken = (epoch) => { requirePasswordSet(); return sign('ics:' + epoch); };
+export const checkCalendarToken = (k, epoch) => typeof k === 'string' && same(k, calendarToken(epoch));
+
 export function sessionCookie(epoch) {
   const payload = `${Date.now() + MAX_AGE * 1000}.${epoch}`;
   return `${COOKIE}=${payload}.${sign(payload)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${MAX_AGE}`;
