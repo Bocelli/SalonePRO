@@ -26,101 +26,7 @@
 <link rel="preload" href="/vendor/geist.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/vendor/phosphor.css">
 <link rel="stylesheet" href="/base.css">
-<style>
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
-  .hero { display: flex; align-items: center; gap: 18px; padding-top: 44px; padding-bottom: 28px; }
-  .mark { display: grid; place-items: center; width: 56px; height: 56px; flex-shrink: 0; border-radius: var(--r-surface); background: var(--accent); color: var(--on-accent); font-size: 1.5rem; font-weight: 750; }
-  .hero h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); letter-spacing: -.03em; font-weight: 700; }
-  .meta { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; color: var(--muted); font-size: .92rem; }
-  .meta span { display: inline-flex; align-items: center; gap: 6px; }
-  .meta .closure-note { color: var(--warn); font-weight: 600; }
-
-  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 20px; align-items: start; padding-bottom: 40px; }
-  .col { display: grid; gap: 20px; }
-  .block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-surface); padding: 22px; }
-  .block h2 { font-size: 1.08rem; margin-bottom: 14px; }
-  .srv-group { border: 1px solid var(--border); border-radius: var(--r-control); }
-  .srv-group + .srv-group { margin-top: 10px; }
-  .srv-group summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 10px 14px; font-weight: 650; cursor: pointer; border-radius: var(--r-control); }
-  .srv-group summary::-webkit-details-marker { display: none; }
-  .srv-group summary:hover { background: var(--surface-2); }
-  .srv-group summary .muted { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
-  .srv-group summary .ph { transition: transform .2s var(--ease); }
-  .srv-group[open] summary .ph { transform: rotate(180deg); }
-  .srv-items { padding: 2px 10px 10px; }
-
-  .srv { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: var(--r-control); cursor: pointer; transition: border-color .16s var(--ease), background .16s var(--ease); }
-  .srv + .srv { margin-top: 8px; }
-  .srv:hover { border-color: var(--accent); }
-  .srv:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); }
-  .srv-name { display: flex; flex-direction: column; gap: 2px; font-weight: 600; }
-  .srv-name small { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-weight: 450; font-size: .84rem; }
-
-  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .cal-head strong { font-size: 1rem; font-weight: 600; }
-  .cal-head .btn-icon:disabled { opacity: .35; cursor: not-allowed; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
-  .cal-lbl { padding: 4px 0; text-align: center; font-size: .75rem; font-weight: 600; color: var(--muted); }
-  .day { font: inherit; aspect-ratio: 1; min-height: 40px; border: 0; border-radius: var(--r-control); background: transparent; color: var(--text); font-weight: 550; font-variant-numeric: tabular-nums; cursor: pointer; transition: background .16s var(--ease); }
-  .day:hover:not(:disabled) { background: var(--surface-2); }
-  .day.today { box-shadow: inset 0 0 0 1px var(--border-strong); }
-  .day.active { background: var(--accent); color: var(--on-accent); box-shadow: none; }
-  .day:disabled { color: var(--muted); opacity: .4; cursor: not-allowed; }
-
-  .slots-title { margin-top: 18px; font-size: .9rem; font-weight: 600; }
-  .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; margin-top: 10px; }
-  .slot { font: inherit; min-height: 44px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer; transition: border-color .16s var(--ease), background .16s var(--ease), transform .12s var(--ease); }
-  .slot:hover:not(:disabled) { border-color: var(--accent); }
-  .slot:active:not(:disabled) { transform: scale(.97); }
-  .slot.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-  .slot:disabled { background: var(--surface-2); border-color: transparent; color: var(--muted); text-decoration: line-through; cursor: not-allowed; }
-  .slots-empty { grid-column: 1 / -1; padding: 8px 0; color: var(--muted); font-size: .9rem; }
-
-  .fields { display: grid; gap: 14px; }
-  .err { color: var(--danger); font-size: .85rem; margin-top: 6px; }
-  .err:empty { display: none; }
-  .check { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; font-size: .9rem; cursor: pointer; }
-  .check input { margin-top: 2px; }
-  .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
-
-  .summary { display: grid; gap: 8px; margin: 18px 0; padding: 16px; border-radius: var(--r-control); background: var(--surface-2); font-size: .9rem; }
-  .sum-row { display: flex; justify-content: space-between; gap: 16px; }
-  .sum-row > span:first-child { color: var(--muted); flex-shrink: 0; }
-  .sum-row > span:last-child { text-align: right; }
-  .sum-total { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 1.05rem; font-weight: 650; }
-  .btn-lg { width: 100%; min-height: 52px; font-size: 1rem; }
-  .wa-alt { width: 100%; margin-top: 8px; color: var(--muted); font-weight: 550; }
-
-  .foot { padding-bottom: 40px; color: var(--muted); font-size: .85rem; }
-  .foot button { font: inherit; color: var(--accent-text); background: none; border: 0; text-decoration: underline; cursor: pointer; }
-
-  .mobile-bar { display: none; position: fixed; inset: auto 0 0 0; z-index: 20; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--border); box-shadow: var(--shadow); }
-  .mobile-bar .btn { min-width: 132px; }
-  .bar-info { display: flex; flex-direction: column; min-width: 0; }
-  .bar-info strong { font-size: 1.05rem; }
-  .bar-info span { color: var(--muted); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-  .done { text-align: center; display: grid; gap: 10px; justify-items: center; }
-  .done-icon { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 999px; background: var(--ok-soft); color: var(--ok); font-size: 2rem; }
-  .done .summary { width: 100%; text-align: left; margin: 8px 0; }
-  .cal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
-  .down { padding: 48px 22px; text-align: center; display: grid; gap: 8px; justify-items: center; }
-  .down .ph { font-size: 2rem; color: var(--muted); }
-
-  @media (max-width: 899px) {
-    .wrap { padding: 0 16px; }
-    .hero { padding-top: 24px; padding-bottom: 18px; gap: 14px; }
-    .mark { width: 48px; height: 48px; font-size: 1.3rem; }
-    .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-    .col { gap: 16px; }
-    .block { padding: 18px 16px; }
-    .book-inline { display: none; }
-    .cal-actions { grid-template-columns: 1fr; }
-    .mobile-bar { display: flex; }
-    body { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
-    .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
-  }
-</style>
+<link rel="stylesheet" href="/prenota.css">
 </head>
 <body>
 <header class="wrap hero">
@@ -148,9 +54,9 @@
     <section class="block" id="sec-when">
       <h2>Giorno e orario</h2>
       <div class="cal-head">
-        <button class="btn-icon" id="cal-prev" onclick="navMonth(-1)" aria-label="Mese precedente"><i class="ph ph-caret-left"></i></button>
+        <button class="btn-icon" id="cal-prev" data-click="navMonth" data-arg="-1" aria-label="Mese precedente"><i class="ph ph-caret-left"></i></button>
         <strong id="cal-title" aria-live="polite"></strong>
-        <button class="btn-icon" id="cal-next" onclick="navMonth(1)" aria-label="Mese successivo"><i class="ph ph-caret-right"></i></button>
+        <button class="btn-icon" id="cal-next" data-click="navMonth" data-arg="1" aria-label="Mese successivo"><i class="ph ph-caret-right"></i></button>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
       <p class="slots-title" id="slots-title">Orari liberi</p>
@@ -174,7 +80,7 @@
         </div>
         <div class="hp" aria-hidden="true"><label for="c-website">Lascia vuoto</label><input type="text" id="c-website" tabindex="-1" autocomplete="off"></div>
       </div>
-      <label class="check"><input type="checkbox" id="c-gdpr"><span>Ho letto l'<a href="#" onclick="openLegal(event)">informativa privacy</a> e accetto il trattamento dei dati per la gestione dell'appuntamento.</span></label>
+      <label class="check"><input type="checkbox" id="c-gdpr"><span>Ho letto l'<a href="#" data-click="openLegal">informativa privacy</a> e accetto il trattamento dei dati per la gestione dell'appuntamento.</span></label>
       <p class="err" id="err-gdpr" role="alert"></p>
 
       <div class="summary" aria-live="polite">
@@ -182,26 +88,26 @@
         <div class="sum-row"><span>Quando</span><span id="sum-when">Da scegliere</span></div>
         <div class="sum-row sum-total"><span>Totale indicativo</span><span class="num" id="sum-total">€ 0</span></div>
       </div>
-      <div class="book-inline"><button class="btn btn-primary btn-lg book-btn" onclick="submitBooking('web')"><i class="ph ph-calendar-check"></i>Prenota</button></div>
-      <button class="btn btn-ghost wa-alt" id="btn-wa" onclick="submitBooking('wa')" hidden><i class="ph ph-whatsapp-logo"></i>Preferisci WhatsApp? Invia la richiesta</button>
+      <div class="book-inline"><button class="btn btn-primary btn-lg book-btn" data-click="submitBooking" data-arg="web"><i class="ph ph-calendar-check"></i>Prenota</button></div>
+      <button class="btn btn-ghost wa-alt" id="btn-wa" data-click="submitBooking" data-arg="wa" hidden><i class="ph ph-whatsapp-logo"></i>Preferisci WhatsApp? Invia la richiesta</button>
     </section>
   </div>
 </main>
 
 <footer class="wrap foot">
-  <p>Nessun cookie di profilazione. <button onclick="openLegal(event)">Informativa privacy</button></p>
+  <p>Nessun cookie di profilazione. <button data-click="openLegal">Informativa privacy</button></p>
 </footer>
 
 <div class="mobile-bar">
   <div class="bar-info"><strong class="num" id="bar-total">€ 0</strong><span id="bar-when">Scegli servizi e orario</span></div>
-  <button class="btn btn-primary book-btn" onclick="submitBooking('web')"><i class="ph ph-calendar-check"></i>Prenota</button>
+  <button class="btn btn-primary book-btn" data-click="submitBooking" data-arg="web"><i class="ph ph-calendar-check"></i>Prenota</button>
 </div>
 
 <div class="modal-backdrop" id="legal-modal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="legal-title">
     <div class="modal-head">
       <h2 id="legal-title">Informativa privacy</h2>
-      <button class="btn-icon" onclick="closeModal('legal-modal')" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="legal-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
     </div>
     <div class="legal" id="legal-body"></div>
   </div>
@@ -218,260 +124,11 @@
       <a class="btn btn-outline" id="btn-apple-cal" rel="noopener"><i class="ph ph-apple-logo"></i><span>Aggiungi su Calendario Apple</span></a>
     </div>
     <a class="btn btn-outline btn-lg" id="done-wa" target="_blank" rel="noopener" hidden><i class="ph ph-whatsapp-logo"></i>Avvisa il salone su WhatsApp</a>
-    <button class="btn btn-primary btn-lg" onclick="location.reload()">Fatto</button>
+    <button class="btn btn-primary btn-lg" data-click="reloadPage">Fatto</button>
   </div>
 </div>
 
 <script src="/common.js"></script>
-<script>
-  let cfg = {}, services = [], busy = [], now = { date: localDate(), time: '00:00' };
-  let month, maxDate, selDate = '', selTime = '';
-  const picked = new Set();
-  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-  const price = (n) => '€ ' + (Number.isInteger(Number(n)) ? Number(n) : Number(n).toFixed(2).replace('.', ','));
-  const chosen = () => services.filter((s) => picked.has(s.id));
-  const step = () => Number(cfg.slotMinutes) || 30;
-  const duration = () => chosen().reduce((s, x) => s + (Number(x.duration) || 0), 0) || step();
-  const closureOn = (ds) => (cfg.closures || []).find((x) => ds >= x.from && ds <= x.to);
-  const isClosed = (ds) => (cfg.closedDays || []).includes(new Date(ds + 'T12:00').getDay()) || !!closureOn(ds);
-  const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
-
-  async function fetchDay(date) {
-    const r = await fetch('/api/public' + (date ? '?date=' + date : ''));
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw Object.assign(new Error(d.error || 'Prenotazione online non disponibile'), { setup: d.setup });
-    ({ config: cfg, services, busy, now } = d);
-  }
-
-  async function init() {
-    try {
-      await fetchDay();
-    } catch (e) {
-      // Not configured yet on Vercel: clients get a plain message, the owner a pointer to the admin page that explains the fix.
-      $('app').innerHTML = e.setup
-        ? `<section class="block down" style="grid-column:1/-1"><i class="ph ph-calendar-blank"></i><h2>Prenotazioni online non ancora attive</h2><p class="muted">Per prenotare contatta direttamente il salone. Torna a trovarci presto!</p><p class="muted small">Sei il titolare? <a href="/">Apri il gestionale</a> per completare la configurazione.</p></section>`
-        : `<section class="block down" style="grid-column:1/-1"><i class="ph ph-cloud-slash"></i><h2>Prenotazione online non disponibile</h2><p class="muted">${esc(e.message)}. Riprova tra poco.</p><button class="btn btn-outline" onclick="location.reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button></section>`;
-      return;
-    }
-    document.title = 'Prenota da ' + cfg.salonName;
-    $('salon-title').textContent = cfg.salonName;
-    $('salon-mark').textContent = (cfg.salonName || 'S').trim().charAt(0).toUpperCase();
-    const names = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
-    const closed = (cfg.closedDays || []).map((d) => names[d]);
-    $('salon-meta').innerHTML = [
-      cfg.address && `<span><i class="ph ph-map-pin"></i>${esc(cfg.address)}</span>`,
-      `<span><i class="ph ph-clock"></i>${esc(cfg.openTime)} - ${esc(cfg.closeTime)}${(cfg.breaks || []).map((b) => `, pausa ${esc(b.from)} - ${esc(b.to)}`).join('')}${closed.length ? `, chiuso ${esc(closed.join(' e '))}` : ''}</span>`,
-      nextClosure(),
-    ].filter(Boolean).join('');
-    $('btn-wa').hidden = !cfg.ownerPhone;
-    $('legal-body').innerHTML = legalHtml(cfg);
-
-    const max = new Date(now.date + 'T12:00');
-    max.setFullYear(max.getFullYear() + 1);
-    maxDate = localDate(max);
-    selDate = firstOpenDay();
-    month = new Date(selDate + 'T12:00');
-    month.setDate(1);
-    renderServices();
-    renderCal();
-    await loadSlots();
-  }
-
-  // Tells clients about holidays in the next 60 days, before they hunt for a free day.
-  function nextClosure() {
-    const limit = new Date(now.date + 'T12:00');
-    limit.setDate(limit.getDate() + 60);
-    const c = (cfg.closures || []).filter((x) => x.to >= now.date && x.from <= localDate(limit)).sort((a, b) => a.from.localeCompare(b.from))[0];
-    if (!c) return '';
-    const when = c.from === c.to ? `il ${fmtDate(c.from)}` : `dal ${fmtDate(c.from)} al ${fmtDate(c.to)}`;
-    return `<span class="closure-note"><i class="ph ph-calendar-x"></i>Chiuso ${when}${c.note ? ` (${esc(c.note)})` : ''}</span>`;
-  }
-
-  function firstOpenDay() {
-    const d = new Date(now.date + 'T12:00');
-    for (let i = 0; i < 60; i++, d.setDate(d.getDate() + 1)) {
-      const ds = localDate(d);
-      if (isClosed(ds)) continue;
-      if (ds === now.date && addMin(now.time, step()) > cfg.closeTime) continue;
-      return ds;
-    }
-    return now.date;
-  }
-
-  // ---------- Services ----------
-  // One folder per category, in the salon's folder order; only the first starts open.
-  function renderServices() {
-    const catOf = (s) => s.cat || 'ALTRO';
-    const cats = [...new Set([...(cfg.serviceFolders || []), ...services.map(catOf)])].filter((c) => services.some((s) => catOf(s) === c));
-    $('srv-list').innerHTML = cats.map((cat, i) => {
-      const items = services.filter((s) => catOf(s) === cat);
-      return `
-      <details class="srv-group" ${i ? '' : 'open'}>
-        <summary><span>${esc(cat)}</span><span class="muted small">${items.length} ${items.length === 1 ? 'servizio' : 'servizi'}<i class="ph ph-caret-down"></i></span></summary>
-        <div class="srv-items">${items.map((s) => `
-          <label class="srv">
-            <input type="checkbox" ${picked.has(s.id) ? 'checked' : ''} onchange="toggleService(${s.id}, this.checked)">
-            <span class="srv-name">${esc(s.name)}<small><i class="ph ph-clock"></i>${Number(s.duration) || 0} min</small></span>
-            <strong class="num">${price(s.price)}</strong>
-          </label>`).join('')}
-        </div>
-      </details>`;
-    }).join('') || '<p class="muted">Il listino non è ancora disponibile.</p>';
-  }
-
-  function toggleService(id, on) {
-    if (on) picked.add(id); else picked.delete(id);
-    $('err-services').textContent = '';
-    renderSlots();
-  }
-
-  // ---------- Calendar ----------
-  function navMonth(n) {
-    month.setMonth(month.getMonth() + n);
-    renderCal();
-  }
-
-  function renderCal() {
-    const y = month.getFullYear(), m = month.getMonth();
-    const today = new Date(now.date + 'T12:00');
-    $('cal-title').textContent = cap(month.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' }));
-    $('cal-prev').disabled = y * 12 + m <= today.getFullYear() * 12 + today.getMonth();
-    $('cal-next').disabled = `${y}-${pad(m + 1)}-31` >= maxDate;
-    let html = ['L', 'M', 'M', 'G', 'V', 'S', 'D'].map((l) => `<span class="cal-lbl" aria-hidden="true">${l}</span>`).join('');
-    html += '<span></span>'.repeat((new Date(y, m, 1).getDay() + 6) % 7);
-    for (let d = 1; d <= new Date(y, m + 1, 0).getDate(); d++) {
-      const ds = `${y}-${pad(m + 1)}-${pad(d)}`;
-      const off = ds < now.date || ds > maxDate || isClosed(ds);
-      const cls = 'day' + (ds === selDate ? ' active' : '') + (ds === now.date ? ' today' : '');
-      html += `<button class="${cls}" ${off ? 'disabled' : `onclick="pickDate('${ds}')"`} aria-label="${dayLabel(ds)}" aria-pressed="${ds === selDate}">${d}</button>`;
-    }
-    $('cal-grid').innerHTML = html;
-  }
-
-  function pickDate(ds) {
-    selDate = ds;
-    selTime = '';
-    renderCal();
-    loadSlots();
-  }
-
-  // ---------- Slots ----------
-  async function loadSlots() {
-    $('slots-title').textContent = 'Orari liberi ' + (selDate === now.date ? 'oggi' : dayLabel(selDate));
-    $('slots-grid').innerHTML = '<div class="skeleton" style="height:44px;border-radius:999px"></div>'.repeat(6);
-    try {
-      await fetchDay(selDate);
-    } catch (e) {
-      $('slots-grid').innerHTML = `<p class="slots-empty">${esc(e.message)}</p>`;
-      return;
-    }
-    renderSlots();
-  }
-
-  function renderSlots() {
-    const dur = duration();
-    const slots = [];
-    // i < 300 guards against a malformed opening time looping forever
-    for (let t = cfg.openTime, i = 0; i < 300 && t && addMin(t, dur) <= cfg.closeTime; t = addMin(t, step()), i++) {
-      if (selDate === now.date && t <= now.time) continue;
-      slots.push({ t, busy: busy.some((b) => t < b.end && b.time < addMin(t, dur)) });
-    }
-    if (selTime && !slots.some((s) => s.t === selTime && !s.busy)) selTime = '';
-    $('slots-grid').innerHTML = slots.map((s) => s.busy
-      ? `<button class="slot" disabled aria-label="${s.t} occupato">${s.t}</button>`
-      : `<button class="slot${s.t === selTime ? ' active' : ''}" onclick="pickTime('${s.t}')" aria-pressed="${s.t === selTime}">${s.t}</button>`).join('')
-      || `<p class="slots-empty">Nessun orario libero per ${dur} minuti in questo giorno. Prova un altro giorno.</p>`;
-    updateSummary();
-  }
-
-  function pickTime(t) {
-    selTime = t;
-    $('err-slots').textContent = '';
-    renderSlots();
-  }
-
-  function updateSummary() {
-    const list = chosen();
-    const tot = list.reduce((s, x) => s + (Number(x.price) || 0), 0);
-    const when = selTime ? `${cap(dayLabel(selDate))}, ore ${selTime}` : 'Da scegliere';
-    $('sum-services').textContent = list.length ? list.map((s) => s.name).join(', ') : 'Nessuno';
-    $('sum-when').textContent = when;
-    $('sum-total').textContent = price(tot);
-    $('bar-total').textContent = price(tot);
-    $('bar-when').textContent = selTime ? `${dayLabel(selDate, { weekday: 'short', day: 'numeric', month: 'short' })}, ${selTime}` : list.length ? 'Scegli un orario' : 'Scegli servizi e orario';
-  }
-
-  // ---------- Submit ----------
-  async function submitBooking(mode) {
-    const name = $('c-name').value.trim(), phone = $('c-phone').value.trim(), list = chosen();
-    const errs = {};
-    if (!list.length) errs.services = 'Scegli almeno un servizio.';
-    if (!selTime) errs.slots = 'Scegli un orario libero.';
-    if (name.length < 2) errs.name = 'Inserisci nome e cognome.';
-    if (phone.replace(/\D/g, '').length < 6) errs.phone = 'Inserisci un numero di telefono valido.';
-    if (!$('c-gdpr').checked) errs.gdpr = "Per prenotare devi accettare l'informativa privacy.";
-    ['services', 'slots', 'name', 'phone', 'gdpr'].forEach((k) => { $('err-' + k).textContent = errs[k] || ''; });
-    const first = Object.keys(errs)[0];
-    if (first) return $('err-' + first).closest('.field, section').scrollIntoView({ behavior: smooth(), block: 'center' });
-
-    const tot = list.reduce((s, x) => s + (Number(x.price) || 0), 0);
-    if (mode === 'wa') {
-      const msg = `PRENOTAZIONE SALONE\nCliente: ${name}\nTel: ${phone}\nData: ${fmtDate(selDate)}\nOra: ${selTime}\nServizi: ${list.map((s) => s.name).join(', ')}\nTotale: ${tot}\nCanale: WhatsApp\nGDPR: Accettato (${now.date})`;
-      window.open('https://wa.me/' + waNumber(cfg.ownerPhone) + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
-      return;
-    }
-
-    document.querySelectorAll('.book-btn').forEach((b) => { b.disabled = true; });
-    try {
-      const r = await fetch('/api/public', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, serviceIds: list.map((s) => s.id), date: selDate, time: selTime, privacy: true, website: $('c-website').value }),
-      });
-      const d = await r.json().catch(() => ({}));
-      if (r.status === 409) {
-        $('err-slots').textContent = d.error;
-        $('sec-when').scrollIntoView({ behavior: smooth(), block: 'start' });
-        return loadSlots();
-      }
-      if (!r.ok) return toast(d.error || 'Prenotazione non riuscita, riprova', 'error');
-      $('done-text').textContent = `Grazie ${name}, ti aspettiamo da ${cfg.salonName}.`;
-      $('done-summary').innerHTML = `
-        <div class="sum-row"><span>Quando</span><span>${esc(cap(dayLabel(selDate)))}, ore ${esc(selTime)}</span></div>
-        <div class="sum-row"><span>Servizi</span><span>${esc(list.map((s) => s.name).join(', '))}</span></div>
-        ${cfg.address ? `<div class="sum-row"><span>Dove</span><span>${esc(cfg.address)}</span></div>` : ''}
-        <div class="sum-row sum-total"><span>Totale indicativo</span><span class="num">${price(tot)}</span></div>`;
-      // Plain sentence, no "Data:/Ora:" fields, so the salon can't import it twice: the booking is already in the agenda.
-      const note = `Ciao! Sono ${name}, ho appena prenotato online ${list.map((s) => s.name).join(' + ')} per ${dayLabel(selDate)} alle ${selTime}. A presto!`;
-      $('done-wa').href = 'https://wa.me/' + waNumber(cfg.ownerPhone) + '?text=' + encodeURIComponent(note);
-      $('done-wa').hidden = !cfg.ownerPhone;
-      const at =(t) => `${selDate.replace(/-/g, '')}T${t.replace(':', '')}00`, enc = encodeURIComponent;
-      const details = `Servizi: ${list.map((s) => s.name).join(' + ')}\nTotale indicativo: ${price(tot)}${cfg.ownerPhone ? `\nPer spostarlo o annullarlo: ${cfg.ownerPhone}` : ''}`;
-      const params = `action=TEMPLATE&text=${enc(`Appuntamento da ${cfg.salonName}`)}&dates=${at(selTime)}/${at(d.appointment.end)}&ctz=Europe/Rome&details=${enc(details)}&location=${enc(cfg.address || '')}`;
-      const ua = navigator.userAgent, android = /android/i.test(ua), ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1); // iPad says "Macintosh"
-      // Google's documented "add to calendar" link on every device: forcing the Android app (intent:// to r/eventedit)
-      // opened it without the event. Android picks the app or the browser by itself.
-      Object.assign($('btn-google-cal'), { href: `https://calendar.google.com/calendar/render?${params}`, target: '_blank' });
-      // The .ics comes from the server (same text, reminder 2 hours before), so iPhone opens it straight in Calendar instead of
-      // saving it to Files. Samsung Calendar opens it on Samsung phones (Google Calendar's app cannot), Outlook & co. on a computer.
-      const [icon, label] = ios ? ['ph-apple-logo', 'Aggiungi su Calendario Apple'] : android ? ['ph-calendar-plus', 'Aggiungi su Calendario Samsung o altro'] : ['ph-download-simple', 'Scarica il file calendario (.ics)'];
-      $('btn-apple-cal').href = `/api/public?ics=1&date=${selDate}&time=${selTime}&s=${list.map((s) => s.id).join(',')}`;
-      $('btn-apple-cal').querySelector('i').className = 'ph ' + icon;
-      $('btn-apple-cal').querySelector('span').textContent = label;
-      openModal('done-modal');
-    } catch {
-      toast('Connessione assente, riprova', 'error');
-    } finally {
-      document.querySelectorAll('.book-btn').forEach((b) => { b.disabled = false; });
-    }
-  }
-
-  function openLegal(e) {
-    e.preventDefault();
-    openModal('legal-modal');
-  }
-
-  init();
-</script>
+<script src="/js/prenota.js"></script>
 </body>
 </html>

@@ -29,7 +29,8 @@
     "@neondatabase/serverless": "^1.0.2"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.10"
+    "@electric-sql/pglite": "^0.5.10",
+    "playwright-core": "^1.63.0"
   },
   "engines": {
     "node": ">=20"

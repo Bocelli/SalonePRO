@@ -45,6 +45,21 @@ function closeModal(id) {
 document.addEventListener('click', (e) => {
   if (e.target.classList?.contains('modal-backdrop') && !e.target.dataset.locked) closeModal(e.target.id);
 });
+
+// No inline handlers, the CSP blocks them: an element names its action in data-click, data-change, data-input,
+// data-submit, data-toggle or data-focus, with its argument in data-id (a number) or data-arg. Each page file adds
+// its actions to `actions`; a handler gets the element and the event. Capture, since toggle and focus do not bubble.
+const actions = { click: {}, change: {}, input: {}, submit: {}, toggle: {}, focus: {} };
+Object.keys(actions).forEach((type) => document.addEventListener(type, (e) => {
+  const el = e.target.closest?.(`[data-${type}]`);
+  if (el) actions[type][el.dataset[type]](el, e);
+}, true));
+Object.assign(actions.click, {
+  openModal: (el) => openModal(el.dataset.arg),
+  closeModal: (el) => closeModal(el.dataset.arg),
+  reloadPage: () => location.reload(),
+});
+actions.focus.select = (el) => el.select();
 document.addEventListener('keydown', (e) => {
   const open = [...document.querySelectorAll('.modal-backdrop.open')].pop();
   if (e.key === 'Escape' && open && !open.dataset.locked) closeModal(open.id);

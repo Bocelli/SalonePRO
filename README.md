@@ -108,14 +108,17 @@ flowchart LR
 - **Test:** le API girano davvero su un Postgres in memoria (PGlite), senza account né rete.
 
 ```
-public/            gestionale (index.html), prenotazione (prenota.html), stili, icone, service worker
-  common.js        funzioni condivise (date, euro, WhatsApp, informativa privacy)
+public/            gestionale (index.html), prenotazione (prenota.html): solo markup, niente script dentro le pagine
+  base.css         stili comuni; admin.css e prenota.css quelli di ciascuna pagina
+  common.js        funzioni condivise (date, euro, WhatsApp, informativa privacy, pulsanti data-click)
   offline.js       logica offline: coda delle modifiche e sovrapposizioni
   history.js       storico visite e lista "Da richiamare"
   csv.js           import ed export delle clienti in CSV
+  js/              il gestionale diviso per sezione (app, api-sync, novita, agenda, listino, clienti,
+                   magazzino, impostazioni, avvio) e la pagina di prenotazione (prenota.js)
   sw.js            service worker: pagine dalla rete, cache come riserva
 api/               funzioni serverless (sessione, dati del gestionale, prenotazioni pubbliche, calendario)
-test/              test delle API, della logica offline e dello storico (npm test)
+test/              test delle API, della logica offline e dello storico, test nel browser (npm test)
 docs/screenshots/  immagini di questo README
 legacy/            la versione originale in un solo file HTML (v6)
 ```
@@ -138,7 +141,11 @@ npm install
 npm test
 ```
 
-Per provare il sito in locale con il database vero: `npx vercel link`, `npx vercel env pull`, `npx vercel dev`.
+`npm test` apre anche le pagine vere in Chrome (deve essere installato sul computer): accesso, agenda, nuovo appuntamento, scheda cliente, impostazioni con il registro errori e prenotazione online, controllando che non ci siano errori né blocchi della Content-Security-Policy.
+
+Per provare il sito in locale senza account: `node test/server.mjs`, poi apri `http://localhost:5173` (password `password-locale-123`, i dati spariscono alla chiusura). Con il database vero: `npx vercel link`, `npx vercel env pull`, `npx vercel dev`.
+
+**Come è fatto il codice del gestionale:** i file di `public/js/` sono script normali che condividono le variabili globali e vanno caricati nell'ordine di `index.html` (`avvio.js` per ultimo). La CSP non permette `onclick` e simili: un pulsante dichiara la sua azione con `data-click="nome"` (o `data-change`, `data-input`, `data-submit`, `data-toggle`, `data-focus`), con l'eventuale argomento in `data-id` o `data-arg`, e la funzione va aggiunta ad `actions` in fondo al file della sua sezione. Il test nel browser segnala le azioni senza funzione.
 
 ## Sicurezza
 
@@ -149,7 +156,7 @@ Per provare il sito in locale con il database vero: `npx vercel link`, `npx verc
 - **Prenotazioni online:** massimo 10 tentativi all'ora per IP, più un campo nascosto anti-bot.
 - **API pubblica:** non restituisce mai nomi o telefoni, solo gli orari occupati.
 - **Link del calendario:** contiene una chiave segreta firmata HMAC (i calendari non possono fare login); "Esci da tutti i dispositivi" lo cambia.
-- **Header:** Content-Security-Policy (nessuno script o connessione verso altri siti), anti-clickjacking, HSTS.
+- **Header:** Content-Security-Policy (nessuno script dentro le pagine né verso altri siti, nessuna connessione esterna), anti-clickjacking, HSTS.
 - **Dati in UE:** funzioni e database a Francoforte.
 
 Attiva la verifica in due passaggi su GitHub, Vercel e Neon: chi entra in quegli account vede tutti i dati.
@@ -173,7 +180,7 @@ L'anteprima del link `/prenota` su WhatsApp e social usa `public/og.png` e i met
 
 ## Novità nell'app
 
-Al primo accesso dopo un aggiornamento il gestionale mostra **Novità di Salone PRO**, riapribile dal menu. Per annunciare un aggiornamento aggiungi una voce in cima all'array `NEWS` in `public/index.html` con un nuovo `v`.
+Al primo accesso dopo un aggiornamento il gestionale mostra **Novità di Salone PRO**, riapribile dal menu. Per annunciare un aggiornamento aggiungi una voce in cima all'array `NEWS` in `public/js/novita.js` con un nuovo `v`.
 
 ## Portare i dati dalla versione originale
 

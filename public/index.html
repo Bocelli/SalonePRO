@@ -18,374 +18,7 @@
 <link rel="preload" href="/vendor/geist.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/vendor/phosphor.css">
 <link rel="stylesheet" href="/base.css">
-<style>
-  .app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100dvh; }
-  body:not(.ready) .app, body:not(.ready) .install-banner { visibility: hidden; }
-  .boot { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--bg); }
-  body.ready .boot { display: none; }
-  .boot .brand-mark { width: 56px; height: 56px; font-size: 1.6rem; animation: fade .6s var(--ease) both .15s; }
-
-  /* Sidebar (desktop + landscape tablet) */
-  .sidebar { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; gap: 24px; padding: 20px 14px; background: var(--surface); border-right: 1px solid var(--border); }
-  .brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px; }
-  .brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--r-control); background: var(--accent); color: var(--on-accent); font-weight: 750; font-size: 1.05rem; flex-shrink: 0; }
-  .brand strong { display: block; font-size: .98rem; }
-  .brand small { display: block; color: var(--muted); font-size: .8rem; max-width: 168px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .nav { display: flex; flex-direction: column; gap: 2px; }
-  .nav-sep { height: 1px; background: var(--border); margin: 10px 12px; }
-  .nav-bottom { margin-top: auto; }
-  .nav-item { font: inherit; font-size: .93rem; font-weight: 550; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: 0; border-radius: var(--r-control); background: transparent; color: var(--muted); cursor: pointer; text-align: left; text-decoration: none; transition: background .16s var(--ease), color .16s var(--ease); }
-  .nav-item .ph { font-size: 1.25rem; }
-  .nav-item:hover { background: var(--surface-2); color: var(--text); }
-  .nav-item.active { background: var(--accent-soft); color: var(--accent-text); }
-
-  /* Main column */
-  .main { min-width: 0; display: flex; flex-direction: column; }
-  .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 32px; background: var(--bg); background: color-mix(in srgb, var(--bg) 86%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
-  .topbar h1 { font-size: 1.3rem; }
-  .content { width: 100%; max-width: 1120px; padding: 28px 32px 56px; }
-  .section { display: none; flex-direction: column; gap: 20px; }
-  .section.active { display: flex; animation: fade .2s var(--ease); }
-
-  /* Surfaces */
-  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-surface); }
-  .panel.pad { padding: 22px; }
-  .panel h3 { font-size: 1.02rem; }
-  .panel.pad > h3 + p { margin-top: 4px; }
-  .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 10px 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
-  .span-2 { grid-column: 1 / -1; }
-  .row-wrap { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
-  .hint { font-size: .84rem; color: var(--muted); margin-top: 12px; }
-  .small { font-size: .84rem; }
-
-  /* Collapsible add forms */
-  .add-panel summary { list-style: none; display: flex; align-items: center; gap: 10px; padding: 16px 20px; font-weight: 600; color: var(--accent-text); cursor: pointer; border-radius: var(--r-surface); }
-  .add-panel summary::-webkit-details-marker { display: none; }
-  .add-panel summary .ph { font-size: 1.25rem; transition: transform .2s var(--ease); }
-  .add-panel[open] summary .ph { transform: rotate(45deg); }
-  .add-body { display: grid; gap: 16px; padding: 0 20px 20px; }
-  .add-body .btn { justify-self: start; }
-
-  /* Agenda */
-  .welcome { display: flex; align-items: center; gap: 14px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-surface); }
-  .wl-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: 1.35rem; flex-shrink: 0; align-self: flex-start; }
-  .wl-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-  .wl-main h2 { font-size: 1.1rem; letter-spacing: -.01em; }
-  .wl-line { font-size: .92rem; line-height: 1.75; margin-top: 2px; }
-  .wl-line .badge { margin-right: 2px; }
-  .wl-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
-  .day-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
-  .day-title { font-size: 1.75rem; letter-spacing: -.025em; }
-  .day-tools { display: flex; align-items: center; gap: 8px; }
-  .day-tools input[type="date"] { width: auto; min-height: 40px; padding: 6px 10px; }
-  .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-surface); overflow: hidden; }
-  .metrics > * { display: flex; flex-direction: column; gap: 2px; padding: 16px 20px; font: inherit; color: inherit; text-align: left; background: none; border: 0; }
-  .metrics > * + * { border-left: 1px solid var(--border); }
-  .metric-val { font-size: 1.5rem; font-weight: 650; letter-spacing: -.02em; }
-  .metric-lbl { font-size: .84rem; color: var(--muted); }
-  .metrics.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-  .appt { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 16px; padding: 16px 20px; align-items: start; }
-  .appt + .appt { border-top: 1px solid var(--border); }
-  .appt-time { display: flex; flex-direction: column; }
-  .appt-time strong { font-size: 1.1rem; }
-  .appt-time span { color: var(--muted); font-size: .85rem; }
-  .appt-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-  .appt-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
-  .appt-head h3 { font-size: 1.02rem; font-weight: 600; }
-  .appt-services { color: var(--muted); font-size: .9rem; }
-  .note { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border-radius: var(--r-control); background: var(--surface-2); font-size: .86rem; }
-  .note .ph { margin-top: 3px; flex-shrink: 0; }
-  .note.formula { background: var(--warn-soft); color: var(--warn); }
-  .appt-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
-  .actions { display: flex; gap: 6px; }
-
-  /* Offline bar */
-  .offline-bar { display: flex; align-items: center; gap: 10px; padding: 10px 32px; background: var(--warn-soft); color: var(--warn); border-bottom: 1px solid var(--border); font-size: .9rem; font-weight: 550; }
-  .offline-bar[hidden] { display: none; }
-  .app-ver { margin-left: auto; font-size: .78rem; font-weight: 500; color: var(--muted); }
-
-  /* New web booking notice: above dialogs, so it is seen whatever is open */
-  .booking-alert { position: fixed; z-index: 150; top: 16px; right: 16px; width: min(420px, calc(100vw - 32px)); display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--surface); border: 1px solid var(--accent); border-radius: var(--r-surface); box-shadow: var(--shadow); animation: rise .3s var(--ease); }
-  .booking-alert > .ph { font-size: 1.4rem; color: var(--accent); flex-shrink: 0; }
-  .ba-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .ba-text span { font-size: .86rem; color: var(--muted); }
-  .offline-bar span { flex: 1; }
-  .offline-bar .ph-wifi-slash { font-size: 1.2rem; }
-  .mini.clash { border-left-color: var(--danger); }
-
-  /* Day / week / month switch */
-  .seg { display: inline-flex; gap: 2px; padding: 3px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-control); }
-  .seg button { font: inherit; font-size: .86rem; font-weight: 600; padding: 6px 12px; border: 0; border-radius: 7px; background: none; color: var(--muted); cursor: pointer; }
-  .seg button.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgb(24 24 27 / .1); }
-
-  /* Breaks and closures */
-  .appt.brk { padding-top: 10px; padding-bottom: 10px; background: var(--surface-2); }
-  .brk-label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 550; }
-  .week-day.closed:not(.today), .m-cell.closed:not(.today) { background: var(--surface-2); }
-  .m-cell.closed .m-num { color: var(--muted); }
-  .ranges { display: grid; gap: 8px; margin: 2px 0 6px; }
-  .ranges:empty { display: none; }
-  .range { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .range input[type="time"], .range input[type="date"] { width: auto; min-height: 40px; padding: 6px 10px; }
-  .range input[type="text"] { flex: 1; min-width: 160px; min-height: 40px; padding: 6px 10px; }
-
-  /* Reminders */
-  .rem-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .rem-title .ph { color: var(--warn); font-size: 1.2rem; }
-  .rem.done { opacity: .6; }
-  .rem-empty { padding: 14px 20px; }
-  #recall .rem-title .ph { color: var(--accent); }
-
-  /* Client card */
-  button.link { all: unset; cursor: pointer; font-weight: 650; }
-  button.link:hover { color: var(--accent-text); text-decoration: underline; }
-  button.link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
-  .card-who { display: flex; align-items: center; gap: 12px; min-width: 0; }
-  .card-who h2 { overflow-wrap: anywhere; }
-  .card-stats { margin-bottom: 18px; }
-  .card-stats > * { padding: 12px 14px; }
-  .card-stats .metric-val { font-size: 1.15rem; }
-  .card-h { display: flex; align-items: baseline; gap: 8px; margin: 22px 0 10px; font-size: 1rem; }
-  .card-h .ph { align-self: center; color: var(--muted); }
-  .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
-  .photo { position: relative; aspect-ratio: 3 / 4; border-radius: var(--r-control); overflow: hidden; background: var(--surface-2); border: 1px solid var(--border); padding: 0; cursor: pointer; }
-  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .photo span { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 6px 4px; font-size: .72rem; color: #fdfdfd; background: linear-gradient(transparent, rgb(0 0 0 / .6)); text-align: left; }
-  .photo.add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-style: dashed; border-color: var(--border-strong); color: var(--muted); font-size: .84rem; }
-  .photo.add .ph { font-size: 1.5rem; }
-  .photo.add:hover, .photo.add:focus-within { color: var(--accent-text); border-color: var(--accent); }
-  .photo.add input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-  .photo-view img { width: 100%; max-height: 62dvh; object-fit: contain; border-radius: var(--r-control); background: var(--surface-2); }
-  .visit { display: grid; grid-template-columns: 92px 1fr auto; gap: 4px 12px; padding: 10px 0; font-size: .9rem; }
-  .visit + .visit { border-top: 1px solid var(--border); }
-  .visit .note { grid-column: 2 / -1; }
-  .visit.next { color: var(--accent-text); }
-  .foot-gap { flex: 1; }
-
-  /* Week */
-  .week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-  .week-day { display: flex; flex-direction: column; gap: 6px; min-height: 180px; padding: 10px 8px; }
-  .week-day + .week-day { border-left: 1px solid var(--border); }
-  .week-day.today { background: var(--accent-soft); }
-  .week-head, .mini, .m-cell { font: inherit; color: var(--text); text-align: left; cursor: pointer; }
-  .week-head { display: flex; flex-direction: column; padding: 4px 6px; border: 0; border-radius: var(--r-control); background: none; }
-  .week-head:hover { background: var(--surface-2); }
-  .mini { display: flex; flex-direction: column; gap: 1px; width: 100%; padding: 7px 9px; font-size: .82rem; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--r-control); background: var(--surface); }
-  .mini:hover { border-color: var(--accent); }
-  .mini strong, .mini small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .mini strong { font-weight: 600; }
-  .mini small { color: var(--muted); }
-
-  /* Month */
-  .month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; padding: 12px; }
-  .m-lbl { padding: 2px 0 4px; text-align: center; font-size: .78rem; font-weight: 600; color: var(--muted); }
-  .m-cell { display: flex; flex-direction: column; gap: 3px; min-width: 0; min-height: 96px; padding: 6px; border: 1px solid var(--border); border-radius: var(--r-control); background: var(--surface); }
-  .m-cell:hover { border-color: var(--accent); }
-  .m-cell.today { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-  .m-num { display: flex; justify-content: space-between; align-items: center; gap: 2px; font-size: .88rem; font-weight: 600; }
-  .m-pill { padding: 1px 5px; border-radius: 5px; background: var(--surface-2); font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .m-more { font-size: .72rem; font-weight: 600; color: var(--accent-text); }
-
-  /* Price-list folders + grouped service picker */
-  .folder + .folder { border-top: 1px solid var(--border); }
-  .folder > summary, .pick-group > summary { list-style: none; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-  .folder > summary::-webkit-details-marker, .pick-group > summary::-webkit-details-marker { display: none; }
-  .folder > summary { padding: 10px 20px; font-size: .95rem; }
-  .folder > summary:hover, .pick-group > summary:hover { background: var(--surface-2); }
-  .folder-caret { color: var(--muted); transition: transform .2s var(--ease); }
-  details[open] > summary .folder-caret { transform: rotate(90deg); }
-  .folder > summary .ph-folder, .pick-group > summary .ph-folder { color: var(--accent-text); font-size: 1.15rem; }
-  .folder-actions { display: flex; gap: 6px; margin-left: auto; }
-  .folder .row { padding-left: 54px; }
-  .folder-empty { padding: 2px 20px 14px 54px; }
-  .pick { display: grid; gap: 8px; max-height: 340px; overflow-y: auto; }
-  .pick-group { border: 1px solid var(--border); border-radius: var(--r-control); }
-  .pick-group > summary { padding: 10px 12px; font-size: .92rem; font-weight: 600; border-radius: var(--r-control); }
-  .pick-group .chips { max-height: none; padding: 2px 10px 10px; }
-
-  /* Generic list rows */
-  .row { display: flex; align-items: center; gap: 14px; padding: 14px 20px; }
-  .row + .row { border-top: 1px solid var(--border); }
-  .row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-  .row-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
-  .row-title .muted { font-size: .88rem; text-decoration: none; }
-  .row-sub { display: flex; align-items: center; gap: 6px; font-size: .86rem; color: var(--muted); }
-  .row-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-  .badges { display: flex; flex-wrap: wrap; gap: 6px; }
-  .avatar { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-weight: 650; font-size: .85rem; flex-shrink: 0; align-self: flex-start; }
-  .stepper { display: flex; align-items: center; gap: 6px; }
-  .stepper output { min-width: 36px; text-align: center; font-size: 1.1rem; font-weight: 650; }
-  .search { position: relative; flex: 1; max-width: 320px; min-width: 200px; }
-  .search .ph { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); }
-  .search input { padding-left: 36px; min-height: 40px; }
-
-  /* Toggle chips */
-  .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; max-height: 248px; overflow-y: auto; padding: 2px; }
-  .chip { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid var(--border-strong); border-radius: 999px; font-size: .9rem; cursor: pointer; user-select: none; transition: background .16s var(--ease), border-color .16s var(--ease); }
-  .chip:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-text); }
-  .chip small { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .days { display: flex; flex-wrap: wrap; gap: 8px; }
-
-  .consent { display: grid; gap: 10px; padding: 14px; border-radius: var(--r-control); background: var(--surface-2); }
-  .consent label { display: flex; align-items: flex-start; gap: 10px; font-size: .9rem; cursor: pointer; }
-
-  /* Install banner + guide */
-  /* Client list tools and bulk actions */
-  .err-log { display: grid; max-height: 300px; overflow-y: auto; margin-top: 14px; border: 1px solid var(--border); border-radius: var(--r-control); }
-  .err-log > p { display: flex; align-items: center; gap: 8px; padding: 12px 14px; }
-  .err-log > p .ph { color: var(--ok); font-size: 1.1rem; }
-  .err-row { display: flex; gap: 12px; padding: 12px 14px; font-size: .88rem; border-left: 3px solid var(--warn); }
-  .err-row + .err-row { border-top: 1px solid var(--border); }
-  .err-row > .ph { font-size: 1.25rem; color: var(--warn); margin-top: 1px; flex-shrink: 0; }
-  .err-row > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .err-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-  .err-detail { margin-top: 3px; font-family: ui-monospace, Consolas, monospace; font-size: .78rem; color: var(--muted); overflow-wrap: anywhere; }
-  .cli-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; padding: 10px 20px; border-bottom: 1px solid var(--border); }
-  .chk { display: inline-flex; align-items: center; gap: 10px; padding-right: 6px; font-size: .9rem; cursor: pointer; }
-  .btn.on { background: var(--accent-soft); color: var(--accent-text); }
-  .row.client.selected { background: var(--surface-2); }
-  .client .sel { align-self: flex-start; margin-top: 11px; } /* level with the avatar */
-  .bulk-bar { position: fixed; z-index: 40; left: 16px; right: 16px; bottom: 20px; max-width: 520px; margin-inline: auto; display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px; background: var(--surface); border: 1px solid var(--accent); border-radius: var(--r-surface); box-shadow: var(--shadow); animation: rise .2s var(--ease); }
-  .install-banner { position: fixed; z-index: 30; left: 16px; right: 16px; bottom: 20px; max-width: 560px; margin-inline: auto; display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-surface); box-shadow: var(--shadow); animation: rise .3s var(--ease); }
-  .install-banner .brand-mark { width: 40px; height: 40px; }
-  .ib-text { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: .88rem; line-height: 1.4; }
-  .ib-text span { color: var(--muted); }
-  .ib-text .ph { vertical-align: -2px; }
-  .guide { display: grid; gap: 8px; margin-top: 18px; }
-  .guide details { border: 1px solid var(--border); border-radius: var(--r-control); }
-  .guide details[open] { border-color: var(--accent); }
-  .guide summary { list-style: none; display: flex; align-items: center; gap: 10px; padding: 12px 14px; font-weight: 600; cursor: pointer; }
-  .guide summary::-webkit-details-marker { display: none; }
-  .guide summary .ph { font-size: 1.25rem; color: var(--accent-text); }
-  .guide ol { display: grid; gap: 10px; padding: 0 16px 16px 38px; font-size: .92rem; }
-  .key { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); font-size: .86rem; font-weight: 600; white-space: nowrap; }
-
-  /* Guided setup */
-  .ob { max-width: 600px; }
-  .ob-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-  .ob-steps span { height: 4px; border-radius: 999px; background: var(--border); transition: background .25s var(--ease); }
-  .ob-steps span.on { background: var(--accent); }
-  .ob-count { margin: 8px 0 14px; }
-  .ob-count:empty { display: none; }
-  .ob-step h2 { font-size: 1.5rem; letter-spacing: -.02em; margin-bottom: 6px; }
-  .ob-step > .muted { margin-bottom: 18px; }
-  .ob-step .hint { margin-top: 14px; }
-  .ob-mark { width: 56px; height: 56px; margin-bottom: 18px; font-size: 1.6rem; }
-  .ob-claim { margin-bottom: 8px; font-size: 1.15rem; font-weight: 600; color: var(--accent-text); }
-  .ob-list { list-style: none; display: grid; gap: 10px; }
-  .ob-list li { display: flex; align-items: center; gap: 12px; font-size: .94rem; }
-  .ob-list .ph { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: var(--r-control); background: var(--accent-soft); color: var(--accent-text); font-size: 1.1rem; }
-  .ob-folders { margin-top: 4px; }
-  .ob .modal-foot { justify-content: flex-start; }
-  #ob-next { margin-left: auto; }
-  .ob-skip { display: block; margin: 14px auto 0; padding: 4px 8px; font: inherit; font-size: .88rem; color: var(--muted); background: none; border: 0; text-decoration: underline; cursor: pointer; }
-  #install-modal { z-index: 110; } /* the install guide opens on top of the guided setup */
-
-  /* What's new */
-  .news { display: grid; gap: 20px; }
-  .news-ver + .news-ver { padding-top: 18px; border-top: 1px solid var(--border); }
-  .news-ver header { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 12px; }
-  .news-ver h3 { font-size: 1.02rem; }
-  .news-ver ul { list-style: none; display: grid; gap: 10px; }
-  .news-ver li { display: flex; gap: 12px; font-size: .92rem; }
-  .news-ver li .ph { flex-shrink: 0; display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--r-control); background: var(--accent-soft); color: var(--accent-text); font-size: 1.05rem; }
-  .news-ver li span { padding-top: 4px; }
-  .news-ver:not(:first-child) li .ph { background: var(--surface-2); color: var(--muted); }
-
-  .empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 44px 20px; text-align: center; }
-  .empty > .ph { font-size: 2rem; color: var(--muted); margin-bottom: 6px; }
-  .empty p { max-width: 42ch; }
-  .empty .btn { margin-top: 12px; }
-  .sk-row { display: grid; grid-template-columns: 64px 1fr; gap: 16px; padding: 18px 20px; }
-  .sk-row + .sk-row { border-top: 1px solid var(--border); }
-
-  /* Web booking */
-  .web-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
-  .link-row { display: flex; gap: 8px; margin-top: 18px; }
-  .link-row input { font-size: .92rem; }
-  .steps { display: grid; gap: 8px; padding-left: 22px; margin-top: 14px; font-size: .92rem; }
-  .checks { list-style: none; display: grid; gap: 10px; margin-top: 20px; color: var(--muted); font-size: .9rem; }
-  .checks li { display: flex; gap: 10px; }
-  .checks .ph { color: var(--ok); margin-top: 3px; }
-  .phone-frame { display: grid; gap: 10px; }
-  .phone-frame iframe { width: 100%; height: 720px; border: 1px solid var(--border); border-radius: 28px; background: var(--bg); box-shadow: var(--shadow); }
-
-  /* Login */
-  #login, #setup { background: var(--bg); }
-  .setup-card { max-width: 540px; display: flex; flex-direction: column; gap: 16px; }
-  .setup-card h2 { margin-bottom: 4px; }
-  .setup-steps { display: grid; gap: 10px; padding-left: 22px; font-size: .94rem; line-height: 1.5; }
-  .setup-steps code { padding: 1px 6px; border-radius: 6px; background: var(--surface-2); font-size: .86em; }
-  .login-card { max-width: 380px; display: flex; flex-direction: column; gap: 14px; }
-  .login-card .brand-mark { width: 44px; height: 44px; font-size: 1.25rem; }
-  .error-text { min-height: 1.3em; color: var(--danger); font-size: .88rem; }
-
-  /* Bottom tab bar (phones + portrait tablets) */
-  .tabbar { display: none; }
-  .tab { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border: 0; border-radius: var(--r-control); background: none; color: var(--muted); font-size: .7rem; font-weight: 600; cursor: pointer; text-decoration: none; }
-  .tab .ph { font-size: 1.45rem; }
-  .tab.active { color: var(--accent-text); }
-
-  @media (max-width: 1100px) {
-    .web-grid { grid-template-columns: 1fr; }
-    .phone-frame { max-width: 420px; }
-    .week { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
-    .week-day + .week-day { border-left: 0; }
-  }
-  @media (max-width: 899px) {
-    .app { grid-template-columns: minmax(0, 1fr); }
-    .sidebar { display: none; }
-    .topbar { padding: calc(10px + env(safe-area-inset-top)) 16px 10px; }
-    .topbar h1 { font-size: 1.15rem; }
-    .topbar .btn-primary { width: 44px; padding: 0; }
-    .hide-sm { display: none; }
-    .content { padding: 16px 16px calc(92px + env(safe-area-inset-bottom)); }
-    .section { gap: 16px; }
-    .tabbar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; inset: auto 0 0 0; z-index: 20; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--border); }
-    .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
-    .install-banner { bottom: calc(80px + env(safe-area-inset-bottom)); }
-    .install-banner .brand-mark { display: none; }
-    .day-head { flex-direction: column; align-items: stretch; gap: 12px; }
-    .welcome { flex-wrap: wrap; padding: 14px 16px; }
-    .wl-chips { width: 100%; justify-content: flex-start; padding-left: 58px; }
-    .day-title { font-size: 1.4rem; }
-    .day-tools input[type="date"] { flex: 1; }
-    .metrics > * { padding: 12px 14px; }
-    .metric-val { font-size: 1.15rem; }
-    .metric-lbl { font-size: .76rem; }
-    .appt { grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 14px 16px; }
-    .appt-side { grid-column: 2; flex-direction: row; align-items: center; justify-content: space-between; }
-    .row { flex-wrap: wrap; padding: 12px 16px; }
-    .client .row-actions { width: 100%; padding-left: 86px; }
-    .cli-tools { padding: 10px 16px; }
-    .bulk-bar { bottom: calc(80px + env(safe-area-inset-bottom)); }
-    .panel-head { padding: 12px 16px; }
-    .panel.pad { padding: 18px 16px; }
-    .add-panel summary { padding: 14px 16px; }
-    .add-body { padding: 0 16px 16px; }
-    .add-body .btn { justify-self: stretch; }
-    .offline-bar { padding: 10px 16px; flex-wrap: wrap; }
-    .day-tools { flex-wrap: wrap; }
-    .seg { flex-basis: 100%; }
-    .seg button { flex: 1; }
-    .week-day { min-height: 0; border-bottom: 1px solid var(--border); }
-    .month { gap: 3px; padding: 8px; }
-    .m-cell { min-height: 52px; padding: 4px; }
-    .m-pill, .m-more { display: none; }
-    .m-num { flex-direction: column; align-items: flex-start; }
-    .m-num .badge { padding: 0 6px; }
-    .folder > summary { padding: 10px 16px; }
-    .folder .row { padding-left: 16px; }
-    .folder-empty { padding: 2px 16px 14px; }
-    .rem .row-actions { width: 100%; justify-content: flex-end; }
-    .search { max-width: none; }
-    .link-row { flex-direction: column; }
-    .phone-frame { max-width: none; }
-    .phone-frame iframe { height: 640px; border-radius: var(--r-surface); }
-  }
-</style>
+<link rel="stylesheet" href="/admin.css">
 </head>
 <body>
 <!-- Boot screen: covers the app until we know whether the session is valid, so nothing shows before login -->
@@ -406,18 +39,18 @@
       <a class="nav-item" href="/privacy" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</a>
       <a class="nav-item" href="/impostazioni" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</a>
     </nav>
-    <button class="nav-item nav-bottom" onclick="openNews()"><i class="ph ph-sparkle"></i>Novità<span class="app-ver num"></span></button>
+    <button class="nav-item nav-bottom" data-click="openNews"><i class="ph ph-sparkle"></i>Novità<span class="app-ver num"></span></button>
   </aside>
 
   <main class="main">
     <header class="topbar">
       <h1 id="page-title">Agenda</h1>
-      <button class="btn btn-primary" onclick="openApptModal()" aria-label="Nuovo appuntamento"><i class="ph ph-plus"></i><span class="hide-sm">Nuovo appuntamento</span></button>
+      <button class="btn btn-primary" data-click="openApptModal" aria-label="Nuovo appuntamento"><i class="ph ph-plus"></i><span class="hide-sm">Nuovo appuntamento</span></button>
     </header>
     <div class="offline-bar" id="offline-bar" role="status" hidden>
       <i class="ph ph-wifi-slash"></i>
       <span id="offline-text"></span>
-      <button class="btn btn-outline btn-sm" onclick="reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button>
+      <button class="btn btn-outline btn-sm" data-click="reload"><i class="ph ph-arrow-clockwise"></i>Riprova</button>
     </div>
 
     <div class="content">
@@ -440,21 +73,21 @@
           </div>
           <div class="day-tools">
             <div class="seg" role="group" aria-label="Vista agenda">
-              <button data-view="day" class="active" onclick="setView('day')">Giorno</button>
-              <button data-view="week" onclick="setView('week')">Settimana</button>
-              <button data-view="month" onclick="setView('month')">Mese</button>
+              <button data-view="day" class="active" data-click="setView" data-arg="day">Giorno</button>
+              <button data-view="week" data-click="setView" data-arg="week">Settimana</button>
+              <button data-view="month" data-click="setView" data-arg="month">Mese</button>
             </div>
-            <button class="btn-icon" onclick="shiftPeriod(-1)" aria-label="Periodo precedente"><i class="ph ph-caret-left"></i></button>
-            <button class="btn btn-outline btn-sm" onclick="setQuickDate(0)">Oggi</button>
-            <button class="btn-icon" onclick="shiftPeriod(1)" aria-label="Periodo successivo"><i class="ph ph-caret-right"></i></button>
-            <input type="date" id="agenda-date" aria-label="Scegli una data" onchange="renderAgenda()">
+            <button class="btn-icon" data-click="shiftPeriod" data-arg="-1" aria-label="Periodo precedente"><i class="ph ph-caret-left"></i></button>
+            <button class="btn btn-outline btn-sm" data-click="setQuickDate" data-arg="0">Oggi</button>
+            <button class="btn-icon" data-click="shiftPeriod" data-arg="1" aria-label="Periodo successivo"><i class="ph ph-caret-right"></i></button>
+            <input type="date" id="agenda-date" aria-label="Scegli una data" data-change="renderAgenda">
           </div>
         </div>
 
         <div class="panel" id="reminders" hidden>
           <div class="panel-head">
             <h3 class="rem-title"><i class="ph ph-bell-ringing"></i>Promemoria prossimi 2 giorni <span class="badge" id="rem-count"></span></h3>
-            <button class="btn btn-ghost btn-sm" id="rem-toggle" onclick="toggleNotified()"></button>
+            <button class="btn btn-ghost btn-sm" id="rem-toggle" data-click="toggleNotified"></button>
           </div>
           <div id="rem-list"></div>
         </div>
@@ -467,7 +100,7 @@
         <div class="panel">
           <div class="panel-head">
             <h3 id="agenda-list-title">Appuntamenti del giorno</h3>
-            <button class="btn btn-ghost btn-sm" onclick="openModal('import-modal')"><i class="ph ph-clipboard-text"></i>Inserisci da messaggio</button>
+            <button class="btn btn-ghost btn-sm" data-click="openModal" data-arg="import-modal"><i class="ph ph-clipboard-text"></i>Inserisci da messaggio</button>
           </div>
           <div id="agenda-list"></div>
         </div>
@@ -484,16 +117,16 @@
               <div class="field"><label for="srv-price">Prezzo (€)</label><input type="number" id="srv-price" placeholder="20" step="0.5" min="0" inputmode="decimal"></div>
               <div class="field"><label for="srv-duration">Durata (minuti)</label><input type="number" id="srv-duration" placeholder="35" step="5" min="5" inputmode="numeric"></div>
             </div>
-            <button class="btn btn-primary" onclick="addService()"><i class="ph ph-check"></i>Inserisci nella cartella</button>
+            <button class="btn btn-primary" data-click="addService"><i class="ph ph-check"></i>Inserisci nella cartella</button>
           </div>
         </details>
         <div class="panel">
           <div class="panel-head">
             <h3>Listino per cartelle</h3>
             <div class="row-actions">
-              <button class="btn btn-ghost btn-sm" onclick="toggleFolders(true)">Apri tutte</button>
-              <button class="btn btn-ghost btn-sm" onclick="toggleFolders(false)">Chiudi tutte</button>
-              <button class="btn btn-outline btn-sm" onclick="addFolder()"><i class="ph ph-folder-plus"></i>Nuova cartella</button>
+              <button class="btn btn-ghost btn-sm" data-click="toggleFolders" data-arg="open">Apri tutte</button>
+              <button class="btn btn-ghost btn-sm" data-click="toggleFolders" data-arg="close">Chiudi tutte</button>
+              <button class="btn btn-outline btn-sm" data-click="addFolder"><i class="ph ph-folder-plus"></i>Nuova cartella</button>
             </div>
           </div>
           <div id="services-list"></div>
@@ -515,7 +148,7 @@
               <label><input type="checkbox" id="cli-gdpr-base" checked><span><strong>Consenso GDPR base:</strong> gestione appuntamenti e notifiche di servizio.</span></label>
               <label><input type="checkbox" id="cli-gdpr-health"><span><strong>Consenso allergie/cute (art. 9 GDPR):</strong> necessario per annotare allergie e sensibilità.</span></label>
             </div>
-            <button class="btn btn-primary" onclick="addClient()"><i class="ph ph-user-plus"></i>Registra cliente</button>
+            <button class="btn btn-primary" data-click="addClient"><i class="ph ph-user-plus"></i>Registra cliente</button>
           </div>
         </details>
         <div class="panel" id="recall" hidden>
@@ -528,23 +161,23 @@
         <div class="panel">
           <div class="panel-head">
             <h3 id="cli-count">Archivio clienti</h3>
-            <div class="search"><i class="ph ph-magnifying-glass"></i><input type="search" id="cli-search" placeholder="Cerca per nome o telefono" aria-label="Cerca cliente" oninput="renderClients()"></div>
+            <div class="search"><i class="ph ph-magnifying-glass"></i><input type="search" id="cli-search" placeholder="Cerca per nome o telefono" aria-label="Cerca cliente" data-input="renderClients"></div>
           </div>
           <div class="cli-tools">
-            <label class="chk"><input type="checkbox" id="cli-all" onchange="selectAllClients(this.checked)"><span>Seleziona tutte</span></label>
-            <button class="btn btn-ghost btn-sm" id="cli-nophone" aria-pressed="false" onclick="toggleNoPhone()"><i class="ph ph-phone-x"></i><span></span></button>
+            <label class="chk"><input type="checkbox" id="cli-all" data-change="selectAllClients"><span>Seleziona tutte</span></label>
+            <button class="btn btn-ghost btn-sm" id="cli-nophone" aria-pressed="false" data-click="toggleNoPhone"><i class="ph ph-phone-x"></i><span></span></button>
             <span class="foot-gap"></span>
-            <button class="btn btn-ghost btn-sm" onclick="$('cli-csv').click()"><i class="ph ph-upload-simple"></i>Importa CSV</button>
-            <input type="file" id="cli-csv" accept=".csv,text/csv" hidden onchange="importClientsCsv(this)">
-            <button class="btn btn-ghost btn-sm" onclick="exportClientsCsv()"><i class="ph ph-download-simple"></i>Esporta CSV</button>
+            <button class="btn btn-ghost btn-sm" data-click="pickCsv"><i class="ph ph-upload-simple"></i>Importa CSV</button>
+            <input type="file" id="cli-csv" accept=".csv,text/csv" hidden data-change="importClientsCsv">
+            <button class="btn btn-ghost btn-sm" data-click="exportClientsCsv"><i class="ph ph-download-simple"></i>Esporta CSV</button>
           </div>
           <div id="clients-list"></div>
         </div>
         <div class="bulk-bar" id="cli-bulk" role="region" aria-label="Clienti selezionate" hidden>
           <strong id="cli-bulk-n"></strong>
           <span class="foot-gap"></span>
-          <button class="btn btn-ghost btn-sm" onclick="selectAllClients(false)">Annulla</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteSelectedClients()"><i class="ph ph-trash"></i>Elimina</button>
+          <button class="btn btn-ghost btn-sm" data-click="clearClientSel">Annulla</button>
+          <button class="btn btn-danger btn-sm" data-click="deleteSelectedClients"><i class="ph ph-trash"></i>Elimina</button>
         </div>
       </section>
 
@@ -567,7 +200,7 @@
               <div class="field"><label for="prd-qty">Quantità attuale</label><input type="number" id="prd-qty" value="3" min="0" inputmode="numeric"></div>
               <div class="field"><label for="prd-min">Soglia minima di avviso</label><input type="number" id="prd-min" value="2" min="0" inputmode="numeric"></div>
             </div>
-            <button class="btn btn-primary" onclick="addProduct()"><i class="ph ph-check"></i>Aggiungi al magazzino</button>
+            <button class="btn btn-primary" data-click="addProduct"><i class="ph ph-check"></i>Aggiungi al magazzino</button>
           </div>
         </details>
         <div class="panel">
@@ -583,8 +216,8 @@
             <h3>La tua pagina di prenotazione</h3>
             <p class="muted">Condividi il link con le clienti: vedono gli orari liberi in tempo reale e ogni prenotazione arriva subito in agenda.</p>
             <div class="link-row">
-              <input id="public-link" readonly aria-label="Link pagina di prenotazione" onfocus="this.select()">
-              <button class="btn btn-primary" onclick="copyLink()"><i class="ph ph-copy"></i>Copia link</button>
+              <input id="public-link" readonly aria-label="Link pagina di prenotazione" data-focus="select">
+              <button class="btn btn-primary" data-click="copyLink"><i class="ph ph-copy"></i>Copia link</button>
             </div>
             <div class="row-wrap">
               <a class="btn btn-outline" id="share-wa" target="_blank" rel="noopener"><i class="ph ph-whatsapp-logo"></i>Condividi su WhatsApp</a>
@@ -610,8 +243,8 @@
           <p class="muted">Seleziona la cliente dopo che ha letto e firmato l'informativa cartacea.</p>
           <div class="row-wrap">
             <select id="gdpr-select-client" aria-label="Cliente" style="max-width:320px"></select>
-            <button class="btn btn-primary" onclick="signClientGdprInSalon()"><i class="ph ph-signature"></i>Registra consenso oggi</button>
-            <button class="btn btn-outline" onclick="printPaperGdprForm()"><i class="ph ph-printer"></i>Stampa modulo</button>
+            <button class="btn btn-primary" data-click="signClientGdprInSalon"><i class="ph ph-signature"></i>Registra consenso oggi</button>
+            <button class="btn btn-outline" data-click="printPaperGdprForm"><i class="ph ph-printer"></i>Stampa modulo</button>
           </div>
         </div>
         <div class="panel pad">
@@ -648,8 +281,8 @@
             <span class="hint" style="margin-top:2px">Questi giorni non sono prenotabili online.</span>
           </div>
           <div class="row-wrap">
-            <button class="btn btn-primary" onclick="saveConfig()"><i class="ph ph-floppy-disk"></i>Salva impostazioni</button>
-            <button class="btn btn-ghost" onclick="openOnboarding()"><i class="ph ph-magic-wand"></i>Configurazione guidata</button>
+            <button class="btn btn-primary" data-click="saveConfig"><i class="ph ph-floppy-disk"></i>Salva impostazioni</button>
+            <button class="btn btn-ghost" data-click="openOnboarding"><i class="ph ph-magic-wand"></i>Configurazione guidata</button>
           </div>
         </div>
 
@@ -659,14 +292,14 @@
           <div class="field" style="margin-top:18px">
             <span class="label">Pause di ogni giorno (es. pranzo)</span>
             <div class="ranges" id="cfg-breaks"></div>
-            <button class="btn btn-ghost btn-sm" onclick="addRange('breaks')"><i class="ph ph-plus"></i>Aggiungi pausa</button>
+            <button class="btn btn-ghost btn-sm" data-click="addRange" data-arg="breaks"><i class="ph ph-plus"></i>Aggiungi pausa</button>
           </div>
           <div class="field" style="margin-top:14px">
             <span class="label">Chiusure (ferie, festivi, corsi)</span>
             <div class="ranges" id="cfg-closures"></div>
-            <button class="btn btn-ghost btn-sm" onclick="addRange('closures')"><i class="ph ph-plus"></i>Aggiungi chiusura</button>
+            <button class="btn btn-ghost btn-sm" data-click="addRange" data-arg="closures"><i class="ph ph-plus"></i>Aggiungi chiusura</button>
           </div>
-          <div class="row-wrap"><button class="btn btn-primary" onclick="saveClosures()"><i class="ph ph-floppy-disk"></i>Salva ferie e pause</button></div>
+          <div class="row-wrap"><button class="btn btn-primary" data-click="saveClosures"><i class="ph ph-floppy-disk"></i>Salva ferie e pause</button></div>
         </div>
 
         <div class="panel pad">
@@ -677,8 +310,8 @@
             <li>Sul telefono apri Google Calendar, vai in <strong>Impostazioni</strong>, tocca il calendario del salone e attiva <strong>Sincronizzazione</strong>.</li>
           </ol>
           <div class="link-row">
-            <input id="cal-link" readonly aria-label="Link del calendario" onfocus="this.select()">
-            <button class="btn btn-primary" onclick="copyLink('cal-link')"><i class="ph ph-copy"></i>Copia link</button>
+            <input id="cal-link" readonly aria-label="Link del calendario" data-focus="select">
+            <button class="btn btn-primary" data-click="copyLink" data-arg="cal-link"><i class="ph ph-copy"></i>Copia link</button>
           </div>
           <div class="row-wrap"><a class="btn btn-outline" id="cal-google" target="_blank" rel="noopener"><i class="ph ph-google-logo"></i>Aggiungi a Google Calendar</a></div>
           <p class="muted small" style="margin-top:14px">Il link è segreto: chi lo ha vede nomi e telefoni delle clienti, quindi non condividerlo. Se finisce in mani sbagliate usa "Esci da tutti i dispositivi": il link cambia e va aggiunto di nuovo.</p>
@@ -688,8 +321,8 @@
           <h3>Backup dei dati</h3>
           <p class="muted">I dati sono nel database online. Scarica comunque un backup ogni tanto.</p>
           <div class="row-wrap">
-            <button class="btn btn-outline" onclick="exportBackup()"><i class="ph ph-download-simple"></i>Scarica backup</button>
-            <label class="btn btn-outline"><i class="ph ph-upload-simple"></i>Ripristina da backup<input type="file" accept=".json,application/json" hidden onchange="importBackup(event)"></label>
+            <button class="btn btn-outline" data-click="exportBackup"><i class="ph ph-download-simple"></i>Scarica backup</button>
+            <label class="btn btn-outline"><i class="ph ph-upload-simple"></i>Ripristina da backup<input type="file" accept=".json,application/json" hidden data-change="importBackup"></label>
           </div>
           <p class="hint">Arrivi dalla versione precedente (salone_pro_v6.html)? Aprila sul dispositivo dove la usavi, premi "Scarica Backup" e carica qui il file.</p>
         </div>
@@ -698,8 +331,8 @@
           <h3>Installa l'app</h3>
           <p class="muted" id="install-status">Aggiungi Salone PRO alla schermata Home del tablet, del telefono o del computer: si apre a schermo intero come un'app.</p>
           <div class="row-wrap">
-            <button class="btn btn-primary" data-install hidden onclick="installApp()"><i class="ph ph-download-simple"></i>Installa Salone PRO</button>
-            <button class="btn btn-outline" onclick="openInstallGuide()"><i class="ph ph-question"></i>Come si installa</button>
+            <button class="btn btn-primary" data-install hidden data-click="installApp"><i class="ph ph-download-simple"></i>Installa Salone PRO</button>
+            <button class="btn btn-outline" data-click="openInstallGuide"><i class="ph ph-question"></i>Come si installa</button>
           </div>
         </div>
 
@@ -708,8 +341,8 @@
           <p class="muted">Gli ultimi problemi su questo dispositivo: salvataggi rifiutati, errori del server e della pagina. Se qualcosa non va, copialo e mandalo a chi ti assiste.</p>
           <div class="err-log" id="err-log"></div>
           <div class="row-wrap">
-            <button class="btn btn-outline btn-sm" onclick="copyErrorLog()"><i class="ph ph-copy"></i>Copia</button>
-            <button class="btn btn-ghost btn-sm" onclick="clearErrorLog()"><i class="ph ph-trash"></i>Svuota</button>
+            <button class="btn btn-outline btn-sm" data-click="copyErrorLog"><i class="ph ph-copy"></i>Copia</button>
+            <button class="btn btn-ghost btn-sm" data-click="clearErrorLog"><i class="ph ph-trash"></i>Svuota</button>
           </div>
         </div>
 
@@ -717,8 +350,8 @@
           <h3>Sessione</h3>
           <p class="muted">Esci da questo dispositivo. Se perdi un tablet o un telefono, esci da tutti: servirà di nuovo la password ovunque e il link del calendario cambia.</p>
           <div class="row-wrap">
-            <button class="btn btn-outline" onclick="logout()"><i class="ph ph-sign-out"></i>Esci</button>
-            <button class="btn btn-danger" onclick="logout(true)"><i class="ph ph-devices"></i>Esci da tutti i dispositivi</button>
+            <button class="btn btn-outline" data-click="logout"><i class="ph ph-sign-out"></i>Esci</button>
+            <button class="btn btn-danger" data-click="logoutAll"><i class="ph ph-devices"></i>Esci da tutti i dispositivi</button>
           </div>
         </div>
       </section>
@@ -730,7 +363,7 @@
     <a class="tab" href="/listino" data-tab="listino"><i class="ph ph-scissors"></i>Listino</a>
     <a class="tab" href="/clienti" data-tab="clienti"><i class="ph ph-users"></i>Clienti</a>
     <a class="tab" href="/magazzino" data-tab="magazzino"><i class="ph ph-package"></i>Magazzino</a>
-    <button class="tab" id="more-btn" onclick="openModal('more-sheet')"><i class="ph ph-dots-three-outline"></i>Altro</button>
+    <button class="tab" id="more-btn" data-click="openModal" data-arg="more-sheet"><i class="ph ph-dots-three-outline"></i>Altro</button>
   </nav>
 </div>
 
@@ -741,7 +374,7 @@
       <a class="nav-item" href="/prenotazione-web" data-tab="webbooking"><i class="ph ph-globe-simple"></i>Prenotazione web</a>
       <a class="nav-item" href="/privacy" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</a>
       <a class="nav-item" href="/impostazioni" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</a>
-      <button class="nav-item" onclick="openNews()"><i class="ph ph-sparkle"></i>Novità<span class="app-ver num"></span></button>
+      <button class="nav-item" data-click="openNews"><i class="ph ph-sparkle"></i>Novità<span class="app-ver num"></span></button>
     </nav>
   </div>
 </div>
@@ -750,8 +383,8 @@
 <div class="booking-alert" id="booking-alert" role="status" hidden>
   <i class="ph ph-bell-ringing" aria-hidden="true"></i>
   <div class="ba-text"><strong id="ba-title"></strong><span id="ba-detail"></span></div>
-  <button class="btn btn-primary btn-sm" onclick="showNewBookings()">Vedi</button>
-  <button class="btn-icon" onclick="dismissBookings()" aria-label="Chiudi avviso"><i class="ph ph-x"></i></button>
+  <button class="btn btn-primary btn-sm" data-click="showNewBookings">Vedi</button>
+  <button class="btn-icon" data-click="dismissBookings" aria-label="Chiudi avviso"><i class="ph ph-x"></i></button>
 </div>
 
 <div class="install-banner" id="install-banner" role="region" aria-label="Installa l'app" hidden>
@@ -760,8 +393,8 @@
     <strong>Installa Salone PRO</strong>
     <span id="ib-sub"></span>
   </div>
-  <button class="btn btn-primary btn-sm" id="ib-action" onclick="installApp()"></button>
-  <button class="btn-icon" onclick="dismissInstall()" aria-label="Non ora"><i class="ph ph-x"></i></button>
+  <button class="btn btn-primary btn-sm" id="ib-action" data-click="installApp"></button>
+  <button class="btn-icon" data-click="dismissInstall" aria-label="Non ora"><i class="ph ph-x"></i></button>
 </div>
 
 <!-- Install guide -->
@@ -769,10 +402,10 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="install-title">
     <div class="modal-head">
       <h2 id="install-title">Come installare l'app</h2>
-      <button class="btn-icon" onclick="closeModal('install-modal')" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="install-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
     </div>
     <p class="muted">Una volta installata, Salone PRO compare tra le tue app e si apre a schermo intero, senza la barra del browser.</p>
-    <button class="btn btn-primary" data-install hidden onclick="installApp()" style="margin-top:16px"><i class="ph ph-download-simple"></i>Installa ora</button>
+    <button class="btn btn-primary" data-install hidden data-click="installApp" style="margin-top:16px"><i class="ph ph-download-simple"></i>Installa ora</button>
     <div class="guide">
       <details data-os="ios">
         <summary><i class="ph ph-device-mobile"></i>iPhone e iPad</summary>
@@ -864,20 +497,20 @@
       <h2>Tutto pronto</h2>
       <p class="muted">Condividi questo link con le clienti: vedono gli orari liberi e prenotano da sole.</p>
       <div class="link-row">
-        <input id="ob-link" readonly aria-label="Link pagina di prenotazione" onfocus="this.select()">
-        <button class="btn btn-primary" onclick="copyLink()"><i class="ph ph-copy"></i>Copia link</button>
+        <input id="ob-link" readonly aria-label="Link pagina di prenotazione" data-focus="select">
+        <button class="btn btn-primary" data-click="copyLink"><i class="ph ph-copy"></i>Copia link</button>
       </div>
       <div class="row-wrap">
         <a class="btn btn-outline" id="ob-share" target="_blank" rel="noopener"><i class="ph ph-whatsapp-logo"></i>Condividi su WhatsApp</a>
-        <button class="btn btn-outline" onclick="installApp()"><i class="ph ph-download-simple"></i>Installa l'app</button>
+        <button class="btn btn-outline" data-click="installApp"><i class="ph ph-download-simple"></i>Installa l'app</button>
       </div>
     </section>
 
     <div class="modal-foot">
-      <button class="btn btn-ghost" id="ob-back" onclick="obGo(-1)"><i class="ph ph-caret-left"></i>Indietro</button>
-      <button class="btn btn-primary" id="ob-next" onclick="obGo(1)"></button>
+      <button class="btn btn-ghost" id="ob-back" data-click="obGo" data-arg="-1"><i class="ph ph-caret-left"></i>Indietro</button>
+      <button class="btn btn-primary" id="ob-next" data-click="obGo" data-arg="1"></button>
     </div>
-    <button class="ob-skip" id="ob-skip" onclick="obFinish(true)">Lo faccio dopo</button>
+    <button class="ob-skip" id="ob-skip" data-click="obSkip">Lo faccio dopo</button>
   </div>
 </div>
 
@@ -886,10 +519,10 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="news-title">
     <div class="modal-head">
       <h2 id="news-title">Novità di Salone PRO</h2>
-      <button class="btn-icon" onclick="closeModal('news-modal')" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="news-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
     </div>
     <div class="news" id="news-list"></div>
-    <div class="modal-foot"><button class="btn btn-primary" onclick="closeModal('news-modal')">Ho capito</button></div>
+    <div class="modal-foot"><button class="btn btn-primary" data-click="closeModal" data-arg="news-modal">Ho capito</button></div>
   </div>
 </div>
 
@@ -898,11 +531,11 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="appt-modal-title">
     <div class="modal-head">
       <h2 id="appt-modal-title">Nuovo appuntamento</h2>
-      <button class="btn-icon" onclick="closeModal('appt-modal')" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="appt-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
     </div>
     <input type="hidden" id="modal-edit-id">
     <div class="form-grid">
-      <div class="field"><label for="modal-client">Cliente in archivio</label><select id="modal-client" onchange="fillClientPhone()"></select></div>
+      <div class="field"><label for="modal-client">Cliente in archivio</label><select id="modal-client" data-change="fillClientPhone"></select></div>
       <div class="field"><label for="modal-new-client">Oppure nuova cliente</label><input type="text" id="modal-new-client" placeholder="Nome e cognome" autocomplete="off"></div>
       <div class="field"><label for="modal-phone">Telefono</label><input type="tel" id="modal-phone" placeholder="333 123 4567" autocomplete="off"></div>
       <div class="field"><label for="modal-date">Data</label><input type="date" id="modal-date"></div>
@@ -918,8 +551,8 @@
       <div class="field span-2"><label for="modal-notes">Note</label><textarea id="modal-notes" rows="2" placeholder="Richieste della cliente, dettagli tecnici..."></textarea></div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="closeModal('appt-modal')">Annulla</button>
-      <button class="btn btn-primary" onclick="saveAppointment()"><i class="ph ph-check"></i>Salva in agenda</button>
+      <button class="btn btn-outline" data-click="closeModal" data-arg="appt-modal">Annulla</button>
+      <button class="btn btn-primary" data-click="saveAppointment"><i class="ph ph-check"></i>Salva in agenda</button>
     </div>
   </div>
 </div>
@@ -929,7 +562,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="contact-title" style="max-width:540px">
     <div class="modal-head">
       <h2 id="contact-title">Avvisa o scrivi alla cliente</h2>
-      <button class="btn-icon" onclick="closeModal('contact-modal')" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="contact-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
     </div>
     <p class="muted" id="contact-who"></p>
     <div class="field" style="margin-top:14px">
@@ -937,8 +570,8 @@
       <textarea id="contact-msg" rows="5"></textarea>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="sendContact('sms')"><i class="ph ph-chat-text"></i>Invia SMS</button>
-      <button class="btn btn-primary" onclick="sendContact('wa')"><i class="ph ph-whatsapp-logo"></i>Invia su WhatsApp</button>
+      <button class="btn btn-outline" data-click="sendContact" data-arg="sms"><i class="ph ph-chat-text"></i>Invia SMS</button>
+      <button class="btn btn-primary" data-click="sendContact" data-arg="wa"><i class="ph ph-whatsapp-logo"></i>Invia su WhatsApp</button>
     </div>
   </div>
 </div>
@@ -948,7 +581,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cm-title">
     <div class="modal-head">
       <div class="card-who"><span class="avatar" id="cm-avatar" aria-hidden="true"></span><div><h2 id="cm-title"></h2><p class="muted small" id="cm-since"></p></div></div>
-      <button class="btn-icon" onclick="closeModal('cli-modal')" aria-label="Chiudi" data-autofocus><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="cli-modal" aria-label="Chiudi" data-autofocus><i class="ph ph-x"></i></button>
     </div>
     <input type="hidden" id="cm-id">
     <div class="metrics card-stats" id="cm-stats"></div>
@@ -968,10 +601,10 @@
     <h3 class="card-h"><i class="ph ph-clock-counter-clockwise"></i>Storico visite</h3>
     <div id="cm-history"></div>
     <div class="modal-foot">
-      <button class="btn btn-danger" onclick="deleteClient(Number($('cm-id').value))"><i class="ph ph-trash"></i>Elimina scheda</button>
+      <button class="btn btn-danger" data-click="deleteCardClient"><i class="ph ph-trash"></i>Elimina scheda</button>
       <span class="foot-gap"></span>
-      <button class="btn btn-outline" onclick="closeModal('cli-modal')">Annulla</button>
-      <button class="btn btn-primary" onclick="saveClientCard()"><i class="ph ph-check"></i>Salva</button>
+      <button class="btn btn-outline" data-click="closeModal" data-arg="cli-modal">Annulla</button>
+      <button class="btn btn-primary" data-click="saveClientCard"><i class="ph ph-check"></i>Salva</button>
     </div>
   </div>
 </div>
@@ -981,14 +614,14 @@
   <div class="modal photo-view" role="dialog" aria-modal="true" aria-labelledby="pv-date">
     <div class="modal-head">
       <h2 id="pv-date"></h2>
-      <button class="btn-icon" onclick="closePhoto()" aria-label="Chiudi" data-autofocus><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closePhoto" aria-label="Chiudi" data-autofocus><i class="ph ph-x"></i></button>
     </div>
     <img id="pv-img" alt="Foto della cliente">
-    <div class="field" style="margin-top:14px"><label for="pv-note">Nota sulla foto</label><input type="text" id="pv-note" maxlength="120" placeholder="Es. prima del balayage" onchange="savePhotoNote()"></div>
+    <div class="field" style="margin-top:14px"><label for="pv-note">Nota sulla foto</label><input type="text" id="pv-note" maxlength="120" placeholder="Es. prima del balayage" data-change="savePhotoNote"></div>
     <div class="modal-foot">
-      <button class="btn btn-danger" onclick="deletePhoto()"><i class="ph ph-trash"></i>Elimina foto</button>
+      <button class="btn btn-danger" data-click="deletePhoto"><i class="ph ph-trash"></i>Elimina foto</button>
       <span class="foot-gap"></span>
-      <button class="btn btn-primary" onclick="closePhoto()"><i class="ph ph-check"></i>Fatto</button>
+      <button class="btn btn-primary" data-click="closePhoto"><i class="ph ph-check"></i>Fatto</button>
     </div>
   </div>
 </div>
@@ -998,7 +631,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="srv-modal-title" style="max-width:540px">
     <div class="modal-head">
       <h2 id="srv-modal-title">Modifica servizio</h2>
-      <button class="btn-icon" onclick="closeModal('srv-modal')" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="srv-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
     </div>
     <input type="hidden" id="srv-edit-id">
     <div class="form-grid">
@@ -1008,8 +641,8 @@
       <div class="field"><label for="srv-edit-duration">Durata (minuti)</label><input type="number" id="srv-edit-duration" min="5" step="5" inputmode="numeric"></div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="closeModal('srv-modal')">Annulla</button>
-      <button class="btn btn-primary" onclick="saveServiceEdit()"><i class="ph ph-check"></i>Salva</button>
+      <button class="btn btn-outline" data-click="closeModal" data-arg="srv-modal">Annulla</button>
+      <button class="btn btn-primary" data-click="saveServiceEdit"><i class="ph ph-check"></i>Salva</button>
     </div>
   </div>
 </div>
@@ -1019,15 +652,15 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
     <div class="modal-head">
       <h2 id="import-title">Inserisci da messaggio</h2>
-      <button class="btn-icon" onclick="closeModal('import-modal')" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="import-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
     </div>
     <div class="field">
       <label for="import-text">Incolla il messaggio di prenotazione ricevuto su WhatsApp</label>
       <textarea id="import-text" rows="8" placeholder="PRENOTAZIONE SALONE&#10;Cliente: ...&#10;Tel: ...&#10;Data: ...&#10;Ora: ..."></textarea>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="closeModal('import-modal')">Annulla</button>
-      <button class="btn btn-primary" onclick="parseBookingString()"><i class="ph ph-lightning"></i>Inserisci in agenda</button>
+      <button class="btn btn-outline" data-click="closeModal" data-arg="import-modal">Annulla</button>
+      <button class="btn btn-primary" data-click="parseBookingString"><i class="ph ph-lightning"></i>Inserisci in agenda</button>
     </div>
   </div>
 </div>
@@ -1043,14 +676,14 @@
     <ol class="setup-steps" id="setup-steps"></ol>
     <div class="modal-foot">
       <a class="btn btn-outline" href="https://vercel.com/dashboard" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Apri Vercel</a>
-      <button class="btn btn-primary" onclick="location.reload()"><i class="ph ph-arrow-clockwise"></i>Ho fatto, riprova</button>
+      <button class="btn btn-primary" data-click="reloadPage"><i class="ph ph-arrow-clockwise"></i>Ho fatto, riprova</button>
     </div>
   </div>
 </div>
 
 <!-- Login -->
 <div class="modal-backdrop" id="login" data-locked="1">
-  <form class="modal login-card" onsubmit="login(event)">
+  <form class="modal login-card" data-submit="login">
     <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors"></i></span>
     <div>
       <h2>Salone PRO</h2>
@@ -1069,1604 +702,15 @@
 <script src="/offline.js"></script>
 <script src="/history.js"></script>
 <script src="/csv.js"></script>
-<script>
-  let db = { config: {}, services: [], clients: [], inventory: [], appointments: [] };
-  let loaded = false;
-  const TITLES = { agenda: 'Agenda', listino: 'Listino servizi', clienti: 'Schede clienti', magazzino: 'Magazzino', webbooking: 'Prenotazione web', gdpr: 'Privacy & GDPR', backup: 'Impostazioni & dati' };
-  const DAYS = [[1, 'Lun'], [2, 'Mar'], [3, 'Mer'], [4, 'Gio'], [5, 'Ven'], [6, 'Sab'], [0, 'Dom']];
-  const todayStr = (offset = 0) => { const d = new Date(); d.setDate(d.getDate() + offset); return localDate(d); };
-  const newId = () => Date.now() * 100 + Math.floor(Math.random() * 100);
-  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-  const initials = (n) => n.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-  const sortedClients = () => [...db.clients].sort((a, b) => a.name.localeCompare(b.name, 'it'));
-  const empty = (icon, title, text, cta = '') => `<div class="empty"><i class="ph ${icon}"></i><p><strong>${title}</strong></p><p class="muted">${text}</p>${cta}</div>`;
-  const anyModalOpen = () => !!document.querySelector('.modal-backdrop.open');
-
-  // ---------- API ----------
-  let offline = false;
-  const isNetwork = (e) => e instanceof TypeError; // fetch rejects with TypeError when there is no connection
-  async function api(method, url, body) {
-    let r;
-    try {
-      r = await fetch(url, { method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
-    } catch (e) {
-      // Once per outage: the 20-second check would otherwise fill the log while offline.
-      if (!offline) logError('Rete', 'Connessione internet assente o instabile: la richiesta non ha raggiunto il server. Le modifiche restano sul dispositivo e partono al ritorno della rete.', e.message);
-      offline = true;
-      updateOfflineBar();
-      throw e;
-    }
-    offline = false;
-    const data = await r.json().catch(() => ({}));
-    const where = `${r.status} ${method} ${url.split('?')[0]}${data.error ? ': ' + data.error : ''}`;
-    if (r.status === 401) {
-      if (loaded) logError('Accesso', 'Sessione scaduta o revocata ("Esci da tutti i dispositivi"): serve di nuovo la password.', where);
-      openModal('login');
-      throw Object.assign(new Error('Sessione scaduta, accedi di nuovo'), { status: 401 });
-    }
-    if (!r.ok) {
-      logError('Server', r.status >= 500 ? 'Il server o il database online ha avuto un errore imprevisto. Se succede ancora, i dettagli sono nei log del progetto su Vercel.'
-        : r.status === 503 ? 'Vercel non è configurato del tutto: manca il database o la password.'
-        : r.status === 429 ? 'Troppe richieste ravvicinate: il server ha bloccato le operazioni per qualche minuto.'
-        : r.status === 400 ? 'I dati inviati non sono stati accettati dal server: la modifica non è stata salvata.'
-        : 'Il server ha risposto con un errore.', where);
-      throw Object.assign(new Error(data.error || 'Errore ' + r.status), { status: r.status, setup: data.setup });
-    }
-    return data;
-  }
-
-  // ---------- Offline: data copy + queue of changes ----------
-  // shortcut: copy and queue live in localStorage (about 5 MB), move them to IndexedDB if the archive grows past a few thousand appointments.
-  const readJSON = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
-  const writeJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
-  const forget = (k) => { try { localStorage.removeItem(k); } catch {} };
-
-  // ---------- Registro errori ----------
-  // shortcut: kept on each device (last 100, localStorage); move it to the database if several devices need one shared log.
-  // Each entry: a category, a plain-language explanation for the salon and the technical detail for whoever helps.
-  const ERR_ICONS = { Rete: 'ph-wifi-slash', Server: 'ph-cloud-slash', Accesso: 'ph-lock-simple', Pagina: 'ph-bug' };
-  function logError(cat, msg, detail = '') {
-    const log = readJSON('sp_errors') || [];
-    log.unshift({ at: new Date().toISOString(), cat, msg: String(msg).slice(0, 300), detail: String(detail).slice(0, 300) });
-    writeJSON('sp_errors', log.slice(0, 100));
-    if ($('tab-backup').classList.contains('active')) renderErrorLog();
-  }
-  // "Script error." comes from scripts of other sites or extensions, with no details to show.
-  window.addEventListener('error', (e) => e.message !== 'Script error.' && logError('Pagina', "Errore imprevisto nella pagina: se qualcosa non funziona, ricarica l'app.", `${e.message} (${(e.filename || 'pagina').split('/').pop() || 'pagina'}:${e.lineno})`));
-  window.addEventListener('unhandledrejection', (e) => logError('Pagina', "Un'operazione non è andata a buon fine.", e.reason?.message || String(e.reason)));
-  function renderErrorLog() {
-    const when = (iso) => new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-    $('err-log').innerHTML = (readJSON('sp_errors') || []).map((e) => `
-      <div class="err-row">
-        <i class="ph ${ERR_ICONS[e.cat] || 'ph-warning-circle'}" aria-hidden="true"></i>
-        <div><div class="err-head"><strong>${esc(e.cat || 'Errore')}</strong><span class="muted small num">${esc(when(e.at))}</span></div>
-        <span>${esc(e.msg)}</span>${e.detail ? `<span class="err-detail">${esc(e.detail)}</span>` : ''}</div>
-      </div>`).join('')
-      || '<p class="muted small"><i class="ph ph-check-circle"></i>Nessun problema recente: il gestionale comunica regolarmente con il server.</p>';
-  }
-  function copyErrorLog() {
-    const lines = (readJSON('sp_errors') || []).map((e) => `${e.at}  [${e.cat || 'Errore'}] ${e.msg}${e.detail ? '  |  ' + e.detail : ''}`);
-    navigator.clipboard.writeText([`Salone PRO v${NEWS[0].v}, ${navigator.userAgent}`, ...lines].join('\n'))
-      .then(() => toast(lines.length ? 'Registro copiato' : 'Registro vuoto copiato'))
-      .catch(() => toast('Copia non riuscita', 'error'));
-  }
-  function clearErrorLog() {
-    if (!confirm('Svuotare il registro degli errori di questo dispositivo?')) return;
-    forget('sp_errors');
-    renderErrorLog();
-    toast('Registro svuotato');
-  }
-  let outbox = readJSON('sp_outbox') || [];
-  const saveCache = () => writeJSON('sp_cache', db);
-
-  // Optimistic UI: local state is already updated. Without connection (or with an expired session) the change waits in the queue.
-  const syncFail = (e) => { toast('Non salvato: ' + e.message, 'error'); reload(); };
-  function send(op) {
-    saveCache();
-    if (outbox.length) return enqueue(op); // keep the order behind changes already waiting
-    return sendOp(op).catch((e) => (isNetwork(e) || e.status === 401 ? enqueue(op) : syncFail(e)));
-  }
-  function enqueue(op) {
-    outbox.push(op);
-    writeJSON('sp_outbox', outbox);
-    updateOfflineBar();
-    toast('Salvato sul dispositivo: lo invio appena torna la rete');
-    return Promise.resolve(); // undefined: callers skip their "saved" toast
-  }
-  const persist = (col, item) => send({ method: 'PUT', col, item });
-  const drop = (col, id) => send({ method: 'DELETE', col, id });
-  // Many at once (CSV import, bulk delete), a few hundred per request: deleted ids travel in the URL.
-  const chunks = (a, n) => Array.from({ length: Math.ceil(a.length / n) }, (_, i) => a.slice(i * n, i * n + n));
-  const persistMany = (col, items) => Promise.all(chunks(items, 500).map((part) => send({ method: 'PUT', col, items: part })));
-  const dropMany = (col, ids) => Promise.all(chunks(ids, 300).map((part) => send({ method: 'DELETE', col, ids: part })));
-  const sendOp = (op) => (op.method === 'PUT'
-    ? api('PUT', '/api/data', { col: op.col, item: op.item, items: op.items })
-    : api('DELETE', `/api/data?col=${op.col}&${op.ids ? 'ids=' + op.ids.join(',') : 'id=' + op.id}`));
-
-  // Sends queued changes in order and returns the ids of the appointments sent. Stops at the first connection or
-  // login problem; a change the server refuses is dropped with a warning so it cannot block the queue forever.
-  let flushing = false;
-  async function flush() {
-    const synced = [];
-    if (flushing || !outbox.length) return synced;
-    flushing = true;
-    try {
-      while (outbox.length) {
-        const op = outbox[0];
-        try {
-          await sendOp(op);
-          if (op.method === 'PUT' && op.col === 'appointments') synced.push(op.item.id);
-        } catch (e) {
-          if (isNetwork(e) || e.status === 401) break;
-          toast('Una modifica fatta offline non è stata accettata: ' + e.message, 'error');
-        }
-        outbox.shift();
-        writeJSON('sp_outbox', outbox);
-      }
-    } finally {
-      flushing = false;
-      updateOfflineBar();
-    }
-    return synced;
-  }
-
-  // After a sync, flag appointments made offline that now overlap others (e.g. a web booking taken meanwhile).
-  function warnClashes(ids) {
-    const found = ids.map((id) => db.appointments.find((a) => a.id === id)).filter((a) => a && clashes(db.appointments, a).length);
-    if (!found.length) return toast('Modifiche fatte offline inviate');
-    toast(`Attenzione: ${found.length === 1 ? 'un appuntamento inserito offline si sovrappone' : `${found.length} appuntamenti inseriti offline si sovrappongono`} ad altri (${found.map((a) => `${fmtDate(a.date).slice(0, 5)} ore ${a.time}`).join(', ')}). Controlla l'agenda.`, 'error');
-    $('agenda-date').value = found[0].date;
-    setView('day');
-  }
-
-  function updateOfflineBar() {
-    const n = outbox.length, waiting = `${n} ${n === 1 ? 'modifica salvata' : 'modifiche salvate'} sul dispositivo`;
-    $('offline-bar').hidden = !offline && !n;
-    $('offline-text').textContent = offline
-      ? `Sei offline. ${n ? `${waiting}: le invio appena torna la rete.` : 'Vedi gli ultimi dati scaricati e puoi continuare a lavorare.'}`
-      : `${waiting}, in attesa di invio.`;
-  }
-
-  async function reload() {
-    const synced = await flush();
-    let fresh;
-    try {
-      fresh = await api('GET', '/api/data');
-    } catch (e) {
-      if (e.status === 401) forget('sp_cache'); // session ended or revoked: no data left readable on this device
-      if (!loaded && isNetwork(e) && (fresh = readJSON('sp_cache'))) {
-        // start offline from the copy saved on this device (queued changes are already inside it)
-      } else {
-        if (e.setup) return showSetup(e.setup);
-        if (!loaded && !$('login').classList.contains('open')) {
-          document.body.classList.add('ready'); // show the app only to explain the problem
-          $('agenda-list').innerHTML = isNetwork(e)
-            ? empty('ph-wifi-slash', 'Sei offline', 'Su questo dispositivo non ci sono ancora dati salvati: collegati a internet una volta per usarlo anche offline.', '<button class="btn btn-outline btn-sm" onclick="reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button>')
-            : empty('ph-cloud-slash', 'Impossibile caricare i dati', esc(e.message), '<button class="btn btn-outline btn-sm" onclick="reload()"><i class="ph ph-arrow-clockwise"></i>Riprova</button>');
-        }
-        return;
-      }
-    }
-    outbox.forEach((op) => applyOp(fresh, op));
-    const known = loaded && new Set(db.appointments.map((a) => a.id));
-    db = fresh;
-    saveCache();
-    const first = !loaded;
-    if (first) { loaded = true; loadConfigUI(); }
-    if (first && $('tab-backup').classList.contains('active')) loadCalendarLink();
-    renderAll();
-    // createdAt check: a restored backup full of old web bookings must not ring
-    if (known) announce(db.appointments.filter((a) => a.source === 'web' && !known.has(a.id) && Date.now() - Date.parse(a.createdAt) < 864e5));
-    document.body.classList.add('ready');
-    updateOfflineBar();
-    if (synced.length) warnClashes(synced);
-    const onboarding = first && needsOnboarding();
-    if (onboarding) openOnboarding();
-    else if (first && newsSeen() !== NEWS[0].v) openNews();
-    if (first && !onboarding) maybeInstallBanner();
-  }
-
-  // ---------- Novità ----------
-  // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
-  const NEWS = [
-    { v: '1.11', date: '19 ottobre 2026', title: 'Import più furbo e registro più chiaro', items: [
-      ['ph-file-csv', "L'import CSV esclude le persone senza numero di telefono e aggiorna le clienti già in archivio invece di saltarle. Due persone con lo stesso numero ma nomi diversi (mamma e figlia) restano due schede."],
-      ['ph-calendar-plus', "Dopo la prenotazione online la cliente aggiunge l'appuntamento al calendario: Google Calendar, Apple su iPhone, Samsung o altro su Android, file da scaricare su computer. Il calendario la avvisa 2 ore prima."],
-      ['ph-bug', 'Il registro errori dice in parole semplici cosa è successo (rete, server, accesso) e registra anche quando manca la connessione.'],
-    ] },
-    { v: '1.10', date: '19 ottobre 2026', title: 'Clienti in blocco e registro errori', items: [
-      ['ph-file-csv', "In Schede clienti puoi importare ed esportare le clienti in CSV (si apre con Excel). All'import le clienti già presenti vengono saltate."],
-      ['ph-check-square', 'Seleziona più clienti con le caselle, o tutte insieme, ed eliminale in un colpo solo.'],
-      ['ph-phone-x', 'Il filtro "Senza telefono" mostra le clienti senza numero: selezionale tutte e fai pulizia.'],
-      ['ph-bug', 'In Impostazioni il "Registro errori" mostra gli ultimi problemi di questo dispositivo, da copiare e inviare a chi ti assiste.'],
-    ] },
-    { v: '1.9', date: '19 ottobre 2026', title: 'Gli appuntamenti nel calendario del telefono', items: [
-      ['ph-calendar-check', 'Dopo aver prenotato online, la cliente tocca "Aggiungi al calendario": su iPhone si apre il Calendario, su Android Google Calendar, con giorno, ora, servizi e indirizzo già scritti.'],
-      ['ph-calendar-plus', 'In Impostazioni trovi "Calendario del telefono": aggiungi il link a Google Calendar e gli appuntamenti compaiono da soli nel calendario di Android.'],
-      ['ph-clock', 'Google aggiorna il calendario ogni qualche ora: per le prenotazioni appena arrivate fa fede il gestionale, con il suo bip.'],
-    ] },
-    { v: '1.8', date: '16 ottobre 2026', title: 'Il riepilogo della giornata', items: [
-      ['ph-sun', "In cima all'agenda trovi il saluto e il riepilogo di oggi: quanti appuntamenti, quanti già fatti e l'incasso. I riquadri con i numeri compaiono quando guardi un altro giorno, la settimana o il mese."],
-      ['ph-clock', "Vedi subito chi arriva dopo e tra quanto, o chi è in poltrona adesso: tocca il nome per aprire la sua scheda."],
-      ['ph-package', 'Con un tocco vai alle clienti da richiamare o ai prodotti da riordinare. I promemoria non mostrano più gli appuntamenti già passati.'],
-    ] },
-    { v: '1.7', date: '16 ottobre 2026', title: 'Le prenotazioni online arrivano da sole', items: [
-      ['ph-bell-ringing', 'Con il gestionale aperto, una nuova prenotazione dalla pagina web arriva entro 20 secondi con un bip e un avviso in alto: tocca "Vedi" per aprire quel giorno in agenda.'],
-      ['ph-wifi-high', 'Se il dispositivo era in standby, l\'avviso compare appena riapri l\'app.'],
-      ['ph-sparkle', 'Accanto a Novità ora vedi la versione dell\'app che stai usando.'],
-    ] },
-    { v: '1.6', date: '16 ottobre 2026', title: 'Scheda cliente, foto e richiami', items: [
-      ['ph-identification-card', 'Tocca il nome di una cliente (anche in agenda) per aprire la sua scheda: dati, formula, note, quanto ha speso e lo storico delle visite.'],
-      ['ph-camera-plus', 'Allega foto alla scheda (prima e dopo, colore): vengono ridotte a 480p sul dispositivo, quindi occupano pochissimo. Le foto non sono incluse nel file di backup.'],
-      ['ph-clock-counter-clockwise', 'In Schede clienti la lista "Da richiamare" mostra chi non viene da qualche settimana e non ha appuntamenti: un tocco e le scrivi su WhatsApp.'],
-      ['ph-coffee', 'In Impostazioni imposta pausa pranzo, ferie e festivi: la pagina di prenotazione li blocca da sola e l\'agenda li mostra.'],
-    ] },
-    { v: '1.5', date: '16 ottobre 2026', title: 'Ogni sezione ha il suo indirizzo', items: [
-      ['ph-link', 'Agenda, clienti, listino e le altre sezioni hanno un indirizzo proprio (es. /clienti): aggiornando la pagina resti dove sei, Indietro funziona e puoi salvarle nei preferiti.'],
-      ['ph-lock-simple', "All'apertura il gestionale resta nascosto finché l'accesso non è verificato."],
-      ['ph-lifebuoy', 'Se su Vercel mancano il database o la password, una schermata spiega passo passo come sistemare.'],
-    ] },
-    { v: '1.4', date: '16 ottobre 2026', title: 'Configurazione guidata', items: [
-      ['ph-magic-wand', 'Alla prima installazione una configurazione guidata ti accompagna passo passo: dati del salone, orari, listino e link per le clienti.'],
-      ['ph-gear-six', 'Puoi riaprirla quando vuoi da Impostazioni, con il pulsante "Configurazione guidata".'],
-    ] },
-    { v: '1.3', date: '16 ottobre 2026', title: 'Funziona anche senza internet', items: [
-      ['ph-wifi-slash', "Senza rete il gestionale si apre lo stesso: vedi gli ultimi dati scaricati e puoi aggiungere o modificare appuntamenti."],
-      ['ph-cloud-arrow-up', "Le modifiche fatte offline restano sul dispositivo e partono da sole quando torna la rete. Una barra in alto ti dice quante ne mancano."],
-      ['ph-warning-octagon', "Se un appuntamento inserito offline si sovrappone a un altro, per esempio a una prenotazione web arrivata nel frattempo, te lo segnalo e lo vedi evidenziato in agenda."],
-      ['ph-device-mobile', "Per usarlo offline in sicurezza installa l'app sulla schermata Home e fai l'accesso almeno una volta con la rete."],
-    ] },
-    { v: '1.2', date: '16 ottobre 2026', title: 'Agenda a settimana e mese, promemoria e listino a cartelle', items: [
-      ['ph-calendar-blank', 'Agenda in vista Giorno, Settimana o Mese, con appuntamenti e incasso del periodo. Tocca un giorno per aprirlo.'],
-      ['ph-bell-ringing', 'Promemoria in cima all’agenda: le clienti di oggi, domani e dopodomani da avvisare, con WhatsApp, SMS e "Avvisata".'],
-      ['ph-megaphone', 'Avvisa o scrivi a una cliente quando vuoi, con un messaggio che puoi modificare, dall’agenda o dalla sua scheda.'],
-      ['ph-folder', 'Listino a cartelle (es. PIEGA, TAGLIO): crea, rinomina ed elimina le cartelle, aprile e chiudile con un tocco.'],
-      ['ph-pencil-simple', 'Ora puoi modificare nome, cartella, prezzo e durata di ogni servizio.'],
-      ['ph-globe-simple', 'Anche la pagina di prenotazione mostra i servizi divisi per cartelle.'],
-    ] },
-    { v: '1.1', date: '16 ottobre 2026', title: 'Più sicurezza e app installabile', items: [
-      ['ph-download-simple', "Installa Salone PRO sulla schermata Home di tablet, telefono e computer: usa il banner in basso o la guida in Impostazioni."],
-      ['ph-lock-simple', "Dopo 5 password sbagliate l'accesso da quel dispositivo si blocca per 15 minuti."],
-      ['ph-devices', 'Hai perso un tablet? In Impostazioni usa "Esci da tutti i dispositivi" per scollegarlo subito.'],
-      ['ph-shield-check', "Prenotazioni online protette dai bot: massimo 10 tentativi all'ora per dispositivo."],
-      ['ph-whatsapp-logo', 'Il link di prenotazione condiviso su WhatsApp ora mostra immagine e descrizione.'],
-    ] },
-    { v: '1.0', date: '16 ottobre 2026', title: 'Salone PRO è online', items: [
-      ['ph-cloud-check', 'I dati sono nel database online: li vedi da qualsiasi dispositivo, non solo dal tablet.'],
-      ['ph-globe-simple', "Le clienti prenotano da sole su /prenota e l'appuntamento arriva subito in agenda con il badge Web."],
-      ['ph-clock', 'Gli orari occupati tengono conto della durata dei servizi, niente più sovrapposizioni.'],
-      ['ph-calendar-blank', 'Giorni di chiusura e intervallo degli orari online si impostano in Impostazioni.'],
-      ['ph-device-mobile', 'Funziona su computer, tablet e telefono, con tema scuro automatico.'],
-    ] },
-  ];
-
-  function newsSeen() {
-    try { return localStorage.getItem('sp_news'); } catch { return null; }
-  }
-
-  function openNews() {
-    $('news-list').innerHTML = NEWS.map((n, i) => `
-      <section class="news-ver">
-        <header>
-          <h3>${n.title}</h3>
-          ${i ? '' : '<span class="badge badge-accent">Nuovo</span>'}
-          <span class="muted small">Versione ${n.v}, ${n.date}</span>
-        </header>
-        <ul>${n.items.map(([icon, text]) => `<li><i class="ph ${icon}" aria-hidden="true"></i><span>${text}</span></li>`).join('')}</ul>
-      </section>`).join('');
-    closeModal('more-sheet');
-    openModal('news-modal');
-    try { localStorage.setItem('sp_news', NEWS[0].v); } catch {}
-  }
-
-  // ---------- Setup missing on Vercel ----------
-  const SETUP = {
-    database: {
-      title: 'Collega il database',
-      text: 'Il sito è online ma non ha ancora un database dove salvare agenda e clienti. Si collega gratis in un paio di minuti:',
-      steps: [
-        'Apri il progetto su <strong>vercel.com</strong> e vai nel tab <strong>Storage</strong>.',
-        'Premi <strong>Create Database</strong> e scegli <strong>Neon</strong>, piano <strong>Free</strong>, regione <strong>Frankfurt</strong>.',
-        'Collegalo a questo progetto per tutti gli ambienti: Vercel aggiunge da solo <code>DATABASE_URL</code>.',
-        "Vai in <strong>Deployments</strong>, apri il menu dell'ultimo deploy e scegli <strong>Redeploy</strong>.",
-      ],
-    },
-    password: {
-      title: 'Imposta la password',
-      text: 'Il gestionale non ha ancora una password di accesso. Si imposta su Vercel:',
-      steps: [
-        'Apri il progetto su <strong>vercel.com</strong>, poi <strong>Settings &gt; Environment Variables</strong>.',
-        'Aggiungi <code>ADMIN_PASSWORD</code> con almeno 10 caratteri: meglio una frase lunga che solo tu conosci.',
-        "Vai in <strong>Deployments</strong> e fai <strong>Redeploy</strong> dell'ultimo deploy.",
-      ],
-    },
-  };
-  function showSetup(kind) {
-    const s = SETUP[kind] || SETUP.database;
-    $('setup-title').textContent = s.title;
-    $('setup-text').textContent = s.text;
-    $('setup-steps').innerHTML = s.steps.map((t) => `<li>${t}</li>`).join('');
-    closeModal('login');
-    openModal('setup');
-  }
-
-  async function login(e) {
-    e.preventDefault();
-    const btn = e.submitter;
-    btn.disabled = true;
-    $('login-err').textContent = '';
-    try {
-      const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('login-pw').value }) });
-      const d = await r.json().catch(() => ({}));
-      if (d.setup) return showSetup(d.setup);
-      if (!r.ok) throw new Error(d.error || 'Accesso non riuscito');
-      $('login-pw').value = '';
-      closeModal('login');
-      await reload();
-    } catch (err) {
-      $('login-err').textContent = err.message;
-    } finally {
-      btn.disabled = false;
-    }
-  }
-
-  async function logout(all) {
-    if (all && !confirm('Scollegare TUTTI i dispositivi, compreso questo? Su ognuno servirà di nuovo la password.')) return;
-    await flush();
-    if (outbox.length && !confirm(`Ci sono ${outbox.length} modifiche fatte offline non ancora inviate: uscendo andranno perse. Uscire comunque?`)) return;
-    try {
-      await api('DELETE', '/api/login' + (all ? '?all=1' : ''));
-    } catch (e) {
-      return toast(isNetwork(e) ? 'Serve la connessione a internet per uscire' : e.message, 'error');
-    }
-    forget('sp_cache'); // the data copy (allergies included) does not stay on a device that logged out
-    forget('sp_outbox');
-    location.reload();
-  }
-
-  // shortcut: polling every 2 min keeps the tablet in sync with web bookings; switch to push if Neon compute hours run short.
-  setInterval(() => { if (loaded && !document.hidden && !anyModalOpen()) reload(); }, 120000);
-  document.addEventListener('visibilitychange', () => { if (loaded && !document.hidden && !anyModalOpen()) reload(); });
-  document.querySelectorAll('.app-ver').forEach((e) => { e.textContent = 'v' + NEWS[0].v; });
-
-  // ---------- Nuove prenotazioni online ----------
-  // While the app is on screen it asks every 20 s whether a web booking newer than its last one exists (a tiny query)
-  // and reloads only then, also with a dialog open. Hidden app: nothing runs, so Neon can sleep; it catches up on return.
-  const maxWebId = () => db.appointments.reduce((m, a) => (a.source === 'web' && a.id > m ? a.id : m), 0);
-  setInterval(async () => {
-    if (!loaded || document.hidden || flushing || $('login').classList.contains('open')) return;
-    const wasOffline = offline;
-    try {
-      if ((await api('GET', `/api/data?newweb=${maxWebId()}`)).n || wasOffline) reload(); // back online: send the queue now
-    } catch {} // offline or session expired: the offline bar and the login already say so
-  }, 20000);
-
-  let newBookings = [], audio;
-  // Browsers play sound only after the first touch or click on the page.
-  document.addEventListener('pointerdown', () => { try { (audio ||= new AudioContext()).resume(); } catch {} }, { once: true });
-  function beep() {
-    try {
-      (audio ||= new AudioContext()).resume();
-      [880, 1320].forEach((hz, i) => {
-        const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime + i * 0.18;
-        o.frequency.value = hz;
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
-        o.connect(g).connect(audio.destination);
-        o.start(t);
-        o.stop(t + 0.42);
-      });
-    } catch {} // no sound on this device: the notice on screen is enough
-    navigator.vibrate?.(200);
-  }
-  function announce(list) {
-    if (!list.length) return;
-    newBookings = [...newBookings, ...list].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-    const a = newBookings[0], more = newBookings.length - 1;
-    $('ba-title').textContent = more ? `${more + 1} nuove prenotazioni online` : 'Nuova prenotazione online';
-    $('ba-detail').textContent = `${a.clientName}, ${dayLabel(a.date)} alle ${a.time}${more ? ` e altre ${more}` : `: ${(a.services || []).join(' + ')}`}`;
-    $('booking-alert').hidden = false;
-    beep();
-  }
-  function dismissBookings() {
-    newBookings = [];
-    $('booking-alert').hidden = true;
-  }
-  function showNewBookings() {
-    const a = newBookings[0];
-    dismissBookings();
-    if (!a) return;
-    document.querySelectorAll('.modal-backdrop.open:not([data-locked])').forEach((m) => closeModal(m.id));
-    showTab('agenda');
-    $('agenda-date').value = a.date;
-    setView('day');
-  }
-  window.addEventListener('online', () => { if (loaded) reload(); });
-  window.addEventListener('offline', () => { offline = true; updateOfflineBar(); });
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
-
-  // ---------- Navigation: one address per section (rewritten to this page in vercel.json) ----------
-  const ROUTES = { agenda: '/', listino: '/listino', clienti: '/clienti', magazzino: '/magazzino', webbooking: '/prenotazione-web', gdpr: '/privacy', backup: '/impostazioni' };
-  function tabFromPath() {
-    const path = location.pathname.replace(/\/$/, '') || '/';
-    return Object.keys(ROUTES).find((t) => ROUTES[t] === path) || 'agenda'; // "/agenda" and unknown paths open the agenda
-  }
-
-  function showTab(tab, push = true) {
-    document.querySelectorAll('.section').forEach((s) => s.classList.toggle('active', s.id === 'tab-' + tab));
-    document.querySelectorAll('.nav-item[data-tab], .tab[data-tab]').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
-    $('more-btn').classList.toggle('active', ['webbooking', 'gdpr', 'backup'].includes(tab));
-    $('page-title').textContent = TITLES[tab];
-    document.title = tab === 'agenda' ? 'Salone PRO' : `${TITLES[tab]} · Salone PRO`;
-    if (push && location.pathname !== ROUTES[tab]) history.pushState(null, '', ROUTES[tab]);
-    closeModal('more-sheet');
-    window.scrollTo(0, 0);
-    if (tab === 'webbooking') $('preview-frame').src = '/prenota';
-    if (tab === 'clienti') renderRecall(); // appointments may have changed since the last render
-    if (tab === 'backup') { loadCalendarLink(); renderErrorLog(); }
-  }
-  document.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-tab]');
-    if (!b || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; // let ctrl/cmd-click open the section in a new tab
-    e.preventDefault();
-    showTab(b.dataset.tab);
-  });
-  window.addEventListener('popstate', () => showTab(tabFromPath(), false));
-
-  function renderAll() {
-    renderAgenda();
-    renderServices();
-    renderClients();
-    renderInventory();
-    renderGdpr();
-    renderWebLink();
-  }
-
-  // ---------- Agenda ----------
-  let view = 'day', showNotified = true;
-  const WEEKDAYS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-  const revenue = (list) => list.reduce((s, a) => s + Number(a.price || 0), 0);
-  const apptsOn = (ds) => db.appointments.filter((a) => a.date === ds).sort((a, b) => a.time.localeCompare(b.time));
-
-  // ---------- Benvenuto: always about today, whatever day the agenda shows ----------
-  const GREETINGS = [[13, 'Buongiorno', 'ph-sun'], [18, 'Buon pomeriggio', 'ph-sun-horizon'], [24, 'Buonasera', 'ph-moon']];
-  const nowHHMM = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-  const toMin = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
-  const inMin = (m) => (m < 60 ? `tra ${m} min` : `tra ${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}`);
-  function renderWelcome() {
-    const now = new Date(), today = todayStr(), hhmm = nowHHMM();
-    const [, hello, icon] = GREETINGS.find(([h]) => now.getHours() < h);
-    const owner = db.config.ownerName && db.config.ownerName !== 'Titolare' ? `, ${db.config.ownerName.trim().split(' ')[0]}` : '';
-    $('wl-icon').className = 'ph ' + icon;
-    $('wl-hello').textContent = hello + owner;
-
-    const list = apptsOn(today), done = list.filter((a) => endOf(a) <= hhmm).length, closure = closureOn(today);
-    $('wl-today').textContent = !list.length
-      ? (isClosedDay(today) ? `Oggi il salone è chiuso${closure?.note ? ` (${closure.note})` : ''}.` : 'Oggi nessun appuntamento in agenda.')
-      : `Oggi ${list.length === 1 ? '1 appuntamento' : `${list.length} appuntamenti`}${done && done < list.length ? `, ${done} già ${done === 1 ? 'fatto' : 'fatti'}` : ''}, ${euro(revenue(list))} di incasso.`;
-
-    const who = (a) => { const c = findClient(a); return c ? `<button class="link" onclick="openClientCard(${c.id})">${esc(a.clientName)}</button>` : `<strong>${esc(a.clientName)}</strong>`; };
-    const what = (a) => (a.services?.length ? `, <span class="muted">${esc(a.services.join(' + '))}</span>` : '');
-    const cur = list.find((a) => a.time <= hhmm && hhmm < endOf(a)), next = list.find((a) => a.time > hhmm);
-    const later = db.appointments.filter((a) => a.date > today).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
-    const lines = [];
-    if (cur) lines.push(`<span class="badge badge-ok">In corso</span> ${who(cur)} fino alle ${esc(endOf(cur))}`);
-    if (next) lines.push(`<span class="badge badge-accent">${inMin(toMin(next.time) - toMin(hhmm))}</span> ${who(next)} alle ${esc(next.time)}${what(next)}`);
-    else if (!cur && later) lines.push(`${list.length ? 'Per oggi hai finito. ' : ''}Il prossimo appuntamento è ${later.date === todayStr(1) ? 'domani' : esc(dayLabel(later.date))} alle ${esc(later.time)} con ${who(later)}`);
-    else if (!cur && list.length) lines.push('Per oggi hai finito.');
-    $('wl-next').innerHTML = lines.map((l) => `<p class="wl-line">${l}</p>`).join('');
-
-    const low = db.inventory.filter((p) => Number(p.qty) <= Number(p.min)).length;
-    const toRecall = recallList(db.clients, db.appointments, today, Number(db.config.recallWeeks ?? 6)).length;
-    $('wl-chips').innerHTML = [
-      toRecall && `<a class="btn btn-outline btn-sm" href="/clienti" data-tab="clienti"><i class="ph ph-clock-counter-clockwise"></i>${toRecall} da richiamare</a>`,
-      low && `<a class="btn btn-outline btn-sm" href="/magazzino" data-tab="magazzino"><i class="ph ph-package"></i>${low} da riordinare</a>`,
-    ].filter(Boolean).join('');
-  }
-  setInterval(() => { if (loaded) { renderWelcome(); renderReminders(); } }, 60000); // keeps "tra 25 min" and the reminders current, no network
-
-  function setQuickDate(offset) { $('agenda-date').value = todayStr(offset); renderAgenda(); }
-  function setView(v) {
-    view = v;
-    document.querySelectorAll('.seg [data-view]').forEach((b) => b.classList.toggle('active', b.dataset.view === v));
-    renderAgenda();
-  }
-  function openDay(ds) { $('agenda-date').value = ds; setView('day'); }
-  function shiftPeriod(n) {
-    const d = new Date(($('agenda-date').value || todayStr()) + 'T12:00');
-    if (view === 'month') d.setMonth(d.getMonth() + n, 1); // day 1 avoids 31 Jan + 1 month = 3 Mar
-    else d.setDate(d.getDate() + n * (view === 'week' ? 7 : 1));
-    $('agenda-date').value = localDate(d);
-    renderAgenda();
-  }
-  // Monday-to-Sunday dates of the week containing ds
-  function weekDays(ds) {
-    const d = new Date(ds + 'T12:00');
-    d.setDate(d.getDate() - (d.getDay() + 6) % 7);
-    return Array.from({ length: 7 }, (_, i) => { const x = new Date(d); x.setDate(d.getDate() + i); return localDate(x); });
-  }
-
-  function findClient(a) {
-    return db.clients.find((c) => c.id === a.clientId) || db.clients.find((c) => c.name.toLowerCase() === (a.clientName || '').toLowerCase());
-  }
-
-  function renderAgenda() {
-    const sel = $('agenda-date').value || todayStr();
-    const days = view === 'day' ? [sel] : view === 'week' ? weekDays(sel) : null;
-    const period = db.appointments.filter((a) => (days ? days.includes(a.date) : (a.date || '').startsWith(sel.slice(0, 7))));
-    const closure = closureOn(sel), closed = isClosedDay(sel);
-    const closedText = closure ? `chiuso${closure.note ? ` (${closure.note})` : ''}` : 'giorno di chiusura';
-    if (view === 'day') {
-      $('agenda-day').textContent = cap(dayLabel(sel));
-      $('agenda-sub').textContent = ({ [todayStr()]: 'Oggi', [todayStr(1)]: 'Domani', [todayStr(-1)]: 'Ieri' }[sel] || dayLabel(sel, { year: 'numeric' })) + (closed ? ` · ${closedText}` : '');
-    } else if (view === 'week') {
-      $('agenda-day').textContent = `${dayLabel(days[0], { day: 'numeric', month: 'short' })} - ${dayLabel(days[6], { day: 'numeric', month: 'short' })}`;
-      $('agenda-sub').textContent = `Settimana, ${days[0].slice(0, 4)}`;
-    } else {
-      $('agenda-day').textContent = cap(dayLabel(sel, { month: 'long', year: 'numeric' }));
-      $('agenda-sub').textContent = 'Tocca un giorno per aprirlo';
-    }
-    $('agenda-list-title').textContent = { day: 'Appuntamenti del giorno', week: 'Appuntamenti della settimana', month: 'Appuntamenti del mese' }[view];
-    $('stat-rev-lbl').textContent = { day: 'incasso previsto', week: 'incasso settimana', month: 'incasso mese' }[view];
-
-    $('metrics').hidden = view === 'day' && sel === todayStr(); // the welcome bar already sums up today
-    $('stat-count').textContent = period.length;
-    $('stat-count-lbl').textContent = period.length === 1 ? 'appuntamento' : 'appuntamenti';
-    $('stat-revenue').textContent = euro(revenue(period));
-    renderReminders();
-    renderWelcome();
-    if (view === 'week') return renderWeek(days);
-    if (view === 'month') return renderMonth(sel);
-
-    const list = apptsOn(sel);
-    if (!list.length) {
-      $('agenda-list').innerHTML = empty('ph-calendar-blank', 'Nessun appuntamento', closed ? `Il salone è ${closedText} in questo giorno.` : 'La giornata è libera. Aggiungi un appuntamento o condividi il link di prenotazione.',
-        '<button class="btn btn-primary btn-sm" onclick="openApptModal()"><i class="ph ph-plus"></i>Nuovo appuntamento</button>');
-      return;
-    }
-
-    // Daily breaks sit between the appointments, in time order.
-    const breaks = closed ? [] : (db.config.breaks || []).map((b) => ({ brk: true, time: b.from, end: b.to }));
-    $('agenda-list').innerHTML = [...list, ...breaks].sort((a, b) => a.time.localeCompare(b.time)).map((a) => {
-      if (a.brk) return `
-      <div class="appt brk">
-        <div class="appt-time num"><strong>${esc(a.time)}</strong><span>${esc(a.end)}</span></div>
-        <p class="brk-label"><i class="ph ph-coffee"></i>Pausa</p>
-      </div>`;
-      const c = findClient(a);
-      const allergy = c && c.allergy && c.allergy.toLowerCase() !== 'nessuna' ? `<span class="badge badge-danger"><i class="ph ph-warning"></i>${esc(c.allergy)}</span>` : '';
-      const msg = encodeURIComponent(`Ciao ${a.clientName}! Ti confermiamo l'appuntamento presso ${db.config.salonName} per ${dayLabel(a.date)} alle ore ${a.time} (${(a.services || []).join(', ')}). A presto!`);
-      const contact = a.phone ? `
-          <a class="btn-icon" href="https://wa.me/${waNumber(a.phone)}?text=${msg}" target="_blank" rel="noopener" onclick="markAttempt(${a.id}, 'WhatsApp')" aria-label="Conferma su WhatsApp" title="WhatsApp"><i class="ph ph-whatsapp-logo"></i></a>
-          <button class="btn-icon" onclick="openContact(null, ${a.id})" aria-label="Avvisa o scrivi alla cliente" title="Avvisa / Scrivi"><i class="ph ph-megaphone"></i></button>` : '';
-      return `
-      <article class="appt">
-        <div class="appt-time num"><strong>${esc(a.time)}</strong><span>${addMin(a.time, a.duration || 30)}</span></div>
-        <div class="appt-body">
-          <div class="appt-head">
-            <h3>${c ? `<button class="link" onclick="openClientCard(${c.id})">${esc(a.clientName)}</button>` : esc(a.clientName)}</h3>
-            ${a.source === 'web' ? '<span class="badge badge-accent"><i class="ph ph-globe-simple"></i>Web</span>' : ''}
-            ${a.reminderSent ? '<span class="badge badge-ok"><i class="ph ph-bell"></i>Avvisata</span>' : ''}
-            ${clashes(list, a).length ? '<span class="badge badge-danger"><i class="ph ph-warning-octagon"></i>Sovrapposto</span>' : ''}
-            ${allergy}
-          </div>
-          <p class="appt-services">${esc((a.services || []).join(' + '))}, ${Number(a.duration) || 30} min</p>
-          ${a.notes ? `<p class="note"><i class="ph ph-note"></i><span>${esc(a.notes)}</span></p>` : ''}
-          ${c && c.formula ? `<p class="note formula"><i class="ph ph-palette"></i><span>${esc(c.formula)}</span></p>` : ''}
-        </div>
-        <div class="appt-side">
-          <strong class="num">${euro(a.price)}</strong>
-          <div class="actions">
-            <button class="btn-icon" onclick="openApptModal(${a.id})" aria-label="Modifica" title="Modifica"><i class="ph ph-pencil-simple"></i></button>
-            ${contact}
-            <button class="btn-icon danger" onclick="deleteAppt(${a.id})" aria-label="Elimina" title="Elimina"><i class="ph ph-trash"></i></button>
-          </div>
-        </div>
-      </article>`;
-    }).join('');
-  }
-
-  function renderWeek(days) {
-    $('agenda-list').innerHTML = `<div class="week">${days.map((ds, i) => {
-      const list = apptsOn(ds), closed = isClosedDay(ds);
-      return `
-      <div class="week-day${ds === todayStr() ? ' today' : ''}${closed ? ' closed' : ''}">
-        <button class="week-head" onclick="openDay('${ds}')" aria-label="Apri ${dayLabel(ds)}">
-          <strong>${WEEKDAYS[i]} ${Number(ds.slice(8))}</strong>
-          <span class="muted small num">${list.length ? `${list.length} app. · ${euro(revenue(list))}` : closed ? esc(closureOn(ds)?.note || 'Chiuso') : 'Libero'}</span>
-        </button>
-        ${list.map((a) => `
-          <button class="mini${clashes(list, a).length ? ' clash' : ''}" onclick="openApptModal(${a.id})">
-            <span class="num">${esc(a.time)}${a.reminderSent ? ' <i class="ph ph-bell" aria-label="avvisata"></i>' : ''}</span>
-            <strong>${esc(a.clientName)}</strong>
-            <small>${esc((a.services || []).join(', '))}</small>
-          </button>`).join('')}
-      </div>`;
-    }).join('')}</div>`;
-  }
-
-  function renderMonth(sel) {
-    const y = Number(sel.slice(0, 4)), m = Number(sel.slice(5, 7)) - 1;
-    let html = WEEKDAYS.map((l) => `<span class="m-lbl">${l}</span>`).join('') + '<span></span>'.repeat((new Date(y, m, 1).getDay() + 6) % 7);
-    for (let d = 1; d <= new Date(y, m + 1, 0).getDate(); d++) {
-      const ds = `${y}-${pad(m + 1)}-${pad(d)}`, list = apptsOn(ds);
-      html += `
-      <button class="m-cell${ds === todayStr() ? ' today' : ''}${isClosedDay(ds) ? ' closed' : ''}" onclick="openDay('${ds}')" aria-label="${dayLabel(ds)}, ${list.length} appuntamenti">
-        <span class="m-num"><span>${d}</span>${list.length ? `<span class="badge badge-accent">${list.length}</span>` : ''}</span>
-        ${closureOn(ds) && !list.length ? `<span class="m-pill">${esc(closureOn(ds).note || 'Chiuso')}</span>` : ''}
-        ${list.slice(0, 3).map((a) => `<span class="m-pill">${esc(a.time)} ${esc(a.clientName)}</span>`).join('')}
-        ${list.length > 3 ? `<span class="m-more">+${list.length - 3} altri</span>` : ''}
-      </button>`;
-    }
-    $('agenda-list').innerHTML = `<div class="month">${html}</div>`;
-  }
-
-  // ---------- Promemoria (oggi, domani, dopodomani) ----------
-  const reminderText = (a) => `Ciao ${a.clientName}! Ti ricordiamo il tuo appuntamento presso ${db.config.salonName} per ${dayLabel(a.date)} alle ore ${a.time} (${(a.services || []).join(', ')}). A presto!`;
-
-  function renderReminders() {
-    const days = [todayStr(), todayStr(1), todayStr(2)], now = nowHHMM();
-    const all = db.appointments.filter((a) => days.includes(a.date) && (a.date !== days[0] || a.time > now)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-    const todo = all.filter((a) => !a.reminderSent).length;
-    $('reminders').hidden = !all.length;
-    $('rem-count').textContent = todo ? `${todo} da avvisare` : 'Tutte avvisate';
-    $('rem-count').className = 'badge ' + (todo ? 'badge-warn' : 'badge-ok');
-    $('rem-toggle').textContent = showNotified ? 'Nascondi avvisate' : 'Mostra tutte';
-    const list = showNotified ? all : all.filter((a) => !a.reminderSent);
-    $('rem-list').innerHTML = list.map((a) => {
-      const msg = encodeURIComponent(reminderText(a)), wa = waNumber(a.phone);
-      const status = a.reminderSent ? 'avvisata' : a.lastAttemptChannel ? `messaggio aperto su ${esc(a.lastAttemptChannel)}, conferma quando inviato` : 'da avvisare';
-      return `
-      <div class="row rem${a.reminderSent ? ' done' : ''}">
-        <div class="row-main">
-          <div class="row-title">
-            <span class="badge ${a.date === days[0] ? 'badge-accent' : 'badge-warn'}">${['Oggi', 'Domani', 'Dopodomani'][days.indexOf(a.date)]} ${esc(a.time)}</span>
-            <strong>${esc(a.clientName)}</strong>
-          </div>
-          <span class="row-sub">${esc((a.services || []).join(' + '))}, ${status}</span>
-        </div>
-        <div class="row-actions">
-          ${a.phone ? `
-          <a class="btn-icon" href="https://wa.me/${wa}?text=${msg}" target="_blank" rel="noopener" onclick="markAttempt(${a.id}, 'WhatsApp')" aria-label="Promemoria su WhatsApp a ${esc(a.clientName)}"><i class="ph ph-whatsapp-logo"></i></a>
-          <a class="btn-icon" href="sms:+${wa}?body=${msg}" onclick="markAttempt(${a.id}, 'SMS')" aria-label="Promemoria via SMS a ${esc(a.clientName)}"><i class="ph ph-chat-text"></i></a>` : '<span class="muted small">Senza numero</span>'}
-          <button class="btn btn-sm ${a.reminderSent ? 'btn-ghost' : 'btn-outline'}" onclick="toggleReminder(${a.id})">${a.reminderSent ? 'Da riavvisare' : '<i class="ph ph-check"></i>Avvisata'}</button>
-        </div>
-      </div>`;
-    }).join('') || '<p class="muted small rem-empty">Tutte le clienti dei prossimi 2 giorni sono avvisate. Tocca "Mostra tutte" per rivederle.</p>';
-  }
-
-  // Opening WhatsApp/SMS does not prove the message was sent, so the salon confirms it with "Avvisata".
-  function markAttempt(id, channel) {
-    const a = db.appointments.find((x) => x.id === id);
-    if (!a) return;
-    a.lastAttemptChannel = channel;
-    persist('appointments', a);
-    setTimeout(renderReminders); // after the link has opened
-  }
-  function toggleReminder(id) {
-    const a = db.appointments.find((x) => x.id === id);
-    if (!a) return;
-    a.reminderSent = !a.reminderSent;
-    persist('appointments', a);
-    renderAgenda();
-  }
-  function toggleNotified() { showNotified = !showNotified; renderReminders(); }
-
-  // ---------- Avvisa / Scrivi alla cliente ----------
-  let contactPhone = '', contactApptId = null, contactRecallId = null;
-  function openContact(clientId, apptId, recall = false) {
-    const a = db.appointments.find((x) => x.id === apptId);
-    const c = db.clients.find((x) => x.id === clientId);
-    const name = a ? a.clientName : c?.name, phone = a ? a.phone : c?.phone;
-    if (!phone) return toast('Questa cliente non ha un numero di telefono salvato', 'error');
-    contactPhone = waNumber(phone);
-    contactApptId = a ? a.id : null;
-    contactRecallId = recall ? clientId : null;
-    $('contact-who').textContent = `${name}, ${phone}`;
-    $('contact-msg').value = a ? reminderText(a) : recall ? recallText(c) : `Ciao ${name}! Ti scriviamo da ${db.config.salonName}: `;
-    openModal('contact-modal');
-  }
-  function sendContact(channel) {
-    const msg = encodeURIComponent($('contact-msg').value.trim());
-    if (contactApptId) markAttempt(contactApptId, channel === 'wa' ? 'WhatsApp' : 'SMS');
-    if (contactRecallId) markRecalled(contactRecallId);
-    if (channel === 'wa') window.open(`https://wa.me/${contactPhone}?text=${msg}`, '_blank', 'noopener');
-    else location.href = `sms:+${contactPhone}?body=${msg}`;
-    closeModal('contact-modal');
-  }
-
-  function openApptModal(id) {
-    const a = db.appointments.find((x) => x.id === id);
-    const client = a && findClient(a);
-    const cur = a ? a.services || [] : [];
-    $('appt-modal-title').textContent = a ? 'Modifica appuntamento' : 'Nuovo appuntamento';
-    $('modal-edit-id').value = a ? a.id : '';
-    $('modal-client').innerHTML = '<option value="">Seleziona una cliente</option>' + sortedClients().map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-    $('modal-client').value = client ? client.id : '';
-    $('modal-new-client').value = a && !client ? a.clientName : '';
-    $('modal-phone').value = a ? a.phone || '' : '';
-    $('modal-date').value = a ? a.date : $('agenda-date').value || todayStr();
-    $('modal-time').value = a ? a.time : '09:30';
-    $('modal-duration').value = a ? a.duration || 30 : 30;
-    $('modal-price').value = a ? Number(a.price || 0) : 0;
-    $('modal-notes').value = a ? a.notes || '' : '';
-    // Folders start closed, except those holding a service already on this appointment
-    $('modal-services-picker').innerHTML = folders().map((f) => {
-      const items = db.services.filter((s) => catOf(s) === f);
-      if (!items.length) return '';
-      return `
-      <details class="pick-group" ${items.some((s) => cur.includes(s.name)) ? 'open' : ''}>
-        <summary><i class="ph ph-caret-right folder-caret"></i><i class="ph ph-folder"></i>${esc(f)}<span class="badge badge-accent">${items.length}</span></summary>
-        <div class="chips">${items.map((s) => `
-          <label class="chip"><input type="checkbox" value="${esc(s.name)}" data-price="${Number(s.price) || 0}" data-dur="${Number(s.duration) || 0}" ${cur.includes(s.name) ? 'checked' : ''} onchange="recalcModal()">
-            <span>${esc(s.name)}</span><small>${euro(s.price)}</small></label>`).join('')}</div>
-      </details>`;
-    }).join('') || '<p class="muted small">Il listino è vuoto.</p>';
-    openModal('appt-modal');
-  }
-
-  function fillClientPhone() {
-    const c = db.clients.find((x) => x.id === Number($('modal-client').value));
-    if (c) { $('modal-phone').value = c.phone || ''; $('modal-new-client').value = ''; }
-  }
-
-  function recalcModal() {
-    let price = 0, dur = 0;
-    document.querySelectorAll('#modal-services-picker input:checked').forEach((cb) => { price += Number(cb.dataset.price); dur += Number(cb.dataset.dur); });
-    $('modal-price').value = price;
-    $('modal-duration').value = dur || 30;
-  }
-
-  function saveAppointment() {
-    const editId = Number($('modal-edit-id').value);
-    const newName = $('modal-new-client').value.trim();
-    const phone = $('modal-phone').value.trim();
-    const date = $('modal-date').value, time = $('modal-time').value;
-    if (!date || !time) return toast('Inserisci data e ora', 'error');
-    const services = [...document.querySelectorAll('#modal-services-picker input:checked')].map((cb) => cb.value);
-    if (!services.length) services.push('Servizio generico');
-
-    let client = newName
-      ? db.clients.find((c) => c.name.toLowerCase() === newName.toLowerCase())
-      : db.clients.find((c) => c.id === Number($('modal-client').value));
-    if (!client && !newName) return toast('Seleziona una cliente o scrivi un nome', 'error');
-    if (!client) {
-      client = { id: newId(), name: newName, phone, allergy: 'Nessuna', formula: '', gdprConsent: true, gdprDate: todayStr() };
-      db.clients.push(client);
-      persist('clients', client);
-    }
-
-    const old = db.appointments.find((a) => a.id === editId);
-    const appt = {
-      ...old, id: old ? old.id : newId(), clientId: client.id, clientName: client.name, phone, date, time, services,
-      price: Number($('modal-price').value || 0), duration: Number($('modal-duration').value) || 30, notes: $('modal-notes').value.trim(),
-    };
-    if (old) Object.assign(old, appt); else db.appointments.push(appt);
-    persist('appointments', appt).then((r) => r && toast(old ? 'Appuntamento aggiornato' : 'Appuntamento salvato'));
-    $('agenda-date').value = date;
-    closeModal('appt-modal');
-    renderAll();
-  }
-
-  function deleteAppt(id) {
-    const a = db.appointments.find((x) => x.id === id);
-    if (!a || !confirm(`Eliminare l'appuntamento di ${a.clientName} alle ${a.time}?`)) return;
-    db.appointments = db.appointments.filter((x) => x.id !== id);
-    drop('appointments', id);
-    renderAgenda();
-  }
-
-  function parseBookingString() {
-    const raw = $('import-text').value.trim();
-    if (!raw) return toast('Incolla prima il messaggio', 'error');
-    const get = (label) => (raw.match(new RegExp('^\\s*' + label + '\\s*:\\s*(.+)$', 'im')) || [])[1]?.trim() || '';
-    let date = get('Data');
-    const dm = date.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
-    if (dm) date = `${dm[3]}-${pad(dm[2])}-${pad(dm[1])}`;
-    const time = get('Ora').replace('.', ':').padStart(5, '0');
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) return toast('Nel messaggio non trovo "Data:" e "Ora:" validi', 'error');
-
-    const name = get('Cliente') || 'Cliente Web';
-    const phone = get('Tel');
-    const services = (get('Servizi') || 'Servizio prenotato').split(',').map((s) => s.trim()).filter(Boolean);
-    const duration = services.reduce((s, n) => s + (Number(db.services.find((x) => x.name === n)?.duration) || 0), 0) || 30;
-    let client = db.clients.find((c) => c.name.toLowerCase() === name.toLowerCase());
-    if (!client) {
-      client = { id: newId(), name, phone, allergy: 'Nessuna', formula: '', gdprConsent: /GDPR\s*:\s*Accettato/i.test(raw), gdprDate: todayStr() };
-      db.clients.push(client);
-      persist('clients', client);
-    }
-    const appt = {
-      id: newId(), clientId: client.id, clientName: client.name, phone, date, time, services, duration,
-      price: Number(get('Totale').replace(',', '.').replace(/[^\d.]/g, '')) || 0, notes: 'Prenotazione ricevuta via messaggio',
-    };
-    db.appointments.push(appt);
-    persist('appointments', appt).then((r) => r && toast('Prenotazione inserita in agenda'));
-    $('import-text').value = '';
-    closeModal('import-modal');
-    $('agenda-date').value = date;
-    showTab('agenda');
-    renderAll();
-  }
-
-  // ---------- Listino ----------
-  // Folders (e.g. PIEGA) = the saved list in config plus any category still used by a service, so none gets lost.
-  const catOf = (s) => s.cat || 'ALTRO';
-  const folders = () => [...new Set([...(db.config.serviceFolders || []), ...db.services.map(catOf)])];
-  const openFolders = {};
-  const folderOptions = () => folders().map((f) => `<option>${esc(f)}</option>`).join('');
-
-  function renderServices() {
-    const list = folders(), sel = $('srv-cat'), keep = sel.value;
-    sel.innerHTML = folderOptions();
-    if (list.includes(keep)) sel.value = keep;
-    $('services-list').innerHTML = list.map((f, i) => {
-      const items = db.services.filter((s) => catOf(s) === f);
-      return `
-      <details class="folder" data-f="${esc(f)}" ${openFolders[f] ?? true ? 'open' : ''} ontoggle="openFolders[this.dataset.f] = this.open">
-        <summary>
-          <i class="ph ph-caret-right folder-caret"></i><i class="ph ph-folder"></i><strong>${esc(f)}</strong>
-          <span class="badge badge-accent">${items.length}</span>
-          <span class="folder-actions">
-            <button class="btn-icon" onclick="event.preventDefault(); renameFolder(${i})" aria-label="Rinomina cartella ${esc(f)}"><i class="ph ph-pencil-simple"></i></button>
-            <button class="btn-icon danger" onclick="event.preventDefault(); deleteFolder(${i})" aria-label="Elimina cartella ${esc(f)}"><i class="ph ph-trash"></i></button>
-          </span>
-        </summary>
-        ${items.map((s) => `
-          <div class="row">
-            <div class="row-main"><strong>${esc(s.name)}</strong><span class="row-sub"><i class="ph ph-clock"></i>${Number(s.duration) || 0} min</span></div>
-            <strong class="num">${euro(s.price)}</strong>
-            <button class="btn-icon" onclick="editService(${s.id})" aria-label="Modifica ${esc(s.name)}"><i class="ph ph-pencil-simple"></i></button>
-            <button class="btn-icon danger" onclick="deleteService(${s.id})" aria-label="Elimina ${esc(s.name)}"><i class="ph ph-trash"></i></button>
-          </div>`).join('') || '<p class="muted small folder-empty">Cartella vuota: aggiungi un servizio con il modulo qui sopra.</p>'}
-      </details>`;
-    }).join('') || empty('ph-folder-plus', 'Listino vuoto', 'Crea una cartella (es. PIEGA) e aggiungi i servizi: compariranno subito nella pagina di prenotazione.');
-  }
-
-  function toggleFolders(open) {
-    folders().forEach((f) => { openFolders[f] = open; });
-    renderServices();
-  }
-
-  function saveFolders(list) {
-    db.config.serviceFolders = [...new Set(list)];
-    persist('config', { ...db.config, id: 1 });
-  }
-
-  function addFolder() {
-    const name = (prompt('Nome della nuova cartella (es. PIEGA, SPOSA):') || '').trim().toUpperCase().slice(0, 60);
-    if (!name) return;
-    if (folders().some((f) => f.toUpperCase() === name)) return toast('Questa cartella esiste già', 'error');
-    saveFolders([...folders(), name]);
-    openFolders[name] = true;
-    renderServices();
-    $('srv-cat').value = name;
-    toast(`Cartella ${name} creata`);
-  }
-
-  function renameFolder(i) {
-    const old = folders()[i];
-    const name = (prompt(`Nuovo nome per la cartella "${old}":`, old) || '').trim().toUpperCase().slice(0, 60);
-    if (!name || name === old) return;
-    if (folders().some((f, j) => j !== i && f.toUpperCase() === name)) return toast('Esiste già una cartella con questo nome', 'error');
-    db.services.filter((s) => catOf(s) === old).forEach((s) => { s.cat = name; persist('services', s); });
-    saveFolders(folders().map((f) => (f === old ? name : f)).filter((f) => f !== old));
-    renderAll();
-  }
-
-  function deleteFolder(i) {
-    const f = folders()[i];
-    const items = db.services.filter((s) => catOf(s) === f);
-    if (!confirm(items.length ? `La cartella "${f}" contiene ${items.length} servizi. Eliminare la cartella e tutti i suoi servizi?` : `Eliminare la cartella vuota "${f}"?`)) return;
-    items.forEach((s) => drop('services', s.id));
-    db.services = db.services.filter((s) => catOf(s) !== f);
-    saveFolders(folders().filter((x) => x !== f));
-    renderServices();
-  }
-
-  function addService() {
-    const name = $('srv-name').value.trim();
-    const price = Number($('srv-price').value || 0);
-    const duration = Number($('srv-duration').value || 30);
-    if (!name) return toast('Inserisci il nome del servizio', 'error');
-    if (price < 0 || duration < 5) return toast('Controlla prezzo e durata', 'error');
-    const s = { id: newId(), name, cat: $('srv-cat').value || 'ALTRO', price, duration };
-    db.services.push(s);
-    openFolders[s.cat] = true;
-    persist('services', s).then((r) => r && toast(`Servizio aggiunto in ${s.cat}`));
-    $('srv-name').value = $('srv-price').value = $('srv-duration').value = '';
-    renderServices();
-  }
-
-  function editService(id) {
-    const s = db.services.find((x) => x.id === id);
-    if (!s) return;
-    $('srv-edit-id').value = id;
-    $('srv-edit-name').value = s.name;
-    $('srv-edit-cat').innerHTML = folderOptions();
-    $('srv-edit-cat').value = catOf(s);
-    $('srv-edit-price').value = s.price;
-    $('srv-edit-duration').value = s.duration;
-    openModal('srv-modal');
-  }
-
-  function saveServiceEdit() {
-    const s = db.services.find((x) => x.id === Number($('srv-edit-id').value));
-    if (!s) return;
-    const name = $('srv-edit-name').value.trim(), price = Number($('srv-edit-price').value || 0), duration = Number($('srv-edit-duration').value || 0);
-    if (!name) return toast('Inserisci il nome del servizio', 'error');
-    if (price < 0 || duration < 5) return toast('Controlla prezzo e durata', 'error');
-    Object.assign(s, { name, cat: $('srv-edit-cat').value, price, duration });
-    persist('services', s).then((r) => r && toast('Servizio aggiornato'));
-    closeModal('srv-modal');
-    renderServices();
-  }
-
-  function deleteService(id) {
-    const s = db.services.find((x) => x.id === id);
-    if (!s || !confirm(`Eliminare "${s.name}" dal listino?`)) return;
-    db.services = db.services.filter((x) => x.id !== id);
-    drop('services', id);
-    renderServices();
-  }
-
-  // ---------- Clienti ----------
-  // ---------- Selezione multipla e filtro "senza telefono" ----------
-  let selClients = new Set(), noPhoneOnly = false;
-  const noPhone = (c) => !(c.phone || '').replace(/\D/g, '');
-  function visibleClients() {
-    const q = $('cli-search').value.trim().toLowerCase();
-    return sortedClients().filter((c) => (c.name.toLowerCase().includes(q) || (c.phone || '').includes(q)) && (!noPhoneOnly || noPhone(c)));
-  }
-  function toggleNoPhone() {
-    noPhoneOnly = !noPhoneOnly;
-    renderClients();
-  }
-  function selectAllClients(on) {
-    if (on) visibleClients().forEach((c) => selClients.add(c.id));
-    else selClients.clear();
-    renderClients();
-  }
-  // Updates the row and the bar without redrawing the list, so the checkbox keeps keyboard focus.
-  function toggleClientSel(id, box) {
-    if (box.checked) selClients.add(id);
-    else selClients.delete(id);
-    box.closest('.row').classList.toggle('selected', box.checked);
-    updateClientBulk();
-  }
-  function updateClientBulk() {
-    const vis = visibleClients(), n = selClients.size, all = vis.length > 0 && vis.every((c) => selClients.has(c.id));
-    $('cli-bulk').hidden = !n;
-    $('cli-bulk-n').textContent = n === 1 ? '1 selezionata' : `${n} selezionate`;
-    $('cli-all').checked = all;
-    $('cli-all').indeterminate = !all && vis.some((c) => selClients.has(c.id));
-  }
-  function deleteSelectedClients() {
-    const list = db.clients.filter((c) => selClients.has(c.id));
-    if (!list.length) return;
-    // Names in the question: the selection can include clients hidden by the current search or filter.
-    const names = list.slice(0, 5).map((c) => c.name).join(', ') + (list.length > 5 ? ` e altre ${list.length - 5}` : '');
-    if (!confirm(`Eliminare ${list.length === 1 ? 'la scheda' : `${list.length} schede`} con le foto?\n${names}.\nGli appuntamenti restano in agenda.`)) return;
-    db.clients = db.clients.filter((c) => !selClients.has(c.id));
-    dropMany('clients', list.map((c) => c.id)).then((r) => r.every(Boolean) && toast(list.length === 1 ? 'Scheda eliminata' : `${list.length} schede eliminate`));
-    selClients.clear();
-    renderClients();
-    renderGdpr();
-    renderAgenda();
-  }
-
-  // ---------- CSV clienti ----------
-  function exportClientsCsv() {
-    if (!db.clients.length) return toast('Nessuna cliente da esportare', 'error');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([toCsv([CLIENT_CSV_HEAD, ...sortedClients().map(clientCsvRow)])], { type: 'text/csv;charset=utf-8' }));
-    a.download = `clienti_${todayStr()}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    toast(db.clients.length === 1 ? '1 cliente esportata' : `${db.clients.length} clienti esportate`);
-  }
-  async function importClientsCsv(input) {
-    const file = input.files[0];
-    input.value = '';
-    if (!file) return;
-    if (file.size > 5e6) return toast('File troppo grande (massimo 5 MB)', 'error');
-    const buf = await file.arrayBuffer();
-    let text, r;
-    try { text = new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch { text = new TextDecoder('windows-1252').decode(buf); } // Excel's plain "CSV" is not UTF-8
-    try { r = clientsFromCsv(text, db.clients); } catch (e) { return toast(e.message, 'error'); }
-    const skipped = [r.noPhone && `${r.noPhone} senza telefono`, r.noName && `${r.noName} senza nome`].filter(Boolean).join(', ');
-    const what = [r.added.length && `${r.added.length} ${r.added.length === 1 ? 'nuova' : 'nuove'}`, r.updated.length && `${r.updated.length} da aggiornare`].filter(Boolean).join(' e ');
-    if (!what) return toast(`Nessuna cliente da importare${skipped ? ` (escluse: ${skipped})` : ''}`, 'error');
-    if (!confirm(`Importare dal file ${what}?${skipped ? `\nEscluse: ${skipped}.` : ''}`)) return;
-    const base = newId(), added = r.added.map((c, i) => ({ ...c, id: base + i })), changed = new Map(r.updated.map((c) => [c.id, c]));
-    db.clients = [...db.clients.map((c) => changed.get(c.id) || c), ...added];
-    persistMany('clients', [...added, ...r.updated]).then((res) => res.every(Boolean)
-      && toast(`Importazione completata: ${[added.length && `${added.length} ${added.length === 1 ? 'nuova' : 'nuove'}`, r.updated.length && `${r.updated.length} ${r.updated.length === 1 ? 'aggiornata' : 'aggiornate'}`].filter(Boolean).join(', ')}`));
-    renderClients();
-    renderGdpr();
-    renderAgenda();
-  }
-
-  function renderClients() {
-    const q = $('cli-search').value.trim().toLowerCase(), list = visibleClients(), np = db.clients.filter(noPhone).length;
-    selClients = new Set(db.clients.filter((c) => selClients.has(c.id)).map((c) => c.id)); // forget clients deleted meanwhile
-    $('cli-count').textContent = db.clients.length === 1 ? '1 cliente' : `${db.clients.length} clienti`;
-    $('cli-nophone').hidden = !np && !noPhoneOnly;
-    $('cli-nophone').classList.toggle('on', noPhoneOnly);
-    $('cli-nophone').setAttribute('aria-pressed', noPhoneOnly);
-    $('cli-nophone').lastChild.textContent = `Senza telefono (${np})`;
-    $('clients-list').innerHTML = list.map((c) => {
-      const allergy = c.allergy && c.allergy.toLowerCase() !== 'nessuna', sel = selClients.has(c.id);
-      return `
-      <div class="row client${sel ? ' selected' : ''}">
-        <input type="checkbox" class="sel" ${sel ? 'checked' : ''} onchange="toggleClientSel(${c.id}, this)" aria-label="Seleziona ${esc(c.name)}">
-        <span class="avatar" aria-hidden="true">${esc(initials(c.name))}</span>
-        <div class="row-main">
-          <div class="row-title"><button class="link" onclick="openClientCard(${c.id})">${esc(c.name)}</button>${c.phone ? `<a class="muted num" href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : ''}</div>
-          <div class="badges">
-            ${allergy ? `<span class="badge badge-danger"><i class="ph ph-warning"></i>${esc(c.allergy)}</span>` : ''}
-            ${c.gdprConsent ? `<span class="badge badge-ok"><i class="ph ph-shield-check"></i>GDPR ${esc(fmtDate(c.gdprDate))}</span>` : '<span class="badge badge-warn"><i class="ph ph-shield-warning"></i>Consenso GDPR mancante</span>'}
-            ${c.source === 'web' ? '<span class="badge badge-accent"><i class="ph ph-globe-simple"></i>Web</span>' : ''}
-          </div>
-          <p class="note formula"><i class="ph ph-palette"></i><span>${esc(c.formula || 'Nessuna formula registrata')}</span></p>
-        </div>
-        <div class="row-actions">
-          ${c.phone ? `<button class="btn btn-outline btn-sm" onclick="openContact(${c.id})"><i class="ph ph-megaphone"></i>Scrivi</button>` : ''}
-          <button class="btn btn-outline btn-sm" onclick="openClientCard(${c.id})"><i class="ph ph-identification-card"></i>Scheda</button>
-        </div>
-      </div>`;
-    }).join('') || (q ? empty('ph-magnifying-glass', 'Nessun risultato', `Nessuna cliente corrisponde a "${esc(q)}".`)
-                      : noPhoneOnly ? empty('ph-phone', 'Nessuna cliente senza telefono', 'Tutte le clienti in archivio hanno un numero.')
-                      : empty('ph-users', 'Archivio vuoto', 'Registra la prima cliente qui sopra, o importa un file CSV. Le clienti che prenotano online vengono aggiunte da sole.'));
-    updateClientBulk();
-    renderRecall();
-  }
-
-  function addClient() {
-    const name = $('cli-name').value.trim();
-    const allergy = $('cli-allergy').value.trim();
-    if (!name) return toast('Inserisci il nome della cliente', 'error');
-    if (allergy && !$('cli-gdpr-health').checked) return toast('Per annotare allergie serve il consenso art. 9', 'error');
-    const c = {
-      id: newId(), name, phone: $('cli-phone').value.trim(), allergy: allergy || 'Nessuna', formula: $('cli-formula').value.trim(),
-      gdprConsent: $('cli-gdpr-base').checked, healthConsent: $('cli-gdpr-health').checked, gdprDate: todayStr(),
-    };
-    db.clients.push(c);
-    persist('clients', c).then((r) => r && toast('Cliente registrata'));
-    ['cli-name', 'cli-phone', 'cli-allergy', 'cli-formula'].forEach((id) => { $(id).value = ''; });
-    $('cli-gdpr-health').checked = false;
-    renderClients();
-    renderGdpr();
-  }
-
-  function deleteClient(id) {
-    const c = db.clients.find((x) => x.id === id);
-    if (!c || !confirm(`Eliminare la scheda di ${c.name} e le sue foto? Gli appuntamenti restano in agenda.`)) return;
-    db.clients = db.clients.filter((x) => x.id !== id);
-    drop('clients', id); // the server deletes the client's photos too
-    closeModal('cli-modal');
-    renderClients();
-    renderGdpr();
-    renderAgenda();
-  }
-
-  // ---------- Da richiamare ----------
-  const weeksAgo = (ds) => Math.round((new Date(todayStr() + 'T12:00:00Z') - new Date(ds + 'T12:00:00Z')) / 6048e5);
-  const recallText = (c) => `Ciao ${c.name.split(' ')[0]}! È passato un po' di tempo dalla tua ultima visita da ${db.config.salonName}. Quando vuoi, puoi prenotare qui: ${location.origin}/prenota`;
-
-  function renderRecall() {
-    const weeks = Number(db.config.recallWeeks ?? 6);
-    const list = recallList(db.clients, db.appointments, todayStr(), weeks);
-    $('recall').hidden = !list.length;
-    $('recall-count').textContent = list.length;
-    $('recall-hint').textContent = `Ultima visita da più di ${weeks} settimane e niente in agenda`;
-    $('recall-list').innerHTML = list.map(({ client: c, last }) => `
-      <div class="row rem">
-        <span class="avatar" aria-hidden="true">${esc(initials(c.name))}</span>
-        <div class="row-main">
-          <div class="row-title"><button class="link" onclick="openClientCard(${c.id})">${esc(c.name)}</button></div>
-          <span class="row-sub">Ultima visita ${esc(fmtDate(last.date))}, ${weeksAgo(last.date)} settimane fa${last.services?.length ? `: ${esc(last.services.join(' + '))}` : ''}</span>
-        </div>
-        <div class="row-actions">
-          ${c.phone ? `<button class="btn btn-outline btn-sm" onclick="openContact(${c.id}, null, true)"><i class="ph ph-whatsapp-logo"></i>Scrivi</button>` : ''}
-          <button class="btn btn-ghost btn-sm" onclick="markRecalled(${c.id})"><i class="ph ph-check"></i>Richiamata</button>
-        </div>
-      </div>`).join('');
-  }
-  // Hides the client from the list for another `recallWeeks` weeks (or until she books again).
-  function markRecalled(id) {
-    const c = db.clients.find((x) => x.id === id);
-    if (!c) return;
-    c.recalledAt = todayStr();
-    persist('clients', c);
-    renderRecall();
-  }
-
-  // ---------- Scheda cliente ----------
-  let cardPhotos = [], openPhotoItem = null;
-  const cardId = () => Number($('cm-id').value);
-
-  function openClientCard(id) {
-    const c = db.clients.find((x) => x.id === id);
-    if (!c) return;
-    const today = todayStr(), visits = visitsByClient(db.appointments, db.clients).get(id) || [];
-    const past = visits.filter((a) => a.date < today), next = visits.filter((a) => a.date >= today).reverse();
-    $('cm-id').value = id;
-    $('cm-title').textContent = c.name;
-    $('cm-avatar').textContent = initials(c.name);
-    $('cm-since').textContent = c.gdprDate ? `Cliente dal ${fmtDate(c.gdprDate)}` : '';
-    $('cm-stats').innerHTML = `
-      <div><span class="metric-val num">${past.length}</span><span class="metric-lbl">${past.length === 1 ? 'visita' : 'visite'}</span></div>
-      <div><span class="metric-val num">${euro(past.reduce((s, a) => s + (Number(a.price) || 0), 0))}</span><span class="metric-lbl">spesi in salone</span></div>
-      <div><span class="metric-val num">${past[0] ? esc(fmtDate(past[0].date).slice(0, 6) + past[0].date.slice(2, 4)) : 'Mai'}</span><span class="metric-lbl">ultima visita</span></div>`;
-    $('cm-name').value = c.name;
-    $('cm-phone').value = c.phone || '';
-    $('cm-allergy').value = c.allergy && c.allergy.toLowerCase() !== 'nessuna' ? c.allergy : '';
-    $('cm-formula').value = c.formula || '';
-    $('cm-notes').value = c.notes || '';
-    $('cm-gdpr').checked = !!c.gdprConsent;
-    $('cm-health').checked = !!c.healthConsent;
-    const visit = (a, upcoming) => `
-      <div class="visit${upcoming ? ' next' : ''}">
-        <span class="num">${esc(fmtDate(a.date))}</span>
-        <span>${upcoming ? `<span class="badge badge-accent">In agenda, ore ${esc(a.time)}</span> ` : ''}${esc((a.services || []).join(' + ') || 'Appuntamento')}</span>
-        <span class="num">${euro(a.price)}</span>
-        ${a.notes ? `<p class="note"><i class="ph ph-note"></i><span>${esc(a.notes)}</span></p>` : ''}
-      </div>`;
-    $('cm-history').innerHTML = [...next.map((a) => visit(a, true)), ...past.map((a) => visit(a))].join('')
-      || '<p class="muted small">Ancora nessuna visita registrata.</p>';
-    // Photos are fetched only when the card opens, so the main load stays light.
-    cardPhotos = [];
-    renderPhotos('caricamento...');
-    openModal('cli-modal');
-    api('GET', `/api/data?photos=${id}`)
-      .then((r) => { if (cardId() === id) { cardPhotos = r.photos; renderPhotos(); } })
-      .catch((e) => { if (cardId() === id) renderPhotos(isNetwork(e) ? 'visibili solo con la connessione' : e.message); });
-  }
-
-  function saveClientCard() {
-    const c = db.clients.find((x) => x.id === cardId());
-    const name = $('cm-name').value.trim(), allergy = $('cm-allergy').value.trim(), gdpr = $('cm-gdpr').checked;
-    if (!c) return;
-    if (!name) return toast('Inserisci il nome della cliente', 'error');
-    if (allergy && !$('cm-health').checked) return toast('Per annotare allergie serve il consenso art. 9', 'error');
-    Object.assign(c, {
-      name, phone: $('cm-phone').value.trim(), allergy: allergy || 'Nessuna', formula: $('cm-formula').value.trim(), notes: $('cm-notes').value.trim(),
-      gdprConsent: gdpr, healthConsent: $('cm-health').checked, gdprDate: gdpr && !c.gdprConsent ? todayStr() : c.gdprDate,
-    });
-    persist('clients', c).then((r) => r && toast('Scheda salvata'));
-    closeModal('cli-modal');
-    renderClients();
-    renderGdpr();
-    renderAgenda();
-  }
-
-  // `status`: text shown instead of the photos (loading, offline, error).
-  function renderPhotos(status) {
-    $('cm-photo-info').textContent = status || `${cardPhotos.length ? cardPhotos.length + ' foto, ' : ''}ridotte a 480p per occupare poco spazio`;
-    $('cm-photos').innerHTML = status ? '' : `
-      <label class="photo add"><input type="file" accept="image/*" multiple onchange="addPhotos(this)"><i class="ph ph-camera-plus"></i>Aggiungi</label>`
-      + cardPhotos.map((p, i) => `
-      <button class="photo" onclick="openPhoto(${i})" aria-label="Foto del ${esc(fmtDate(p.date))}${p.note ? ', ' + esc(p.note) : ''}"><img src="${esc(p.img)}" alt="" loading="lazy"><span>${esc(p.note || fmtDate(p.date))}</span></button>`).join('');
-  }
-
-  // Shrinks a photo on the device to 480p JPEG (usually 40-80 KB), so it costs little in Neon and Vercel traffic.
-  async function shrink(file) {
-    let bmp;
-    try { bmp = await createImageBitmap(file); } catch { throw new Error('Formato non supportato, scegli una foto JPEG o PNG'); }
-    const k = Math.min(1, 480 / Math.min(bmp.width, bmp.height), 854 / Math.max(bmp.width, bmp.height));
-    const cv = Object.assign(document.createElement('canvas'), { width: Math.round(bmp.width * k), height: Math.round(bmp.height * k) });
-    const ctx = cv.getContext('2d');
-    ctx.fillStyle = '#fff'; // transparent PNGs would turn black in JPEG
-    ctx.fillRect(0, 0, cv.width, cv.height);
-    ctx.drawImage(bmp, 0, 0, cv.width, cv.height);
-    bmp.close();
-    for (const q of [0.75, 0.6, 0.45]) {
-      const url = cv.toDataURL('image/jpeg', q);
-      if (url.length <= 200000) return url; // the server accepts up to 220000 characters
-    }
-    throw new Error('Foto troppo pesante anche dopo la riduzione');
-  }
-
-  // Photos go straight to the server, never into the offline queue: they would fill the device storage.
-  async function addPhotos(input) {
-    const id = cardId(), files = [...input.files];
-    input.value = '';
-    for (const f of files) {
-      try {
-        const p = { id: newId(), clientId: id, date: todayStr(), note: '', img: await shrink(f) };
-        await api('PUT', '/api/data', { col: 'photos', item: p });
-        if (cardId() === id) { cardPhotos.unshift(p); renderPhotos(); }
-      } catch (e) {
-        return toast(isNetwork(e) ? 'Serve la connessione per caricare le foto' : e.message, 'error');
-      }
-    }
-    if (files.length) toast(files.length === 1 ? 'Foto aggiunta' : `${files.length} foto aggiunte`);
-  }
-
-  function openPhoto(i) {
-    openPhotoItem = cardPhotos[i];
-    $('pv-img').src = openPhotoItem.img;
-    $('pv-date').textContent = `Foto del ${fmtDate(openPhotoItem.date)}`;
-    $('pv-note').value = openPhotoItem.note || '';
-    openModal('photo-modal');
-  }
-  function closePhoto() {
-    savePhotoNote();
-    closeModal('photo-modal');
-  }
-  function savePhotoNote() {
-    const p = openPhotoItem, note = $('pv-note').value.trim();
-    if (!p || note === p.note) return;
-    p.note = note;
-    renderPhotos();
-    api('PUT', '/api/data', { col: 'photos', item: p }).catch((e) => toast('Nota non salvata: ' + (isNetwork(e) ? 'manca la connessione' : e.message), 'error'));
-  }
-  function deletePhoto() {
-    const p = openPhotoItem;
-    if (!p || !confirm('Eliminare questa foto?')) return;
-    api('DELETE', `/api/data?col=photos&id=${p.id}`)
-      .then(() => {
-        cardPhotos = cardPhotos.filter((x) => x !== p);
-        openPhotoItem = null;
-        closeModal('photo-modal');
-        renderPhotos();
-        toast('Foto eliminata');
-      })
-      .catch((e) => toast(isNetwork(e) ? 'Serve la connessione per eliminare le foto' : e.message, 'error'));
-  }
-
-  // ---------- Magazzino ----------
-  function renderInventory() {
-    const low = (p) => Number(p.qty) <= Number(p.min);
-    const n = db.inventory.filter(low).length;
-    $('inv-summary').textContent = n ? `${n} da riordinare` : 'Tutto sopra la soglia';
-    $('inventory-list').innerHTML = [...db.inventory].sort((a, b) => low(b) - low(a)).map((p) => `
-      <div class="row">
-        <div class="row-main">
-          <div class="row-title"><strong>${esc(p.name)}</strong>${low(p) ? '<span class="badge badge-danger">Da riordinare</span>' : ''}</div>
-          <span class="row-sub">${esc(p.cat)}, soglia minima ${Number(p.min)}</span>
-        </div>
-        <div class="row-actions">
-          <div class="stepper">
-            <button class="btn-icon" onclick="changeQty(${p.id}, -1)" aria-label="Diminuisci"><i class="ph ph-minus"></i></button>
-            <output class="num" aria-label="Quantità">${Number(p.qty)}</output>
-            <button class="btn-icon" onclick="changeQty(${p.id}, 1)" aria-label="Aumenta"><i class="ph ph-plus"></i></button>
-          </div>
-          <button class="btn-icon danger" onclick="deleteProduct(${p.id})" aria-label="Elimina ${esc(p.name)}"><i class="ph ph-trash"></i></button>
-        </div>
-      </div>`).join('') || empty('ph-package', 'Magazzino vuoto', 'Aggiungi tinte, ossigeni e prodotti: ti avviso quando scendono sotto la soglia.');
-  }
-
-  function addProduct() {
-    const name = $('prd-name').value.trim();
-    if (!name) return toast('Inserisci il nome del prodotto', 'error');
-    const p = { id: newId(), name, cat: $('prd-cat').value, qty: Math.max(0, Number($('prd-qty').value || 0)), min: Math.max(0, Number($('prd-min').value || 1)) };
-    db.inventory.push(p);
-    persist('inventory', p).then((r) => r && toast('Prodotto aggiunto'));
-    $('prd-name').value = '';
-    renderInventory();
-    renderAgenda();
-  }
-
-  function changeQty(id, delta) {
-    const p = db.inventory.find((x) => x.id === id);
-    if (!p) return;
-    p.qty = Math.max(0, Number(p.qty) + delta);
-    persist('inventory', p);
-    renderInventory();
-    renderAgenda();
-  }
-
-  function deleteProduct(id) {
-    const p = db.inventory.find((x) => x.id === id);
-    if (!p || !confirm(`Eliminare "${p.name}" dal magazzino?`)) return;
-    db.inventory = db.inventory.filter((x) => x.id !== id);
-    drop('inventory', id);
-    renderInventory();
-    renderAgenda();
-  }
-
-  // ---------- Prenotazione web ----------
-  function renderWebLink() {
-    const link = location.origin + '/prenota';
-    $('public-link').value = link;
-    $('share-wa').href = 'https://wa.me/?text=' + encodeURIComponent(`Prenota il tuo appuntamento da ${db.config.salonName}: ${link}`);
-  }
-
-  function copyLink(id = 'public-link') {
-    navigator.clipboard.writeText($(id).value)
-      .then(() => toast('Link copiato'))
-      .catch(() => { $(id).select(); toast('Seleziona il link e copialo', 'error'); });
-  }
-
-  // ---------- Calendario del telefono ----------
-  // The link carries a secret token because calendar apps cannot log in; it is fetched only when Impostazioni opens.
-  async function loadCalendarLink() {
-    if (!loaded) return; // opened straight on /impostazioni: reload() calls it after login
-    try {
-      const link = `${location.origin}/api/calendar?k=${(await api('GET', '/api/data?calendar')).token}`;
-      $('cal-link').value = link;
-      $('cal-google').href = 'https://calendar.google.com/calendar/render?cid=' + encodeURIComponent(link.replace('https:', 'webcal:'));
-    } catch (e) {
-      $('cal-link').value = isNetwork(e) ? 'Serve la connessione per vedere il link' : e.message;
-    }
-  }
-
-  // ---------- Privacy ----------
-  function renderGdpr() {
-    const sel = $('gdpr-select-client');
-    const v = sel.value;
-    sel.innerHTML = sortedClients().map((c) => `<option value="${c.id}">${esc(c.name)}${c.gdprConsent ? '' : ' (consenso mancante)'}</option>`).join('') || '<option value="">Nessuna cliente</option>';
-    if (db.clients.some((c) => String(c.id) === v)) sel.value = v;
-    $('legal-text-container').innerHTML = legalHtml(db.config);
-  }
-
-  function signClientGdprInSalon() {
-    const c = db.clients.find((x) => x.id === Number($('gdpr-select-client').value));
-    if (!c) return toast('Seleziona una cliente', 'error');
-    c.gdprConsent = true;
-    c.gdprDate = todayStr();
-    persist('clients', c).then((r) => r && toast(`Consenso registrato per ${c.name}`));
-    renderClients();
-    renderGdpr();
-  }
-
-  function printPaperGdprForm() {
-    const c = db.clients.find((x) => x.id === Number($('gdpr-select-client').value));
-    const w = window.open('', '_blank');
-    if (!w) return toast('Consenti i popup per stampare il modulo', 'error');
-    w.document.write(`<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><title>Modulo privacy</title>
-      <style>body{font-family:system-ui,sans-serif;max-width:720px;margin:32px auto;padding:0 20px;line-height:1.55;color:#18181b}h1{font-size:1.25rem}h4{margin:16px 0 4px}
-      .opt{display:block;margin:14px 0}.sign{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:48px}.sign div{border-top:1px solid #18181b;padding-top:6px;font-size:.85rem}</style></head><body>
-      <h1>Informativa privacy e consenso, ${esc(db.config.salonName)}</h1>
-      <p>Cliente: <strong>${c ? esc(c.name) : '______________________________'}</strong></p>
-      ${legalHtml(db.config)}
-      <span class="opt">&#9744; Ho letto l'informativa e acconsento al trattamento dei dati per la gestione degli appuntamenti.</span>
-      <span class="opt">&#9744; Acconsento all'annotazione di allergie e sensibilità della cute per la sicurezza dei trattamenti (art. 9 GDPR).</span>
-      <div class="sign"><div>Data</div><div>Firma</div></div>
-      <script>window.onload = () => window.print();<\/script></body></html>`);
-    w.document.close();
-  }
-
-  // ---------- Impostazioni ----------
-  function loadConfigUI() {
-    const c = db.config;
-    $('cfg-name').value = c.salonName || '';
-    $('cfg-owner').value = c.ownerName || '';
-    $('cfg-address').value = c.address || '';
-    $('cfg-vat').value = c.vat || '';
-    $('cfg-email').value = c.email || '';
-    $('cfg-phone').value = c.ownerPhone || '';
-    $('cfg-open').value = c.openTime || '09:00';
-    $('cfg-close').value = c.closeTime || '19:00';
-    $('cfg-slot').value = String(c.slotMinutes || 30);
-    $('cfg-recall').value = String(c.recallWeeks ?? 6);
-    $('cfg-breaks').innerHTML = (c.breaks || []).map(rangeRow.breaks).join('');
-    $('cfg-closures').innerHTML = (c.closures || []).filter((x) => x.to >= todayStr()).map(rangeRow.closures).join(''); // past closures drop out
-    $('cfg-closed').innerHTML = DAYS.map(([d, l]) => `<label class="chip"><input type="checkbox" value="${d}" ${(c.closedDays || []).includes(d) ? 'checked' : ''}>${l}</label>`).join('');
-    $('brand-salon').textContent = c.salonName || '';
-  }
-
-  function saveConfig() {
-    const openTime = $('cfg-open').value || '09:00', closeTime = $('cfg-close').value || '19:00';
-    if (openTime >= closeTime) return toast("La chiusura deve essere dopo l'apertura", 'error');
-    Object.assign(db.config, {
-      salonName: $('cfg-name').value.trim() || 'Il Mio Salone',
-      ownerName: $('cfg-owner').value.trim() || 'Titolare',
-      address: $('cfg-address').value.trim(),
-      vat: $('cfg-vat').value.trim(),
-      email: $('cfg-email').value.trim(),
-      ownerPhone: $('cfg-phone').value.trim(),
-      openTime, closeTime,
-      slotMinutes: Number($('cfg-slot').value),
-      recallWeeks: Number($('cfg-recall').value),
-      closedDays: [...document.querySelectorAll('#cfg-closed input:checked')].map((i) => Number(i.value)),
-    });
-    persist('config', { ...db.config, id: 1 }).then((r) => r && toast('Impostazioni salvate'));
-    loadConfigUI();
-    renderAll();
-  }
-
-  // ---------- Configurazione guidata (prima installazione) ----------
-  // Shown once per salon (flag saved in config), while the salon still has the default name.
-  const needsOnboarding = () => !db.config.onboarded && db.config.salonName === 'Il Mio Salone';
-  const OB_LAST = 4;
-  let obStep = 0;
-
-  function openOnboarding() {
-    const c = db.config;
-    $('ob-name').value = c.salonName === 'Il Mio Salone' ? '' : c.salonName || '';
-    $('ob-owner').value = c.ownerName === 'Titolare' ? '' : c.ownerName || '';
-    $('ob-phone').value = c.ownerPhone || '';
-    $('ob-address').value = c.address || '';
-    $('ob-open').value = c.openTime || '09:00';
-    $('ob-close').value = c.closeTime || '19:00';
-    $('ob-slot').value = String(c.slotMinutes || 30);
-    $('ob-break-from').value = c.breaks?.[0]?.from || '';
-    $('ob-break-to').value = c.breaks?.[0]?.to || '';
-    $('ob-closed').innerHTML = DAYS.map(([d, l]) => `<label class="chip"><input type="checkbox" value="${d}" ${(c.closedDays || []).includes(d) ? 'checked' : ''}>${l}</label>`).join('');
-    obShow(0);
-    openModal('ob-modal');
-  }
-
-  function obShow(n) {
-    obStep = n;
-    document.querySelectorAll('.ob-step').forEach((s) => { s.hidden = Number(s.dataset.step) !== n; });
-    document.querySelectorAll('#ob-steps span').forEach((s, i) => s.classList.toggle('on', i < n));
-    $('ob-steps').hidden = !n;
-    $('ob-count').textContent = n ? `Passo ${n} di ${OB_LAST}` : '';
-    $('ob-back').hidden = !n;
-    $('ob-skip').hidden = n === OB_LAST;
-    $('ob-next').innerHTML = n === 0 ? 'Iniziamo' : n === OB_LAST ? '<i class="ph ph-check"></i>Vai all’agenda' : 'Avanti<i class="ph ph-caret-right"></i>';
-    if (n === 3) {
-      const list = folders();
-      $('ob-srv-text').textContent = db.services.length
-        ? `Abbiamo preparato un listino di partenza con ${db.services.length} servizi in ${list.length} cartelle. Controlla i prezzi quando vuoi.`
-        : 'Il listino è vuoto: crea le cartelle (es. PIEGA) e aggiungi i servizi da Listino servizi.';
-      $('ob-folders').innerHTML = list.map((f) => `<span class="badge badge-accent"><i class="ph ph-folder"></i>${esc(f)}, ${db.services.filter((s) => catOf(s) === f).length}</span>`).join('');
-    }
-    if (n === OB_LAST) {
-      $('ob-link').value = $('public-link').value;
-      $('ob-share').href = $('share-wa').href;
-    }
-    $('ob-modal').querySelector('.modal').scrollTop = 0;
-  }
-
-  function obGo(dir) {
-    if (dir > 0 && obStep === 1 && !$('ob-name').value.trim()) return toast('Scrivi il nome del salone', 'error');
-    if (dir > 0 && obStep === 2) {
-      if (($('ob-open').value || '09:00') >= ($('ob-close').value || '19:00')) return toast("La chiusura deve essere dopo l'apertura", 'error');
-      const bFrom = $('ob-break-from').value, bTo = $('ob-break-to').value;
-      if ((bFrom || bTo) && !(bFrom && bTo && bFrom < bTo)) return toast('Pausa pranzo: indica inizio e fine, con la fine dopo l’inizio', 'error');
-      db.config.breaks = bFrom ? [{ from: bFrom, to: bTo }, ...(db.config.breaks || []).slice(1)] : (db.config.breaks || []).slice(1);
-      Object.assign(db.config, {
-        salonName: $('ob-name').value.trim(),
-        ownerName: $('ob-owner').value.trim() || 'Titolare',
-        ownerPhone: $('ob-phone').value.trim(),
-        address: $('ob-address').value.trim(),
-        openTime: $('ob-open').value || '09:00',
-        closeTime: $('ob-close').value || '19:00',
-        slotMinutes: Number($('ob-slot').value),
-        closedDays: [...document.querySelectorAll('#ob-closed input:checked')].map((i) => Number(i.value)),
-      });
-      persist('config', { ...db.config, id: 1 });
-      loadConfigUI();
-      renderAll();
-    }
-    if (dir > 0 && obStep === OB_LAST) return obFinish(false);
-    obShow(obStep + dir);
-  }
-
-  function obFinish(skipped) {
-    db.config.onboarded = true;
-    persist('config', { ...db.config, id: 1 });
-    try { localStorage.setItem('sp_news', NEWS[0].v); } catch {} // a new salon does not need the changelog
-    closeModal('ob-modal');
-    showTab('agenda');
-    toast(skipped ? 'Puoi riprendere la configurazione guidata da Impostazioni' : 'Tutto pronto, buon lavoro!');
-    if (!skipped) maybeInstallBanner();
-  }
-
-  // ---------- Ferie, festivi e pause ----------
-  // The rows on screen are the draft: "Aggiungi" adds a row, the bin removes it, "Salva" reads them all back.
-  const rangeRow = {
-    breaks: (x = { from: '13:00', to: '15:00' }) => `
-      <div class="range" data-kind="breaks">
-        <input type="time" data-k="from" value="${esc(x.from)}" aria-label="Inizio pausa">
-        <span class="muted">alle</span>
-        <input type="time" data-k="to" value="${esc(x.to)}" aria-label="Fine pausa">
-        <button class="btn-icon danger" onclick="this.closest('.range').remove()" aria-label="Togli pausa"><i class="ph ph-trash"></i></button>
-      </div>`,
-    closures: (x = { from: todayStr(), to: todayStr(), note: '' }) => `
-      <div class="range" data-kind="closures">
-        <input type="date" data-k="from" value="${esc(x.from)}" aria-label="Chiuso dal">
-        <span class="muted">al</span>
-        <input type="date" data-k="to" value="${esc(x.to)}" aria-label="Chiuso fino al">
-        <input type="text" data-k="note" value="${esc(x.note || '')}" placeholder="Es. Ferie estive" maxlength="60" aria-label="Nota">
-        <button class="btn-icon danger" onclick="this.closest('.range').remove()" aria-label="Togli chiusura"><i class="ph ph-trash"></i></button>
-      </div>`,
-  };
-  const readRanges = (kind) => [...document.querySelectorAll(`#cfg-${kind} .range`)]
-    .map((row) => Object.fromEntries([...row.querySelectorAll('[data-k]')].map((i) => [i.dataset.k, i.value.trim()])));
-  function addRange(kind) {
-    $(`cfg-${kind}`).insertAdjacentHTML('beforeend', rangeRow[kind]());
-  }
-  function saveClosures() {
-    const breaks = readRanges('breaks');
-    const closures = readRanges('closures').map((x) => ({ from: x.from, to: x.to || x.from, ...(x.note && { note: x.note }) }));
-    if (breaks.some((b) => !b.from || !b.to || b.from >= b.to)) return toast('Controlla le pause: la fine deve essere dopo l’inizio', 'error');
-    if (closures.some((x) => !x.from || x.from > x.to)) return toast('Controlla le chiusure: la data di fine deve essere dopo quella di inizio', 'error');
-    Object.assign(db.config, { breaks, closures: closures.sort((a, b) => a.from.localeCompare(b.from)) });
-    persist('config', { ...db.config, id: 1 }).then((r) => r && toast('Ferie e pause salvate'));
-    loadConfigUI();
-    renderAll();
-  }
-  const closureOn = (ds) => (db.config.closures || []).find((x) => ds >= x.from && ds <= x.to);
-  const isClosedDay = (ds) => (db.config.closedDays || []).includes(new Date(ds + 'T12:00').getDay()) || !!closureOn(ds);
-
-  function exportBackup() {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' }));
-    a.download = `backup_salone_pro_${todayStr()}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-
-  function importBackup(e) {
-    const file = e.target.files[0];
-    e.target.value = '';
-    if (!file) return;
-    if (!confirm('Il ripristino SOSTITUISCE tutti i dati attuali (agenda, clienti, listino, magazzino, impostazioni). Continuare?')) return;
-    if (outbox.length && !confirm(`Ci sono ${outbox.length} modifiche fatte offline non ancora inviate: il ripristino le annulla. Continuare?`)) return;
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      try {
-        const r = await api('POST', '/api/data', JSON.parse(ev.target.result));
-        outbox = [];
-        forget('sp_outbox');
-        loaded = false;
-        await reload();
-        toast(`Backup ripristinato (${r.count} elementi)`);
-      } catch (err) {
-        toast('Ripristino non riuscito: ' + (err instanceof SyntaxError ? 'file non valido' : isNetwork(err) ? 'serve la connessione a internet' : err.message), 'error');
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  // ---------- Installazione PWA ----------
-  const isStandalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-  // iPadOS reports itself as a Mac: touch points tell them apart.
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const deviceOs = isIOS ? 'ios' : /android/i.test(navigator.userAgent) ? 'android' : 'desktop';
-  let installPrompt;
-
-  // Android/desktop Chrome and Edge offer a native prompt; iOS only allows Share > Add to Home Screen, so we explain it.
-  function maybeInstallBanner() {
-    let off;
-    try { off = localStorage.getItem('sp_install_off'); } catch {}
-    if (isStandalone || off || (!installPrompt && !isIOS) || $('ob-modal').classList.contains('open')) return; // guided setup offers install at its last step
-    $('ib-sub').innerHTML = installPrompt ? "Si apre a schermo intero, come un'app." : 'Tocca <i class="ph ph-export"></i> Condividi, poi "Aggiungi a Home".';
-    $('ib-action').innerHTML = installPrompt ? '<i class="ph ph-download-simple"></i>Installa' : 'Come fare';
-    $('install-banner').hidden = false;
-  }
-  function dismissInstall() {
-    $('install-banner').hidden = true;
-    try { localStorage.setItem('sp_install_off', '1'); } catch {}
-  }
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    installPrompt = e;
-    document.querySelectorAll('[data-install]').forEach((b) => { b.hidden = false; });
-    if (loaded) maybeInstallBanner();
-  });
-  window.addEventListener('appinstalled', () => {
-    $('install-banner').hidden = true;
-    toast('Salone PRO installata');
-  });
-  async function installApp() {
-    if (!installPrompt) return openInstallGuide();
-    installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    installPrompt = null;
-    document.querySelectorAll('[data-install]').forEach((b) => { b.hidden = true; });
-    if (outcome === 'accepted') $('install-banner').hidden = true;
-  }
-  function openInstallGuide() {
-    document.querySelectorAll('#install-modal details').forEach((d) => { d.open = d.dataset.os === deviceOs; });
-    openModal('install-modal');
-  }
-  if (isStandalone) $('install-status').textContent = "L'app è già installata su questo dispositivo.";
-
-  // ---------- Start ----------
-  $('agenda-date').value = todayStr();
-  $('agenda-day').textContent = cap(dayLabel(todayStr()));
-  $('agenda-list').innerHTML = Array.from({ length: 3 }, () =>
-    '<div class="sk-row"><div class="skeleton" style="height:36px"></div><div style="display:grid;gap:8px"><div class="skeleton" style="height:16px;width:40%"></div><div class="skeleton" style="height:14px;width:65%"></div></div></div>').join('');
-  showTab(tabFromPath(), false);
-  reload();
-</script>
+<!-- Admin app, one file per area. Classic scripts sharing their globals: app.js first, avvio.js last. -->
+<script src="/js/app.js"></script>
+<script src="/js/api-sync.js"></script>
+<script src="/js/novita.js"></script>
+<script src="/js/agenda.js"></script>
+<script src="/js/listino.js"></script>
+<script src="/js/clienti.js"></script>
+<script src="/js/magazzino.js"></script>
+<script src="/js/impostazioni.js"></script>
+<script src="/js/avvio.js"></script>
 </body>
 </html>
