@@ -131,13 +131,13 @@ function obShow(n) {
   $('ob-count').textContent = n ? `Passo ${n} di ${OB_LAST}` : '';
   $('ob-back').hidden = !n;
   $('ob-skip').hidden = n === OB_LAST;
-  $('ob-next').innerHTML = n === 0 ? 'Iniziamo' : n === OB_LAST ? '<i class="ph ph-check"></i>Vai all’agenda' : 'Avanti<i class="ph ph-caret-right"></i>';
+  $('ob-next').innerHTML = n === 0 ? 'Iniziamo' : n === OB_LAST ? '<i class="ph ph-check" aria-hidden="true"></i>Vai all’agenda' : 'Avanti<i class="ph ph-caret-right" aria-hidden="true"></i>';
   if (n === 3) {
     const list = folders();
     $('ob-srv-text').textContent = db.services.length
       ? `Abbiamo preparato un listino di partenza con ${db.services.length} servizi in ${list.length} cartelle. Controlla i prezzi quando vuoi.`
       : 'Il listino è vuoto: crea le cartelle (es. PIEGA) e aggiungi i servizi da Listino servizi.';
-    $('ob-folders').innerHTML = list.map((f) => `<span class="badge badge-accent"><i class="ph ph-folder"></i>${esc(f)}, ${db.services.filter((s) => catOf(s) === f).length}</span>`).join('');
+    $('ob-folders').innerHTML = list.map((f) => `<span class="badge badge-accent"><i class="ph ph-folder" aria-hidden="true"></i>${esc(f)}, ${db.services.filter((s) => catOf(s) === f).length}</span>`).join('');
   }
   if (n === OB_LAST) {
     $('ob-link').value = $('public-link').value;
@@ -189,7 +189,7 @@ const rangeRow = {
       <input type="time" data-k="from" value="${esc(x.from)}" aria-label="Inizio pausa">
       <span class="muted">alle</span>
       <input type="time" data-k="to" value="${esc(x.to)}" aria-label="Fine pausa">
-      <button class="btn-icon danger" data-click="removeRange" aria-label="Togli pausa"><i class="ph ph-trash"></i></button>
+      <button class="btn-icon danger" data-click="removeRange" aria-label="Togli pausa"><i class="ph ph-trash" aria-hidden="true"></i></button>
     </div>`,
   closures: (x = { from: todayStr(), to: todayStr(), note: '' }) => `
     <div class="range" data-kind="closures">
@@ -197,7 +197,7 @@ const rangeRow = {
       <span class="muted">al</span>
       <input type="date" data-k="to" value="${esc(x.to)}" aria-label="Chiuso fino al">
       <input type="text" data-k="note" value="${esc(x.note || '')}" placeholder="Es. Ferie estive" maxlength="60" aria-label="Nota">
-      <button class="btn-icon danger" data-click="removeRange" aria-label="Togli chiusura"><i class="ph ph-trash"></i></button>
+      <button class="btn-icon danger" data-click="removeRange" aria-label="Togli chiusura"><i class="ph ph-trash" aria-hidden="true"></i></button>
     </div>`,
 };
 const readRanges = (kind) => [...document.querySelectorAll(`#cfg-${kind} .range`)]
@@ -260,8 +260,8 @@ function maybeInstallBanner() {
   let off;
   try { off = localStorage.getItem('sp_install_off'); } catch {}
   if (isStandalone || off || (!installPrompt && !isIOS) || $('ob-modal').classList.contains('open')) return; // guided setup offers install at its last step
-  $('ib-sub').innerHTML = installPrompt ? "Si apre a schermo intero, come un'app." : 'Tocca <i class="ph ph-export"></i> Condividi, poi "Aggiungi a Home".';
-  $('ib-action').innerHTML = installPrompt ? '<i class="ph ph-download-simple"></i>Installa' : 'Come fare';
+  $('ib-sub').innerHTML = installPrompt ? "Si apre a schermo intero, come un'app." : 'Tocca <i class="ph ph-export" aria-hidden="true"></i> Condividi, poi "Aggiungi a Home".';
+  $('ib-action').innerHTML = installPrompt ? '<i class="ph ph-download-simple" aria-hidden="true"></i>Installa' : 'Come fare';
   $('install-banner').hidden = false;
 }
 function dismissInstall() {

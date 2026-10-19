@@ -24,8 +24,8 @@ async function init() {
   } catch (e) {
     // Not configured yet on Vercel: clients get a plain message, the owner a pointer to the admin page that explains the fix.
     $('app').innerHTML = e.setup
-      ? `<section class="block down" style="grid-column:1/-1"><i class="ph ph-calendar-blank"></i><h2>Prenotazioni online non ancora attive</h2><p class="muted">Per prenotare contatta direttamente il salone. Torna a trovarci presto!</p><p class="muted small">Sei il titolare? <a href="/">Apri il gestionale</a> per completare la configurazione.</p></section>`
-      : `<section class="block down" style="grid-column:1/-1"><i class="ph ph-cloud-slash"></i><h2>Prenotazione online non disponibile</h2><p class="muted">${esc(e.message)}. Riprova tra poco.</p><button class="btn btn-outline" data-click="reloadPage"><i class="ph ph-arrow-clockwise"></i>Riprova</button></section>`;
+      ? `<section class="block down" style="grid-column:1/-1"><i class="ph ph-calendar-blank" aria-hidden="true"></i><h2>Prenotazioni online non ancora attive</h2><p class="muted">Per prenotare contatta direttamente il salone. Torna a trovarci presto!</p><p class="muted small">Sei il titolare? <a href="/">Apri il gestionale</a> per completare la configurazione.</p></section>`
+      : `<section class="block down" style="grid-column:1/-1"><i class="ph ph-cloud-slash" aria-hidden="true"></i><h2>Prenotazione online non disponibile</h2><p class="muted">${esc(e.message)}. Riprova tra poco.</p><button class="btn btn-outline" data-click="reloadPage"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i>Riprova</button></section>`;
     return;
   }
   document.title = 'Prenota da ' + cfg.salonName;
@@ -34,8 +34,8 @@ async function init() {
   const names = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
   const closed = (cfg.closedDays || []).map((d) => names[d]);
   $('salon-meta').innerHTML = [
-    cfg.address && `<span><i class="ph ph-map-pin"></i>${esc(cfg.address)}</span>`,
-    `<span><i class="ph ph-clock"></i>${esc(cfg.openTime)} - ${esc(cfg.closeTime)}${(cfg.breaks || []).map((b) => `, pausa ${esc(b.from)} - ${esc(b.to)}`).join('')}${closed.length ? `, chiuso ${esc(closed.join(' e '))}` : ''}</span>`,
+    cfg.address && `<span><i class="ph ph-map-pin" aria-hidden="true"></i>${esc(cfg.address)}</span>`,
+    `<span><i class="ph ph-clock" aria-hidden="true"></i>${esc(cfg.openTime)} - ${esc(cfg.closeTime)}${(cfg.breaks || []).map((b) => `, pausa ${esc(b.from)} - ${esc(b.to)}`).join('')}${closed.length ? `, chiuso ${esc(closed.join(' e '))}` : ''}</span>`,
     nextClosure(),
   ].filter(Boolean).join('');
   $('btn-wa').hidden = !cfg.ownerPhone;
@@ -59,7 +59,7 @@ function nextClosure() {
   const c = (cfg.closures || []).filter((x) => x.to >= now.date && x.from <= localDate(limit)).sort((a, b) => a.from.localeCompare(b.from))[0];
   if (!c) return '';
   const when = c.from === c.to ? `il ${fmtDate(c.from)}` : `dal ${fmtDate(c.from)} al ${fmtDate(c.to)}`;
-  return `<span class="closure-note"><i class="ph ph-calendar-x"></i>Chiuso ${when}${c.note ? ` (${esc(c.note)})` : ''}</span>`;
+  return `<span class="closure-note"><i class="ph ph-calendar-x" aria-hidden="true"></i>Chiuso ${when}${c.note ? ` (${esc(c.note)})` : ''}</span>`;
 }
 
 function firstOpenDay() {
@@ -82,11 +82,11 @@ function renderServices() {
     const items = services.filter((s) => catOf(s) === cat);
     return `
     <details class="srv-group" ${i ? '' : 'open'}>
-      <summary><span>${esc(cat)}</span><span class="muted small">${items.length} ${items.length === 1 ? 'servizio' : 'servizi'}<i class="ph ph-caret-down"></i></span></summary>
+      <summary><span>${esc(cat)}</span><span class="muted small">${items.length} ${items.length === 1 ? 'servizio' : 'servizi'}<i class="ph ph-caret-down" aria-hidden="true"></i></span></summary>
       <div class="srv-items">${items.map((s) => `
         <label class="srv">
           <input type="checkbox" ${picked.has(s.id) ? 'checked' : ''} data-change="toggleService" data-id="${s.id}">
-          <span class="srv-name">${esc(s.name)}<small><i class="ph ph-clock"></i>${Number(s.duration) || 0} min</small></span>
+          <span class="srv-name">${esc(s.name)}<small><i class="ph ph-clock" aria-hidden="true"></i>${Number(s.duration) || 0} min</small></span>
           <strong class="num">${price(s.price)}</strong>
         </label>`).join('')}
       </div>
@@ -186,8 +186,12 @@ async function submitBooking(mode) {
   if (phone.replace(/\D/g, '').length < 6) errs.phone = 'Inserisci un numero di telefono valido.';
   if (!$('c-gdpr').checked) errs.gdpr = "Per prenotare devi accettare l'informativa privacy.";
   ['services', 'slots', 'name', 'phone', 'gdpr'].forEach((k) => { $('err-' + k).textContent = errs[k] || ''; });
+  ['name', 'phone', 'gdpr'].forEach((k) => $('c-' + k).setAttribute('aria-invalid', !!errs[k]));
   const first = Object.keys(errs)[0];
-  if (first) return $('err-' + first).closest('.field, section').scrollIntoView({ behavior: smooth(), block: 'center' });
+  if (first) {
+    $('c-' + first)?.focus({ preventScroll: true }); // a field to fix gets the focus (services and times have none)
+    return $('err-' + first).closest('.field, section').scrollIntoView({ behavior: smooth(), block: 'center' });
+  }
 
   const tot = list.reduce((s, x) => s + (Number(x.price) || 0), 0);
   if (mode === 'wa') {

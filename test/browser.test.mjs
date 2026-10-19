@@ -76,8 +76,10 @@ test('client card', async () => {
   assert.equal(await admin.inputValue('#cm-phone'), '333 000 1111');
   await admin.locator('#cm-history', { hasText: 'In agenda, ore 10:00' }).waitFor();
   await admin.locator('#cm-photo-info', { hasText: 'ridotte a 480p' }).waitFor(); // photos fetched
+  assert.equal(await admin.evaluate(() => document.querySelector('.app').inert), true); // keyboard stays in the dialog
   await admin.locator('#cli-modal').getByRole('button', { name: 'Chiudi' }).click();
   await admin.locator('#cli-modal').waitFor({ state: 'hidden' });
+  assert.equal(await admin.evaluate(() => document.activeElement.textContent), 'Giulia Prova'); // focus back on the opener
 });
 
 test('settings with the error log', async () => {

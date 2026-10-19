@@ -60,7 +60,7 @@ function renderErrorLog() {
       <div><div class="err-head"><strong>${esc(e.cat || 'Errore')}</strong><span class="muted small num">${esc(when(e.at))}</span></div>
       <span>${esc(e.msg)}</span>${e.detail ? `<span class="err-detail">${esc(e.detail)}</span>` : ''}</div>
     </div>`).join('')
-    || '<p class="muted small"><i class="ph ph-check-circle"></i>Nessun problema recente: il gestionale comunica regolarmente con il server.</p>';
+    || '<p class="muted small"><i class="ph ph-check-circle" aria-hidden="true"></i>Nessun problema recente: il gestionale comunica regolarmente con il server.</p>';
 }
 function copyErrorLog() {
   const lines = (readJSON('sp_errors') || []).map((e) => `${e.at}  [${e.cat || 'Errore'}] ${e.msg}${e.detail ? '  |  ' + e.detail : ''}`);
@@ -159,8 +159,8 @@ async function reload() {
       if (!loaded && !$('login').classList.contains('open')) {
         document.body.classList.add('ready'); // show the app only to explain the problem
         $('agenda-list').innerHTML = isNetwork(e)
-          ? empty('ph-wifi-slash', 'Sei offline', 'Su questo dispositivo non ci sono ancora dati salvati: collegati a internet una volta per usarlo anche offline.', '<button class="btn btn-outline btn-sm" data-click="reload"><i class="ph ph-arrow-clockwise"></i>Riprova</button>')
-          : empty('ph-cloud-slash', 'Impossibile caricare i dati', esc(e.message), '<button class="btn btn-outline btn-sm" data-click="reload"><i class="ph ph-arrow-clockwise"></i>Riprova</button>');
+          ? empty('ph-wifi-slash', 'Sei offline', 'Su questo dispositivo non ci sono ancora dati salvati: collegati a internet una volta per usarlo anche offline.', '<button class="btn btn-outline btn-sm" data-click="reload"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i>Riprova</button>')
+          : empty('ph-cloud-slash', 'Impossibile caricare i dati', esc(e.message), '<button class="btn btn-outline btn-sm" data-click="reload"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i>Riprova</button>');
       }
       return;
     }

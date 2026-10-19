@@ -26,21 +26,34 @@ function toast(msg, kind) {
     document.body.append(el);
   }
   el.className = 'toast' + (kind === 'error' ? ' error' : '');
-  el.innerHTML = `<i class="ph ${kind === 'error' ? 'ph-warning-circle' : 'ph-check-circle'}"></i><span>${esc(msg)}</span>`;
+  el.innerHTML = `<i class="ph ${kind === 'error' ? 'ph-warning-circle' : 'ph-check-circle'}" aria-hidden="true"></i><span>${esc(msg)}</span>`;
   requestAnimationFrame(() => el.classList.add('show'));
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), kind === 'error' ? 5000 : 2600);
 }
 
+// While a dialog is open the rest of the page is inert (Tab, clicks and screen readers stay inside it); closing it gives
+// focus back to the control that opened it. The new-booking notice and the toast stay usable above everything.
+const openers = {};
+function syncInert() {
+  const top = [...document.querySelectorAll('.modal-backdrop.open')].pop();
+  for (const el of document.body.children) el.inert = !!top && el !== top && !el.matches('#booking-alert, .toast');
+}
 function openModal(id) {
+  if (!$(id).classList.contains('open')) openers[id] = document.activeElement;
   $(id).classList.add('open');
+  syncInert();
   document.body.style.overflow = 'hidden';
   // data-autofocus: dialogs mostly read (client card) focus the close button, so phones do not pop up the keyboard
   setTimeout(() => ($(id).querySelector('[data-autofocus]') || $(id).querySelector('input:not([type=hidden]):not([type=checkbox]), select, textarea'))?.focus(), 50);
 }
 function closeModal(id) {
+  if (!$(id).classList.contains('open')) return;
   $(id).classList.remove('open');
+  syncInert();
   if (!document.querySelector('.modal-backdrop.open')) document.body.style.overflow = '';
+  if (openers[id]?.isConnected) openers[id].focus({ preventScroll: true });
+  delete openers[id];
 }
 document.addEventListener('click', (e) => {
   if (e.target.classList?.contains('modal-backdrop') && !e.target.dataset.locked) closeModal(e.target.id);

@@ -89,20 +89,20 @@ function renderClients() {
     const allergy = c.allergy && c.allergy.toLowerCase() !== 'nessuna', sel = selClients.has(c.id);
     return `
     <div class="row client${sel ? ' selected' : ''}">
-      <input type="checkbox" class="sel" ${sel ? 'checked' : ''} data-change="toggleClientSel" data-id="${c.id}" aria-label="Seleziona ${esc(c.name)}">
+      <label class="sel"><input type="checkbox" ${sel ? 'checked' : ''} data-change="toggleClientSel" data-id="${c.id}" aria-label="Seleziona ${esc(c.name)}"></label>
       <span class="avatar" aria-hidden="true">${esc(initials(c.name))}</span>
       <div class="row-main">
         <div class="row-title"><button class="link" data-click="openClientCard" data-id="${c.id}">${esc(c.name)}</button>${c.phone ? `<a class="muted num" href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : ''}</div>
         <div class="badges">
-          ${allergy ? `<span class="badge badge-danger"><i class="ph ph-warning"></i>${esc(c.allergy)}</span>` : ''}
-          ${c.gdprConsent ? `<span class="badge badge-ok"><i class="ph ph-shield-check"></i>GDPR ${esc(fmtDate(c.gdprDate))}</span>` : '<span class="badge badge-warn"><i class="ph ph-shield-warning"></i>Consenso GDPR mancante</span>'}
-          ${c.source === 'web' ? '<span class="badge badge-accent"><i class="ph ph-globe-simple"></i>Web</span>' : ''}
+          ${allergy ? `<span class="badge badge-danger"><i class="ph ph-warning" aria-hidden="true"></i>${esc(c.allergy)}</span>` : ''}
+          ${c.gdprConsent ? `<span class="badge badge-ok"><i class="ph ph-shield-check" aria-hidden="true"></i>GDPR ${esc(fmtDate(c.gdprDate))}</span>` : '<span class="badge badge-warn"><i class="ph ph-shield-warning" aria-hidden="true"></i>Consenso GDPR mancante</span>'}
+          ${c.source === 'web' ? '<span class="badge badge-accent"><i class="ph ph-globe-simple" aria-hidden="true"></i>Web</span>' : ''}
         </div>
-        <p class="note formula"><i class="ph ph-palette"></i><span>${esc(c.formula || 'Nessuna formula registrata')}</span></p>
+        <p class="note formula"><i class="ph ph-palette" aria-hidden="true"></i><span>${esc(c.formula || 'Nessuna formula registrata')}</span></p>
       </div>
       <div class="row-actions">
-        ${c.phone ? `<button class="btn btn-outline btn-sm" data-click="contactClient" data-id="${c.id}"><i class="ph ph-megaphone"></i>Scrivi</button>` : ''}
-        <button class="btn btn-outline btn-sm" data-click="openClientCard" data-id="${c.id}"><i class="ph ph-identification-card"></i>Scheda</button>
+        ${c.phone ? `<button class="btn btn-outline btn-sm" data-click="contactClient" data-id="${c.id}"><i class="ph ph-megaphone" aria-hidden="true"></i>Scrivi</button>` : ''}
+        <button class="btn btn-outline btn-sm" data-click="openClientCard" data-id="${c.id}"><i class="ph ph-identification-card" aria-hidden="true"></i>Scheda</button>
       </div>
     </div>`;
   }).join('') || (q ? empty('ph-magnifying-glass', 'Nessun risultato', `Nessuna cliente corrisponde a "${esc(q)}".`)
@@ -158,8 +158,8 @@ function renderRecall() {
         <span class="row-sub">Ultima visita ${esc(fmtDate(last.date))}, ${weeksAgo(last.date)} settimane fa${last.services?.length ? `: ${esc(last.services.join(' + '))}` : ''}</span>
       </div>
       <div class="row-actions">
-        ${c.phone ? `<button class="btn btn-outline btn-sm" data-click="contactRecall" data-id="${c.id}"><i class="ph ph-whatsapp-logo"></i>Scrivi</button>` : ''}
-        <button class="btn btn-ghost btn-sm" data-click="markRecalled" data-id="${c.id}"><i class="ph ph-check"></i>Richiamata</button>
+        ${c.phone ? `<button class="btn btn-outline btn-sm" data-click="contactRecall" data-id="${c.id}"><i class="ph ph-whatsapp-logo" aria-hidden="true"></i>Scrivi</button>` : ''}
+        <button class="btn btn-ghost btn-sm" data-click="markRecalled" data-id="${c.id}"><i class="ph ph-check" aria-hidden="true"></i>Richiamata</button>
       </div>
     </div>`).join('');
 }
@@ -201,7 +201,7 @@ function openClientCard(id) {
       <span class="num">${esc(fmtDate(a.date))}</span>
       <span>${upcoming ? `<span class="badge badge-accent">In agenda, ore ${esc(a.time)}</span> ` : ''}${esc((a.services || []).join(' + ') || 'Appuntamento')}</span>
       <span class="num">${euro(a.price)}</span>
-      ${a.notes ? `<p class="note"><i class="ph ph-note"></i><span>${esc(a.notes)}</span></p>` : ''}
+      ${a.notes ? `<p class="note"><i class="ph ph-note" aria-hidden="true"></i><span>${esc(a.notes)}</span></p>` : ''}
     </div>`;
   $('cm-history').innerHTML = [...next.map((a) => visit(a, true)), ...past.map((a) => visit(a))].join('')
     || '<p class="muted small">Ancora nessuna visita registrata.</p>';
@@ -235,7 +235,7 @@ function saveClientCard() {
 function renderPhotos(status) {
   $('cm-photo-info').textContent = status || `${cardPhotos.length ? cardPhotos.length + ' foto, ' : ''}ridotte a 480p per occupare poco spazio`;
   $('cm-photos').innerHTML = status ? '' : `
-    <label class="photo add"><input type="file" accept="image/*" multiple data-change="addPhotos"><i class="ph ph-camera-plus"></i>Aggiungi</label>`
+    <label class="photo add"><input type="file" accept="image/*" multiple data-change="addPhotos"><i class="ph ph-camera-plus" aria-hidden="true"></i>Aggiungi</label>`
     + cardPhotos.map((p, i) => `
     <button class="photo" data-click="openPhoto" data-id="${i}" aria-label="Foto del ${esc(fmtDate(p.date))}${p.note ? ', ' + esc(p.note) : ''}"><img src="${esc(p.img)}" alt="" loading="lazy"><span>${esc(p.note || fmtDate(p.date))}</span></button>`).join('');
 }

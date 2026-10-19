@@ -33,7 +33,7 @@
   <span class="mark" id="salon-mark" aria-hidden="true">S</span>
   <div>
     <h1 id="salon-title">Prenota online</h1>
-    <div class="meta" id="salon-meta"><span><i class="ph ph-clock"></i>Disponibilità in tempo reale</span></div>
+    <div class="meta" id="salon-meta"><span><i class="ph ph-clock" aria-hidden="true"></i>Disponibilità in tempo reale</span></div>
   </div>
 </header>
 
@@ -54,9 +54,9 @@
     <section class="block" id="sec-when">
       <h2>Giorno e orario</h2>
       <div class="cal-head">
-        <button class="btn-icon" id="cal-prev" data-click="navMonth" data-arg="-1" aria-label="Mese precedente"><i class="ph ph-caret-left"></i></button>
+        <button class="btn-icon" id="cal-prev" data-click="navMonth" data-arg="-1" aria-label="Mese precedente"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
         <strong id="cal-title" aria-live="polite"></strong>
-        <button class="btn-icon" id="cal-next" data-click="navMonth" data-arg="1" aria-label="Mese successivo"><i class="ph ph-caret-right"></i></button>
+        <button class="btn-icon" id="cal-next" data-click="navMonth" data-arg="1" aria-label="Mese successivo"><i class="ph ph-caret-right" aria-hidden="true"></i></button>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
       <p class="slots-title" id="slots-title">Orari liberi</p>
@@ -69,18 +69,18 @@
       <div class="fields">
         <div class="field">
           <label for="c-name">Nome e cognome</label>
-          <input type="text" id="c-name" autocomplete="name" maxlength="80" placeholder="Es. Giulia Bianchi">
+          <input type="text" id="c-name" aria-describedby="err-name" autocomplete="name" maxlength="80" placeholder="Es. Giulia Bianchi">
           <p class="err" id="err-name" role="alert"></p>
         </div>
         <div class="field">
           <label for="c-phone">Telefono</label>
-          <input type="tel" id="c-phone" autocomplete="tel" maxlength="20" inputmode="tel" placeholder="Es. 333 987 6543">
-          <span class="hint">Lo usiamo solo per confermare o spostare l'appuntamento.</span>
+          <input type="tel" id="c-phone" aria-describedby="phone-hint err-phone" autocomplete="tel" maxlength="20" inputmode="tel" placeholder="Es. 333 987 6543">
+          <span class="hint" id="phone-hint">Lo usiamo solo per confermare o spostare l'appuntamento.</span>
           <p class="err" id="err-phone" role="alert"></p>
         </div>
         <div class="hp" aria-hidden="true"><label for="c-website">Lascia vuoto</label><input type="text" id="c-website" tabindex="-1" autocomplete="off"></div>
       </div>
-      <label class="check"><input type="checkbox" id="c-gdpr"><span>Ho letto l'<a href="#" data-click="openLegal">informativa privacy</a> e accetto il trattamento dei dati per la gestione dell'appuntamento.</span></label>
+      <label class="check"><input type="checkbox" id="c-gdpr" aria-describedby="err-gdpr"><span>Ho letto l'<a href="#" data-click="openLegal">informativa privacy</a> e accetto il trattamento dei dati per la gestione dell'appuntamento.</span></label>
       <p class="err" id="err-gdpr" role="alert"></p>
 
       <div class="summary" aria-live="polite">
@@ -88,8 +88,8 @@
         <div class="sum-row"><span>Quando</span><span id="sum-when">Da scegliere</span></div>
         <div class="sum-row sum-total"><span>Totale indicativo</span><span class="num" id="sum-total">€ 0</span></div>
       </div>
-      <div class="book-inline"><button class="btn btn-primary btn-lg book-btn" data-click="submitBooking" data-arg="web"><i class="ph ph-calendar-check"></i>Prenota</button></div>
-      <button class="btn btn-ghost wa-alt" id="btn-wa" data-click="submitBooking" data-arg="wa" hidden><i class="ph ph-whatsapp-logo"></i>Preferisci WhatsApp? Invia la richiesta</button>
+      <div class="book-inline"><button class="btn btn-primary btn-lg book-btn" data-click="submitBooking" data-arg="web"><i class="ph ph-calendar-check" aria-hidden="true"></i>Prenota</button></div>
+      <button class="btn btn-ghost wa-alt" id="btn-wa" data-click="submitBooking" data-arg="wa" hidden><i class="ph ph-whatsapp-logo" aria-hidden="true"></i>Preferisci WhatsApp? Invia la richiesta</button>
     </section>
   </div>
 </main>
@@ -100,14 +100,14 @@
 
 <div class="mobile-bar">
   <div class="bar-info"><strong class="num" id="bar-total">€ 0</strong><span id="bar-when">Scegli servizi e orario</span></div>
-  <button class="btn btn-primary book-btn" data-click="submitBooking" data-arg="web"><i class="ph ph-calendar-check"></i>Prenota</button>
+  <button class="btn btn-primary book-btn" data-click="submitBooking" data-arg="web"><i class="ph ph-calendar-check" aria-hidden="true"></i>Prenota</button>
 </div>
 
 <div class="modal-backdrop" id="legal-modal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="legal-title">
     <div class="modal-head">
       <h2 id="legal-title">Informativa privacy</h2>
-      <button class="btn-icon" data-click="closeModal" data-arg="legal-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="legal-modal" aria-label="Chiudi"><i class="ph ph-x" aria-hidden="true"></i></button>
     </div>
     <div class="legal" id="legal-body"></div>
   </div>
@@ -115,15 +115,15 @@
 
 <div class="modal-backdrop" id="done-modal" data-locked="1">
   <div class="modal done" role="dialog" aria-modal="true" aria-labelledby="done-title">
-    <span class="done-icon"><i class="ph ph-check"></i></span>
+    <span class="done-icon"><i class="ph ph-check" aria-hidden="true"></i></span>
     <h2 id="done-title">Prenotazione confermata</h2>
     <p class="muted" id="done-text"></p>
     <div class="summary" id="done-summary"></div>
     <div class="cal-actions">
-      <a class="btn btn-outline" id="btn-google-cal" rel="noopener"><i class="ph ph-google-logo"></i>Aggiungi su Calendario Google</a>
-      <a class="btn btn-outline" id="btn-apple-cal" rel="noopener"><i class="ph ph-apple-logo"></i><span>Aggiungi su Calendario Apple</span></a>
+      <a class="btn btn-outline" id="btn-google-cal" rel="noopener"><i class="ph ph-google-logo" aria-hidden="true"></i>Aggiungi su Calendario Google</a>
+      <a class="btn btn-outline" id="btn-apple-cal" rel="noopener"><i class="ph ph-apple-logo" aria-hidden="true"></i><span>Aggiungi su Calendario Apple</span></a>
     </div>
-    <a class="btn btn-outline btn-lg" id="done-wa" target="_blank" rel="noopener" hidden><i class="ph ph-whatsapp-logo"></i>Avvisa il salone su WhatsApp</a>
+    <a class="btn btn-outline btn-lg" id="done-wa" target="_blank" rel="noopener" hidden><i class="ph ph-whatsapp-logo" aria-hidden="true"></i>Avvisa il salone su WhatsApp</a>
     <button class="btn btn-primary btn-lg" data-click="reloadPage">Fatto</button>
   </div>
 </div>

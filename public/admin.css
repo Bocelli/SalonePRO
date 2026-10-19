@@ -1,3 +1,4 @@
+html { scroll-padding-top: 80px; } /* keyboard focus never ends up under the sticky top bar */
 .app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100dvh; }
 body:not(.ready) .app, body:not(.ready) .install-banner { visibility: hidden; }
 .boot { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--bg); }
@@ -93,11 +94,17 @@ body.ready .boot { display: none; }
 .offline-bar span { flex: 1; }
 .offline-bar .ph-wifi-slash { font-size: 1.2rem; }
 .mini.clash { border-left-color: var(--danger); }
+.mini.clash .ph-warning-octagon { color: var(--danger); }
 
 /* Day / week / month switch */
 .seg { display: inline-flex; gap: 2px; padding: 3px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-control); }
 .seg button { font: inherit; font-size: .86rem; font-weight: 600; padding: 6px 12px; border: 0; border-radius: 7px; background: none; color: var(--muted); cursor: pointer; }
 .seg button.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgb(24 24 27 / .1); }
+/* Touch: 44px tap areas around small controls, the look does not change (see .btn-sm in base.css) */
+.seg button, .ob-skip, .appt-head button.link, .row-title button.link, .row-title a { position: relative; }
+.seg button::after, .ob-skip::after { content: ''; position: absolute; inset: -6px 0; }
+.ob-skip::after { inset: -8px 0; }
+.appt-head button.link::after, .row-title button.link::after, .row-title a::after { content: ''; position: absolute; inset: -12px -2px; }
 
 /* Breaks and closures */
 .appt.brk { padding-top: 10px; padding-bottom: 10px; background: var(--surface-2); }
@@ -168,15 +175,16 @@ button.link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2p
 .m-more { font-size: .72rem; font-weight: 600; color: var(--accent-text); }
 
 /* Price-list folders + grouped service picker */
+.folder { position: relative; }
 .folder + .folder { border-top: 1px solid var(--border); }
-.folder > summary, .pick-group > summary { list-style: none; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-.folder > summary::-webkit-details-marker, .pick-group > summary::-webkit-details-marker { display: none; }
-.folder > summary { padding: 10px 20px; font-size: .95rem; }
-.folder > summary:hover, .pick-group > summary:hover { background: var(--surface-2); }
+.folder > details > summary, .pick-group > summary { list-style: none; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.folder > details > summary::-webkit-details-marker, .pick-group > summary::-webkit-details-marker { display: none; }
+.folder > details > summary { min-height: 60px; padding: 10px 116px 10px 20px; font-size: .95rem; } /* right: room for the buttons */
+.folder > details > summary:hover, .pick-group > summary:hover { background: var(--surface-2); }
 .folder-caret { color: var(--muted); transition: transform .2s var(--ease); }
 details[open] > summary .folder-caret { transform: rotate(90deg); }
-.folder > summary .ph-folder, .pick-group > summary .ph-folder { color: var(--accent-text); font-size: 1.15rem; }
-.folder-actions { display: flex; gap: 6px; margin-left: auto; }
+.folder > details > summary .ph-folder, .pick-group > summary .ph-folder { color: var(--accent-text); font-size: 1.15rem; }
+.folder-actions { position: absolute; top: 10px; right: 20px; display: flex; gap: 6px; } /* beside the summary, not in it (screen readers skip buttons in a summary); first in the markup for the Tab order */
 .folder .row { padding-left: 54px; }
 .folder-empty { padding: 2px 20px 14px 54px; }
 .pick { display: grid; gap: 8px; max-height: 340px; overflow-y: auto; }
@@ -225,7 +233,7 @@ details[open] > summary .folder-caret { transform: rotate(90deg); }
 .chk { display: inline-flex; align-items: center; gap: 10px; padding-right: 6px; font-size: .9rem; cursor: pointer; }
 .btn.on { background: var(--accent-soft); color: var(--accent-text); }
 .row.client.selected { background: var(--surface-2); }
-.client .sel { align-self: flex-start; margin-top: 11px; } /* level with the avatar */
+.client .sel { display: grid; place-items: center; width: 44px; height: 44px; margin: -2px -13px 0; align-self: flex-start; cursor: pointer; } /* 44px to tap, the checkbox stays level with the avatar */
 .bulk-bar { position: fixed; z-index: 40; left: 16px; right: 16px; bottom: 20px; max-width: 520px; margin-inline: auto; display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px; background: var(--surface); border: 1px solid var(--accent); border-radius: var(--r-surface); box-shadow: var(--shadow); animation: rise .2s var(--ease); }
 .install-banner { position: fixed; z-index: 30; left: 16px; right: 16px; bottom: 20px; max-width: 560px; margin-inline: auto; display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-surface); box-shadow: var(--shadow); animation: rise .3s var(--ease); }
 .install-banner .brand-mark { width: 40px; height: 40px; }
@@ -347,6 +355,7 @@ details[open] > summary .folder-caret { transform: rotate(90deg); }
   .add-body .btn { justify-self: stretch; }
   .offline-bar { padding: 10px 16px; flex-wrap: wrap; }
   .day-tools { flex-wrap: wrap; }
+  html { scroll-padding-bottom: calc(80px + env(safe-area-inset-bottom)); } /* nor under the tab bar */
   .seg { flex-basis: 100%; }
   .seg button { flex: 1; }
   .week-day { min-height: 0; border-bottom: 1px solid var(--border); }
@@ -355,7 +364,9 @@ details[open] > summary .folder-caret { transform: rotate(90deg); }
   .m-pill, .m-more { display: none; }
   .m-num { flex-direction: column; align-items: flex-start; }
   .m-num .badge { padding: 0 6px; }
-  .folder > summary { padding: 10px 16px; }
+  .folder > details > summary { padding: 10px 112px 10px 16px; }
+  .folder-actions { right: 16px; }
+  .panel-head .row-actions { flex-wrap: wrap; flex-shrink: 1; row-gap: 10px; } /* "Nuova cartella" goes on a second line instead of past the screen */
   .folder .row { padding-left: 16px; }
   .folder-empty { padding: 2px 16px 14px; }
   .rem .row-actions { width: 100%; justify-content: flex-end; }

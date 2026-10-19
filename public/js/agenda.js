@@ -37,8 +37,8 @@ function renderWelcome() {
   const low = db.inventory.filter((p) => Number(p.qty) <= Number(p.min)).length;
   const toRecall = recallList(db.clients, db.appointments, today, Number(db.config.recallWeeks ?? 6)).length;
   $('wl-chips').innerHTML = [
-    toRecall && `<a class="btn btn-outline btn-sm" href="/clienti" data-tab="clienti"><i class="ph ph-clock-counter-clockwise"></i>${toRecall} da richiamare</a>`,
-    low && `<a class="btn btn-outline btn-sm" href="/magazzino" data-tab="magazzino"><i class="ph ph-package"></i>${low} da riordinare</a>`,
+    toRecall && `<a class="btn btn-outline btn-sm" href="/clienti" data-tab="clienti"><i class="ph ph-clock-counter-clockwise" aria-hidden="true"></i>${toRecall} da richiamare</a>`,
+    low && `<a class="btn btn-outline btn-sm" href="/magazzino" data-tab="magazzino"><i class="ph ph-package" aria-hidden="true"></i>${low} da riordinare</a>`,
   ].filter(Boolean).join('');
 }
 setInterval(() => { if (loaded) { renderWelcome(); renderReminders(); } }, 60000); // keeps "tra 25 min" and the reminders current, no network
@@ -46,7 +46,10 @@ setInterval(() => { if (loaded) { renderWelcome(); renderReminders(); } }, 60000
 function setQuickDate(offset) { $('agenda-date').value = todayStr(offset); renderAgenda(); }
 function setView(v) {
   view = v;
-  document.querySelectorAll('.seg [data-view]').forEach((b) => b.classList.toggle('active', b.dataset.view === v));
+  document.querySelectorAll('.seg [data-view]').forEach((b) => {
+    b.classList.toggle('active', b.dataset.view === v);
+    b.setAttribute('aria-pressed', b.dataset.view === v);
+  });
   renderAgenda();
 }
 function openDay(ds) { $('agenda-date').value = ds; setView('day'); }
@@ -99,7 +102,7 @@ function renderAgenda() {
   const list = apptsOn(sel);
   if (!list.length) {
     $('agenda-list').innerHTML = empty('ph-calendar-blank', 'Nessun appuntamento', closed ? `Il salone è ${closedText} in questo giorno.` : 'La giornata è libera. Aggiungi un appuntamento o condividi il link di prenotazione.',
-      '<button class="btn btn-primary btn-sm" data-click="openApptModal"><i class="ph ph-plus"></i>Nuovo appuntamento</button>');
+      '<button class="btn btn-primary btn-sm" data-click="openApptModal"><i class="ph ph-plus" aria-hidden="true"></i>Nuovo appuntamento</button>');
     return;
   }
 
@@ -109,35 +112,35 @@ function renderAgenda() {
     if (a.brk) return `
     <div class="appt brk">
       <div class="appt-time num"><strong>${esc(a.time)}</strong><span>${esc(a.end)}</span></div>
-      <p class="brk-label"><i class="ph ph-coffee"></i>Pausa</p>
+      <p class="brk-label"><i class="ph ph-coffee" aria-hidden="true"></i>Pausa</p>
     </div>`;
     const c = findClient(a);
-    const allergy = c && c.allergy && c.allergy.toLowerCase() !== 'nessuna' ? `<span class="badge badge-danger"><i class="ph ph-warning"></i>${esc(c.allergy)}</span>` : '';
+    const allergy = c && c.allergy && c.allergy.toLowerCase() !== 'nessuna' ? `<span class="badge badge-danger"><i class="ph ph-warning" aria-hidden="true"></i>${esc(c.allergy)}</span>` : '';
     const msg = encodeURIComponent(`Ciao ${a.clientName}! Ti confermiamo l'appuntamento presso ${db.config.salonName} per ${dayLabel(a.date)} alle ore ${a.time} (${(a.services || []).join(', ')}). A presto!`);
     const contact = a.phone ? `
-        <a class="btn-icon" href="https://wa.me/${waNumber(a.phone)}?text=${msg}" target="_blank" rel="noopener" data-click="markAttempt" data-id="${a.id}" data-arg="WhatsApp" aria-label="Conferma su WhatsApp" title="WhatsApp"><i class="ph ph-whatsapp-logo"></i></a>
-        <button class="btn-icon" data-click="contactAppt" data-id="${a.id}" aria-label="Avvisa o scrivi alla cliente" title="Avvisa / Scrivi"><i class="ph ph-megaphone"></i></button>` : '';
+        <a class="btn-icon" href="https://wa.me/${waNumber(a.phone)}?text=${msg}" target="_blank" rel="noopener" data-click="markAttempt" data-id="${a.id}" data-arg="WhatsApp" aria-label="Conferma su WhatsApp" title="WhatsApp"><i class="ph ph-whatsapp-logo" aria-hidden="true"></i></a>
+        <button class="btn-icon" data-click="contactAppt" data-id="${a.id}" aria-label="Avvisa o scrivi alla cliente" title="Avvisa / Scrivi"><i class="ph ph-megaphone" aria-hidden="true"></i></button>` : '';
     return `
     <article class="appt">
       <div class="appt-time num"><strong>${esc(a.time)}</strong><span>${addMin(a.time, a.duration || 30)}</span></div>
       <div class="appt-body">
         <div class="appt-head">
           <h3>${c ? `<button class="link" data-click="openClientCard" data-id="${c.id}">${esc(a.clientName)}</button>` : esc(a.clientName)}</h3>
-          ${a.source === 'web' ? '<span class="badge badge-accent"><i class="ph ph-globe-simple"></i>Web</span>' : ''}
-          ${a.reminderSent ? '<span class="badge badge-ok"><i class="ph ph-bell"></i>Avvisata</span>' : ''}
-          ${clashes(list, a).length ? '<span class="badge badge-danger"><i class="ph ph-warning-octagon"></i>Sovrapposto</span>' : ''}
+          ${a.source === 'web' ? '<span class="badge badge-accent"><i class="ph ph-globe-simple" aria-hidden="true"></i>Web</span>' : ''}
+          ${a.reminderSent ? '<span class="badge badge-ok"><i class="ph ph-bell" aria-hidden="true"></i>Avvisata</span>' : ''}
+          ${clashes(list, a).length ? '<span class="badge badge-danger"><i class="ph ph-warning-octagon" aria-hidden="true"></i>Sovrapposto</span>' : ''}
           ${allergy}
         </div>
         <p class="appt-services">${esc((a.services || []).join(' + '))}, ${Number(a.duration) || 30} min</p>
-        ${a.notes ? `<p class="note"><i class="ph ph-note"></i><span>${esc(a.notes)}</span></p>` : ''}
-        ${c && c.formula ? `<p class="note formula"><i class="ph ph-palette"></i><span>${esc(c.formula)}</span></p>` : ''}
+        ${a.notes ? `<p class="note"><i class="ph ph-note" aria-hidden="true"></i><span>${esc(a.notes)}</span></p>` : ''}
+        ${c && c.formula ? `<p class="note formula"><i class="ph ph-palette" aria-hidden="true"></i><span>${esc(c.formula)}</span></p>` : ''}
       </div>
       <div class="appt-side">
         <strong class="num">${euro(a.price)}</strong>
         <div class="actions">
-          <button class="btn-icon" data-click="openApptModal" data-id="${a.id}" aria-label="Modifica" title="Modifica"><i class="ph ph-pencil-simple"></i></button>
+          <button class="btn-icon" data-click="openApptModal" data-id="${a.id}" aria-label="Modifica" title="Modifica"><i class="ph ph-pencil-simple" aria-hidden="true"></i></button>
           ${contact}
-          <button class="btn-icon danger" data-click="deleteAppt" data-id="${a.id}" aria-label="Elimina" title="Elimina"><i class="ph ph-trash"></i></button>
+          <button class="btn-icon danger" data-click="deleteAppt" data-id="${a.id}" aria-label="Elimina" title="Elimina"><i class="ph ph-trash" aria-hidden="true"></i></button>
         </div>
       </div>
     </article>`;
@@ -155,7 +158,7 @@ function renderWeek(days) {
       </button>
       ${list.map((a) => `
         <button class="mini${clashes(list, a).length ? ' clash' : ''}" data-click="openApptModal" data-id="${a.id}">
-          <span class="num">${esc(a.time)}${a.reminderSent ? ' <i class="ph ph-bell" aria-label="avvisata"></i>' : ''}</span>
+          <span class="num">${esc(a.time)}${a.reminderSent ? ' <i class="ph ph-bell" role="img" aria-label="avvisata"></i>' : ''}${clashes(list, a).length ? ' <i class="ph ph-warning-octagon" role="img" aria-label="sovrapposto"></i>' : ''}</span>
           <strong>${esc(a.clientName)}</strong>
           <small>${esc((a.services || []).join(', '))}</small>
         </button>`).join('')}
@@ -205,9 +208,9 @@ function renderReminders() {
       </div>
       <div class="row-actions">
         ${a.phone ? `
-        <a class="btn-icon" href="https://wa.me/${wa}?text=${msg}" target="_blank" rel="noopener" data-click="markAttempt" data-id="${a.id}" data-arg="WhatsApp" aria-label="Promemoria su WhatsApp a ${esc(a.clientName)}"><i class="ph ph-whatsapp-logo"></i></a>
-        <a class="btn-icon" href="sms:+${wa}?body=${msg}" data-click="markAttempt" data-id="${a.id}" data-arg="SMS" aria-label="Promemoria via SMS a ${esc(a.clientName)}"><i class="ph ph-chat-text"></i></a>` : '<span class="muted small">Senza numero</span>'}
-        <button class="btn btn-sm ${a.reminderSent ? 'btn-ghost' : 'btn-outline'}" data-click="toggleReminder" data-id="${a.id}">${a.reminderSent ? 'Da riavvisare' : '<i class="ph ph-check"></i>Avvisata'}</button>
+        <a class="btn-icon" href="https://wa.me/${wa}?text=${msg}" target="_blank" rel="noopener" data-click="markAttempt" data-id="${a.id}" data-arg="WhatsApp" aria-label="Promemoria su WhatsApp a ${esc(a.clientName)}"><i class="ph ph-whatsapp-logo" aria-hidden="true"></i></a>
+        <a class="btn-icon" href="sms:+${wa}?body=${msg}" data-click="markAttempt" data-id="${a.id}" data-arg="SMS" aria-label="Promemoria via SMS a ${esc(a.clientName)}"><i class="ph ph-chat-text" aria-hidden="true"></i></a>` : '<span class="muted small">Senza numero</span>'}
+        <button class="btn btn-sm ${a.reminderSent ? 'btn-ghost' : 'btn-outline'}" data-click="toggleReminder" data-id="${a.id}">${a.reminderSent ? 'Da riavvisare' : '<i class="ph ph-check" aria-hidden="true"></i>Avvisata'}</button>
       </div>
     </div>`;
   }).join('') || '<p class="muted small rem-empty">Tutte le clienti dei prossimi 2 giorni sono avvisate. Tocca "Mostra tutte" per rivederle.</p>';
@@ -274,7 +277,7 @@ function openApptModal(id) {
     if (!items.length) return '';
     return `
     <details class="pick-group" ${items.some((s) => cur.includes(s.name)) ? 'open' : ''}>
-      <summary><i class="ph ph-caret-right folder-caret"></i><i class="ph ph-folder"></i>${esc(f)}<span class="badge badge-accent">${items.length}</span></summary>
+      <summary><i class="ph ph-caret-right folder-caret" aria-hidden="true"></i><i class="ph ph-folder" aria-hidden="true"></i>${esc(f)}<span class="badge badge-accent">${items.length}</span></summary>
       <div class="chips">${items.map((s) => `
         <label class="chip"><input type="checkbox" value="${esc(s.name)}" data-price="${Number(s.price) || 0}" data-dur="${Number(s.duration) || 0}" ${cur.includes(s.name) ? 'checked' : ''} data-change="recalcModal">
           <span>${esc(s.name)}</span><small>${euro(s.price)}</small></label>`).join('')}</div>

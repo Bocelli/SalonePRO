@@ -11,11 +11,11 @@ function renderInventory() {
       </div>
       <div class="row-actions">
         <div class="stepper">
-          <button class="btn-icon" data-click="changeQty" data-id="${p.id}" data-arg="-1" aria-label="Diminuisci"><i class="ph ph-minus"></i></button>
+          <button class="btn-icon" data-click="changeQty" data-id="${p.id}" data-arg="-1" aria-label="Diminuisci"><i class="ph ph-minus" aria-hidden="true"></i></button>
           <output class="num" aria-label="Quantità">${Number(p.qty)}</output>
-          <button class="btn-icon" data-click="changeQty" data-id="${p.id}" data-arg="1" aria-label="Aumenta"><i class="ph ph-plus"></i></button>
+          <button class="btn-icon" data-click="changeQty" data-id="${p.id}" data-arg="1" aria-label="Aumenta"><i class="ph ph-plus" aria-hidden="true"></i></button>
         </div>
-        <button class="btn-icon danger" data-click="deleteProduct" data-id="${p.id}" aria-label="Elimina ${esc(p.name)}"><i class="ph ph-trash"></i></button>
+        <button class="btn-icon danger" data-click="deleteProduct" data-id="${p.id}" aria-label="Elimina ${esc(p.name)}"><i class="ph ph-trash" aria-hidden="true"></i></button>
       </div>
     </div>`).join('') || empty('ph-package', 'Magazzino vuoto', 'Aggiungi tinte, ossigeni e prodotti: ti avviso quando scendono sotto la soglia.');
 }

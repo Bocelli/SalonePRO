@@ -22,42 +22,42 @@
 </head>
 <body>
 <!-- Boot screen: covers the app until we know whether the session is valid, so nothing shows before login -->
-<div class="boot" aria-hidden="true"><span class="brand-mark"><i class="ph ph-scissors"></i></span></div>
+<div class="boot" aria-hidden="true"><span class="brand-mark"><i class="ph ph-scissors" aria-hidden="true"></i></span></div>
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
-      <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors"></i></span>
+      <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors" aria-hidden="true"></i></span>
       <div><strong>Salone PRO</strong><small id="brand-salon">&nbsp;</small></div>
     </div>
     <nav class="nav" aria-label="Sezioni">
-      <a class="nav-item active" href="/" data-tab="agenda"><i class="ph ph-calendar-blank"></i>Agenda</a>
-      <a class="nav-item" href="/listino" data-tab="listino"><i class="ph ph-scissors"></i>Listino servizi</a>
-      <a class="nav-item" href="/clienti" data-tab="clienti"><i class="ph ph-users"></i>Schede clienti</a>
-      <a class="nav-item" href="/magazzino" data-tab="magazzino"><i class="ph ph-package"></i>Magazzino</a>
+      <a class="nav-item active" href="/" data-tab="agenda"><i class="ph ph-calendar-blank" aria-hidden="true"></i>Agenda</a>
+      <a class="nav-item" href="/listino" data-tab="listino"><i class="ph ph-scissors" aria-hidden="true"></i>Listino servizi</a>
+      <a class="nav-item" href="/clienti" data-tab="clienti"><i class="ph ph-users" aria-hidden="true"></i>Schede clienti</a>
+      <a class="nav-item" href="/magazzino" data-tab="magazzino"><i class="ph ph-package" aria-hidden="true"></i>Magazzino</a>
       <div class="nav-sep"></div>
-      <a class="nav-item" href="/prenotazione-web" data-tab="webbooking"><i class="ph ph-globe-simple"></i>Prenotazione web</a>
-      <a class="nav-item" href="/privacy" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</a>
-      <a class="nav-item" href="/impostazioni" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</a>
+      <a class="nav-item" href="/prenotazione-web" data-tab="webbooking"><i class="ph ph-globe-simple" aria-hidden="true"></i>Prenotazione web</a>
+      <a class="nav-item" href="/privacy" data-tab="gdpr"><i class="ph ph-shield-check" aria-hidden="true"></i>Privacy &amp; GDPR</a>
+      <a class="nav-item" href="/impostazioni" data-tab="backup"><i class="ph ph-gear-six" aria-hidden="true"></i>Impostazioni &amp; dati</a>
     </nav>
-    <button class="nav-item nav-bottom" data-click="openNews"><i class="ph ph-sparkle"></i>Novità<span class="app-ver num"></span></button>
+    <button class="nav-item nav-bottom" data-click="openNews"><i class="ph ph-sparkle" aria-hidden="true"></i>Novità<span class="app-ver num"></span></button>
   </aside>
 
   <main class="main">
     <header class="topbar">
       <h1 id="page-title">Agenda</h1>
-      <button class="btn btn-primary" data-click="openApptModal" aria-label="Nuovo appuntamento"><i class="ph ph-plus"></i><span class="hide-sm">Nuovo appuntamento</span></button>
+      <button class="btn btn-primary" data-click="openApptModal" aria-label="Nuovo appuntamento"><i class="ph ph-plus" aria-hidden="true"></i><span class="hide-sm">Nuovo appuntamento</span></button>
     </header>
     <div class="offline-bar" id="offline-bar" role="status" hidden>
-      <i class="ph ph-wifi-slash"></i>
+      <i class="ph ph-wifi-slash" aria-hidden="true"></i>
       <span id="offline-text"></span>
-      <button class="btn btn-outline btn-sm" data-click="reload"><i class="ph ph-arrow-clockwise"></i>Riprova</button>
+      <button class="btn btn-outline btn-sm" data-click="reload"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i>Riprova</button>
     </div>
 
     <div class="content">
       <!-- AGENDA -->
       <section id="tab-agenda" class="section active">
         <div class="welcome">
-          <span class="wl-icon" aria-hidden="true"><i class="ph ph-sun" id="wl-icon"></i></span>
+          <span class="wl-icon" aria-hidden="true"><i class="ph ph-sun" aria-hidden="true" id="wl-icon"></i></span>
           <div class="wl-main">
             <h2 id="wl-hello">&nbsp;</h2>
             <p class="muted" id="wl-today"></p>
@@ -73,20 +73,20 @@
           </div>
           <div class="day-tools">
             <div class="seg" role="group" aria-label="Vista agenda">
-              <button data-view="day" class="active" data-click="setView" data-arg="day">Giorno</button>
-              <button data-view="week" data-click="setView" data-arg="week">Settimana</button>
-              <button data-view="month" data-click="setView" data-arg="month">Mese</button>
+              <button data-view="day" class="active" aria-pressed="true" data-click="setView" data-arg="day">Giorno</button>
+              <button data-view="week" aria-pressed="false" data-click="setView" data-arg="week">Settimana</button>
+              <button data-view="month" aria-pressed="false" data-click="setView" data-arg="month">Mese</button>
             </div>
-            <button class="btn-icon" data-click="shiftPeriod" data-arg="-1" aria-label="Periodo precedente"><i class="ph ph-caret-left"></i></button>
+            <button class="btn-icon" data-click="shiftPeriod" data-arg="-1" aria-label="Periodo precedente"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <button class="btn btn-outline btn-sm" data-click="setQuickDate" data-arg="0">Oggi</button>
-            <button class="btn-icon" data-click="shiftPeriod" data-arg="1" aria-label="Periodo successivo"><i class="ph ph-caret-right"></i></button>
+            <button class="btn-icon" data-click="shiftPeriod" data-arg="1" aria-label="Periodo successivo"><i class="ph ph-caret-right" aria-hidden="true"></i></button>
             <input type="date" id="agenda-date" aria-label="Scegli una data" data-change="renderAgenda">
           </div>
         </div>
 
         <div class="panel" id="reminders" hidden>
           <div class="panel-head">
-            <h3 class="rem-title"><i class="ph ph-bell-ringing"></i>Promemoria prossimi 2 giorni <span class="badge" id="rem-count"></span></h3>
+            <h3 class="rem-title"><i class="ph ph-bell-ringing" aria-hidden="true"></i>Promemoria prossimi 2 giorni <span class="badge" id="rem-count"></span></h3>
             <button class="btn btn-ghost btn-sm" id="rem-toggle" data-click="toggleNotified"></button>
           </div>
           <div id="rem-list"></div>
@@ -100,7 +100,7 @@
         <div class="panel">
           <div class="panel-head">
             <h3 id="agenda-list-title">Appuntamenti del giorno</h3>
-            <button class="btn btn-ghost btn-sm" data-click="openModal" data-arg="import-modal"><i class="ph ph-clipboard-text"></i>Inserisci da messaggio</button>
+            <button class="btn btn-ghost btn-sm" data-click="openModal" data-arg="import-modal"><i class="ph ph-clipboard-text" aria-hidden="true"></i>Inserisci da messaggio</button>
           </div>
           <div id="agenda-list"></div>
         </div>
@@ -109,7 +109,7 @@
       <!-- LISTINO -->
       <section id="tab-listino" class="section">
         <details class="panel add-panel">
-          <summary><i class="ph ph-plus-circle"></i>Aggiungi un servizio in una cartella</summary>
+          <summary><i class="ph ph-plus-circle" aria-hidden="true"></i>Aggiungi un servizio in una cartella</summary>
           <div class="add-body">
             <div class="form-grid">
               <div class="field"><label for="srv-cat">Cartella</label><select id="srv-cat"></select></div>
@@ -117,7 +117,7 @@
               <div class="field"><label for="srv-price">Prezzo (€)</label><input type="number" id="srv-price" placeholder="20" step="0.5" min="0" inputmode="decimal"></div>
               <div class="field"><label for="srv-duration">Durata (minuti)</label><input type="number" id="srv-duration" placeholder="35" step="5" min="5" inputmode="numeric"></div>
             </div>
-            <button class="btn btn-primary" data-click="addService"><i class="ph ph-check"></i>Inserisci nella cartella</button>
+            <button class="btn btn-primary" data-click="addService"><i class="ph ph-check" aria-hidden="true"></i>Inserisci nella cartella</button>
           </div>
         </details>
         <div class="panel">
@@ -126,7 +126,7 @@
             <div class="row-actions">
               <button class="btn btn-ghost btn-sm" data-click="toggleFolders" data-arg="open">Apri tutte</button>
               <button class="btn btn-ghost btn-sm" data-click="toggleFolders" data-arg="close">Chiudi tutte</button>
-              <button class="btn btn-outline btn-sm" data-click="addFolder"><i class="ph ph-folder-plus"></i>Nuova cartella</button>
+              <button class="btn btn-outline btn-sm" data-click="addFolder"><i class="ph ph-folder-plus" aria-hidden="true"></i>Nuova cartella</button>
             </div>
           </div>
           <div id="services-list"></div>
@@ -136,7 +136,7 @@
       <!-- CLIENTI -->
       <section id="tab-clienti" class="section">
         <details class="panel add-panel">
-          <summary><i class="ph ph-plus-circle"></i>Registra una nuova cliente</summary>
+          <summary><i class="ph ph-plus-circle" aria-hidden="true"></i>Registra una nuova cliente</summary>
           <div class="add-body">
             <div class="form-grid">
               <div class="field"><label for="cli-name">Nome e cognome</label><input type="text" id="cli-name" placeholder="Es. Maria Rossi" autocomplete="off"></div>
@@ -148,12 +148,12 @@
               <label><input type="checkbox" id="cli-gdpr-base" checked><span><strong>Consenso GDPR base:</strong> gestione appuntamenti e notifiche di servizio.</span></label>
               <label><input type="checkbox" id="cli-gdpr-health"><span><strong>Consenso allergie/cute (art. 9 GDPR):</strong> necessario per annotare allergie e sensibilità.</span></label>
             </div>
-            <button class="btn btn-primary" data-click="addClient"><i class="ph ph-user-plus"></i>Registra cliente</button>
+            <button class="btn btn-primary" data-click="addClient"><i class="ph ph-user-plus" aria-hidden="true"></i>Registra cliente</button>
           </div>
         </details>
         <div class="panel" id="recall" hidden>
           <div class="panel-head">
-            <h3 class="rem-title"><i class="ph ph-clock-counter-clockwise"></i>Da richiamare <span class="badge badge-warn" id="recall-count"></span></h3>
+            <h3 class="rem-title"><i class="ph ph-clock-counter-clockwise" aria-hidden="true"></i>Da richiamare <span class="badge badge-warn" id="recall-count"></span></h3>
             <span class="muted small" id="recall-hint"></span>
           </div>
           <div id="recall-list"></div>
@@ -161,15 +161,15 @@
         <div class="panel">
           <div class="panel-head">
             <h3 id="cli-count">Archivio clienti</h3>
-            <div class="search"><i class="ph ph-magnifying-glass"></i><input type="search" id="cli-search" placeholder="Cerca per nome o telefono" aria-label="Cerca cliente" data-input="renderClients"></div>
+            <div class="search"><i class="ph ph-magnifying-glass" aria-hidden="true"></i><input type="search" id="cli-search" placeholder="Cerca per nome o telefono" aria-label="Cerca cliente" data-input="renderClients"></div>
           </div>
           <div class="cli-tools">
             <label class="chk"><input type="checkbox" id="cli-all" data-change="selectAllClients"><span>Seleziona tutte</span></label>
-            <button class="btn btn-ghost btn-sm" id="cli-nophone" aria-pressed="false" data-click="toggleNoPhone"><i class="ph ph-phone-x"></i><span></span></button>
+            <button class="btn btn-ghost btn-sm" id="cli-nophone" aria-pressed="false" data-click="toggleNoPhone"><i class="ph ph-phone-x" aria-hidden="true"></i><span></span></button>
             <span class="foot-gap"></span>
-            <button class="btn btn-ghost btn-sm" data-click="pickCsv"><i class="ph ph-upload-simple"></i>Importa CSV</button>
+            <button class="btn btn-ghost btn-sm" data-click="pickCsv"><i class="ph ph-upload-simple" aria-hidden="true"></i>Importa CSV</button>
             <input type="file" id="cli-csv" accept=".csv,text/csv" hidden data-change="importClientsCsv">
-            <button class="btn btn-ghost btn-sm" data-click="exportClientsCsv"><i class="ph ph-download-simple"></i>Esporta CSV</button>
+            <button class="btn btn-ghost btn-sm" data-click="exportClientsCsv"><i class="ph ph-download-simple" aria-hidden="true"></i>Esporta CSV</button>
           </div>
           <div id="clients-list"></div>
         </div>
@@ -177,14 +177,14 @@
           <strong id="cli-bulk-n"></strong>
           <span class="foot-gap"></span>
           <button class="btn btn-ghost btn-sm" data-click="clearClientSel">Annulla</button>
-          <button class="btn btn-danger btn-sm" data-click="deleteSelectedClients"><i class="ph ph-trash"></i>Elimina</button>
+          <button class="btn btn-danger btn-sm" data-click="deleteSelectedClients"><i class="ph ph-trash" aria-hidden="true"></i>Elimina</button>
         </div>
       </section>
 
       <!-- MAGAZZINO -->
       <section id="tab-magazzino" class="section">
         <details class="panel add-panel">
-          <summary><i class="ph ph-plus-circle"></i>Aggiungi un prodotto al magazzino</summary>
+          <summary><i class="ph ph-plus-circle" aria-hidden="true"></i>Aggiungi un prodotto al magazzino</summary>
           <div class="add-body">
             <div class="form-grid">
               <div class="field"><label for="prd-name">Prodotto</label><input type="text" id="prd-name" placeholder="Es. Tinta 7.1 Biondo Cenere"></div>
@@ -200,7 +200,7 @@
               <div class="field"><label for="prd-qty">Quantità attuale</label><input type="number" id="prd-qty" value="3" min="0" inputmode="numeric"></div>
               <div class="field"><label for="prd-min">Soglia minima di avviso</label><input type="number" id="prd-min" value="2" min="0" inputmode="numeric"></div>
             </div>
-            <button class="btn btn-primary" data-click="addProduct"><i class="ph ph-check"></i>Aggiungi al magazzino</button>
+            <button class="btn btn-primary" data-click="addProduct"><i class="ph ph-check" aria-hidden="true"></i>Aggiungi al magazzino</button>
           </div>
         </details>
         <div class="panel">
@@ -217,16 +217,16 @@
             <p class="muted">Condividi il link con le clienti: vedono gli orari liberi in tempo reale e ogni prenotazione arriva subito in agenda.</p>
             <div class="link-row">
               <input id="public-link" readonly aria-label="Link pagina di prenotazione" data-focus="select">
-              <button class="btn btn-primary" data-click="copyLink"><i class="ph ph-copy"></i>Copia link</button>
+              <button class="btn btn-primary" data-click="copyLink"><i class="ph ph-copy" aria-hidden="true"></i>Copia link</button>
             </div>
             <div class="row-wrap">
-              <a class="btn btn-outline" id="share-wa" target="_blank" rel="noopener"><i class="ph ph-whatsapp-logo"></i>Condividi su WhatsApp</a>
-              <a class="btn btn-outline" href="/prenota" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Apri la pagina</a>
+              <a class="btn btn-outline" id="share-wa" target="_blank" rel="noopener"><i class="ph ph-whatsapp-logo" aria-hidden="true"></i>Condividi su WhatsApp</a>
+              <a class="btn btn-outline" href="/prenota" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out" aria-hidden="true"></i>Apri la pagina</a>
             </div>
             <ul class="checks">
-              <li><i class="ph ph-check"></i>Date passate e giorni di chiusura non sono selezionabili.</li>
-              <li><i class="ph ph-check"></i>Gli orari occupati sono bloccati in base alla durata dei servizi scelti.</li>
-              <li><i class="ph ph-check"></i>Chi preferisce può inviarti la richiesta su WhatsApp e tu la inserisci con "Inserisci da messaggio".</li>
+              <li><i class="ph ph-check" aria-hidden="true"></i>Date passate e giorni di chiusura non sono selezionabili.</li>
+              <li><i class="ph ph-check" aria-hidden="true"></i>Gli orari occupati sono bloccati in base alla durata dei servizi scelti.</li>
+              <li><i class="ph ph-check" aria-hidden="true"></i>Chi preferisce può inviarti la richiesta su WhatsApp e tu la inserisci con "Inserisci da messaggio".</li>
             </ul>
           </div>
           <div class="phone-frame">
@@ -243,8 +243,8 @@
           <p class="muted">Seleziona la cliente dopo che ha letto e firmato l'informativa cartacea.</p>
           <div class="row-wrap">
             <select id="gdpr-select-client" aria-label="Cliente" style="max-width:320px"></select>
-            <button class="btn btn-primary" data-click="signClientGdprInSalon"><i class="ph ph-signature"></i>Registra consenso oggi</button>
-            <button class="btn btn-outline" data-click="printPaperGdprForm"><i class="ph ph-printer"></i>Stampa modulo</button>
+            <button class="btn btn-primary" data-click="signClientGdprInSalon"><i class="ph ph-signature" aria-hidden="true"></i>Registra consenso oggi</button>
+            <button class="btn btn-outline" data-click="printPaperGdprForm"><i class="ph ph-printer" aria-hidden="true"></i>Stampa modulo</button>
           </div>
         </div>
         <div class="panel pad">
@@ -281,8 +281,8 @@
             <span class="hint" style="margin-top:2px">Questi giorni non sono prenotabili online.</span>
           </div>
           <div class="row-wrap">
-            <button class="btn btn-primary" data-click="saveConfig"><i class="ph ph-floppy-disk"></i>Salva impostazioni</button>
-            <button class="btn btn-ghost" data-click="openOnboarding"><i class="ph ph-magic-wand"></i>Configurazione guidata</button>
+            <button class="btn btn-primary" data-click="saveConfig"><i class="ph ph-floppy-disk" aria-hidden="true"></i>Salva impostazioni</button>
+            <button class="btn btn-ghost" data-click="openOnboarding"><i class="ph ph-magic-wand" aria-hidden="true"></i>Configurazione guidata</button>
           </div>
         </div>
 
@@ -292,14 +292,14 @@
           <div class="field" style="margin-top:18px">
             <span class="label">Pause di ogni giorno (es. pranzo)</span>
             <div class="ranges" id="cfg-breaks"></div>
-            <button class="btn btn-ghost btn-sm" data-click="addRange" data-arg="breaks"><i class="ph ph-plus"></i>Aggiungi pausa</button>
+            <button class="btn btn-ghost btn-sm" data-click="addRange" data-arg="breaks"><i class="ph ph-plus" aria-hidden="true"></i>Aggiungi pausa</button>
           </div>
           <div class="field" style="margin-top:14px">
             <span class="label">Chiusure (ferie, festivi, corsi)</span>
             <div class="ranges" id="cfg-closures"></div>
-            <button class="btn btn-ghost btn-sm" data-click="addRange" data-arg="closures"><i class="ph ph-plus"></i>Aggiungi chiusura</button>
+            <button class="btn btn-ghost btn-sm" data-click="addRange" data-arg="closures"><i class="ph ph-plus" aria-hidden="true"></i>Aggiungi chiusura</button>
           </div>
-          <div class="row-wrap"><button class="btn btn-primary" data-click="saveClosures"><i class="ph ph-floppy-disk"></i>Salva ferie e pause</button></div>
+          <div class="row-wrap"><button class="btn btn-primary" data-click="saveClosures"><i class="ph ph-floppy-disk" aria-hidden="true"></i>Salva ferie e pause</button></div>
         </div>
 
         <div class="panel pad">
@@ -311,9 +311,9 @@
           </ol>
           <div class="link-row">
             <input id="cal-link" readonly aria-label="Link del calendario" data-focus="select">
-            <button class="btn btn-primary" data-click="copyLink" data-arg="cal-link"><i class="ph ph-copy"></i>Copia link</button>
+            <button class="btn btn-primary" data-click="copyLink" data-arg="cal-link"><i class="ph ph-copy" aria-hidden="true"></i>Copia link</button>
           </div>
-          <div class="row-wrap"><a class="btn btn-outline" id="cal-google" target="_blank" rel="noopener"><i class="ph ph-google-logo"></i>Aggiungi a Google Calendar</a></div>
+          <div class="row-wrap"><a class="btn btn-outline" id="cal-google" target="_blank" rel="noopener"><i class="ph ph-google-logo" aria-hidden="true"></i>Aggiungi a Google Calendar</a></div>
           <p class="muted small" style="margin-top:14px">Il link è segreto: chi lo ha vede nomi e telefoni delle clienti, quindi non condividerlo. Se finisce in mani sbagliate usa "Esci da tutti i dispositivi": il link cambia e va aggiunto di nuovo.</p>
         </div>
 
@@ -321,8 +321,8 @@
           <h3>Backup dei dati</h3>
           <p class="muted">I dati sono nel database online. Scarica comunque un backup ogni tanto.</p>
           <div class="row-wrap">
-            <button class="btn btn-outline" data-click="exportBackup"><i class="ph ph-download-simple"></i>Scarica backup</button>
-            <label class="btn btn-outline"><i class="ph ph-upload-simple"></i>Ripristina da backup<input type="file" accept=".json,application/json" hidden data-change="importBackup"></label>
+            <button class="btn btn-outline" data-click="exportBackup"><i class="ph ph-download-simple" aria-hidden="true"></i>Scarica backup</button>
+            <label class="btn btn-outline"><i class="ph ph-upload-simple" aria-hidden="true"></i>Ripristina da backup<input type="file" accept=".json,application/json" hidden data-change="importBackup"></label>
           </div>
           <p class="hint">Arrivi dalla versione precedente (salone_pro_v6.html)? Aprila sul dispositivo dove la usavi, premi "Scarica Backup" e carica qui il file.</p>
         </div>
@@ -331,8 +331,8 @@
           <h3>Installa l'app</h3>
           <p class="muted" id="install-status">Aggiungi Salone PRO alla schermata Home del tablet, del telefono o del computer: si apre a schermo intero come un'app.</p>
           <div class="row-wrap">
-            <button class="btn btn-primary" data-install hidden data-click="installApp"><i class="ph ph-download-simple"></i>Installa Salone PRO</button>
-            <button class="btn btn-outline" data-click="openInstallGuide"><i class="ph ph-question"></i>Come si installa</button>
+            <button class="btn btn-primary" data-install hidden data-click="installApp"><i class="ph ph-download-simple" aria-hidden="true"></i>Installa Salone PRO</button>
+            <button class="btn btn-outline" data-click="openInstallGuide"><i class="ph ph-question" aria-hidden="true"></i>Come si installa</button>
           </div>
         </div>
 
@@ -341,8 +341,8 @@
           <p class="muted">Gli ultimi problemi su questo dispositivo: salvataggi rifiutati, errori del server e della pagina. Se qualcosa non va, copialo e mandalo a chi ti assiste.</p>
           <div class="err-log" id="err-log"></div>
           <div class="row-wrap">
-            <button class="btn btn-outline btn-sm" data-click="copyErrorLog"><i class="ph ph-copy"></i>Copia</button>
-            <button class="btn btn-ghost btn-sm" data-click="clearErrorLog"><i class="ph ph-trash"></i>Svuota</button>
+            <button class="btn btn-outline btn-sm" data-click="copyErrorLog"><i class="ph ph-copy" aria-hidden="true"></i>Copia</button>
+            <button class="btn btn-ghost btn-sm" data-click="clearErrorLog"><i class="ph ph-trash" aria-hidden="true"></i>Svuota</button>
           </div>
         </div>
 
@@ -350,8 +350,8 @@
           <h3>Sessione</h3>
           <p class="muted">Esci da questo dispositivo. Se perdi un tablet o un telefono, esci da tutti: servirà di nuovo la password ovunque e il link del calendario cambia.</p>
           <div class="row-wrap">
-            <button class="btn btn-outline" data-click="logout"><i class="ph ph-sign-out"></i>Esci</button>
-            <button class="btn btn-danger" data-click="logoutAll"><i class="ph ph-devices"></i>Esci da tutti i dispositivi</button>
+            <button class="btn btn-outline" data-click="logout"><i class="ph ph-sign-out" aria-hidden="true"></i>Esci</button>
+            <button class="btn btn-danger" data-click="logoutAll"><i class="ph ph-devices" aria-hidden="true"></i>Esci da tutti i dispositivi</button>
           </div>
         </div>
       </section>
@@ -359,11 +359,11 @@
   </main>
 
   <nav class="tabbar" aria-label="Sezioni">
-    <a class="tab active" href="/" data-tab="agenda"><i class="ph ph-calendar-blank"></i>Agenda</a>
-    <a class="tab" href="/listino" data-tab="listino"><i class="ph ph-scissors"></i>Listino</a>
-    <a class="tab" href="/clienti" data-tab="clienti"><i class="ph ph-users"></i>Clienti</a>
-    <a class="tab" href="/magazzino" data-tab="magazzino"><i class="ph ph-package"></i>Magazzino</a>
-    <button class="tab" id="more-btn" data-click="openModal" data-arg="more-sheet"><i class="ph ph-dots-three-outline"></i>Altro</button>
+    <a class="tab active" href="/" data-tab="agenda"><i class="ph ph-calendar-blank" aria-hidden="true"></i>Agenda</a>
+    <a class="tab" href="/listino" data-tab="listino"><i class="ph ph-scissors" aria-hidden="true"></i>Listino</a>
+    <a class="tab" href="/clienti" data-tab="clienti"><i class="ph ph-users" aria-hidden="true"></i>Clienti</a>
+    <a class="tab" href="/magazzino" data-tab="magazzino"><i class="ph ph-package" aria-hidden="true"></i>Magazzino</a>
+    <button class="tab" id="more-btn" data-click="openModal" data-arg="more-sheet"><i class="ph ph-dots-three-outline" aria-hidden="true"></i>Altro</button>
   </nav>
 </div>
 
@@ -371,10 +371,10 @@
 <div class="modal-backdrop" id="more-sheet">
   <div class="modal" role="dialog" aria-modal="true" aria-label="Altre sezioni">
     <nav class="nav">
-      <a class="nav-item" href="/prenotazione-web" data-tab="webbooking"><i class="ph ph-globe-simple"></i>Prenotazione web</a>
-      <a class="nav-item" href="/privacy" data-tab="gdpr"><i class="ph ph-shield-check"></i>Privacy &amp; GDPR</a>
-      <a class="nav-item" href="/impostazioni" data-tab="backup"><i class="ph ph-gear-six"></i>Impostazioni &amp; dati</a>
-      <button class="nav-item" data-click="openNews"><i class="ph ph-sparkle"></i>Novità<span class="app-ver num"></span></button>
+      <a class="nav-item" href="/prenotazione-web" data-tab="webbooking"><i class="ph ph-globe-simple" aria-hidden="true"></i>Prenotazione web</a>
+      <a class="nav-item" href="/privacy" data-tab="gdpr"><i class="ph ph-shield-check" aria-hidden="true"></i>Privacy &amp; GDPR</a>
+      <a class="nav-item" href="/impostazioni" data-tab="backup"><i class="ph ph-gear-six" aria-hidden="true"></i>Impostazioni &amp; dati</a>
+      <button class="nav-item" data-click="openNews"><i class="ph ph-sparkle" aria-hidden="true"></i>Novità<span class="app-ver num"></span></button>
     </nav>
   </div>
 </div>
@@ -384,17 +384,17 @@
   <i class="ph ph-bell-ringing" aria-hidden="true"></i>
   <div class="ba-text"><strong id="ba-title"></strong><span id="ba-detail"></span></div>
   <button class="btn btn-primary btn-sm" data-click="showNewBookings">Vedi</button>
-  <button class="btn-icon" data-click="dismissBookings" aria-label="Chiudi avviso"><i class="ph ph-x"></i></button>
+  <button class="btn-icon" data-click="dismissBookings" aria-label="Chiudi avviso"><i class="ph ph-x" aria-hidden="true"></i></button>
 </div>
 
 <div class="install-banner" id="install-banner" role="region" aria-label="Installa l'app" hidden>
-  <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors"></i></span>
+  <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors" aria-hidden="true"></i></span>
   <div class="ib-text">
     <strong>Installa Salone PRO</strong>
     <span id="ib-sub"></span>
   </div>
   <button class="btn btn-primary btn-sm" id="ib-action" data-click="installApp"></button>
-  <button class="btn-icon" data-click="dismissInstall" aria-label="Non ora"><i class="ph ph-x"></i></button>
+  <button class="btn-icon" data-click="dismissInstall" aria-label="Non ora"><i class="ph ph-x" aria-hidden="true"></i></button>
 </div>
 
 <!-- Install guide -->
@@ -402,34 +402,34 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="install-title">
     <div class="modal-head">
       <h2 id="install-title">Come installare l'app</h2>
-      <button class="btn-icon" data-click="closeModal" data-arg="install-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="install-modal" aria-label="Chiudi"><i class="ph ph-x" aria-hidden="true"></i></button>
     </div>
     <p class="muted">Una volta installata, Salone PRO compare tra le tue app e si apre a schermo intero, senza la barra del browser.</p>
-    <button class="btn btn-primary" data-install hidden data-click="installApp" style="margin-top:16px"><i class="ph ph-download-simple"></i>Installa ora</button>
+    <button class="btn btn-primary" data-install hidden data-click="installApp" style="margin-top:16px"><i class="ph ph-download-simple" aria-hidden="true"></i>Installa ora</button>
     <div class="guide">
       <details data-os="ios">
-        <summary><i class="ph ph-device-mobile"></i>iPhone e iPad</summary>
+        <summary><i class="ph ph-device-mobile" aria-hidden="true"></i>iPhone e iPad</summary>
         <ol>
           <li>Apri questo sito con <strong>Safari</strong>.</li>
-          <li>Tocca <span class="key"><i class="ph ph-export"></i>Condividi</span> nella barra in basso (su iPad in alto a destra).</li>
-          <li>Scorri e tocca <span class="key"><i class="ph ph-plus-square"></i>Aggiungi alla schermata Home</span>.</li>
+          <li>Tocca <span class="key"><i class="ph ph-export" aria-hidden="true"></i>Condividi</span> nella barra in basso (su iPad in alto a destra).</li>
+          <li>Scorri e tocca <span class="key"><i class="ph ph-plus-square" aria-hidden="true"></i>Aggiungi alla schermata Home</span>.</li>
           <li>Tocca <strong>Aggiungi</strong> in alto a destra.</li>
         </ol>
       </details>
       <details data-os="android">
-        <summary><i class="ph ph-android-logo"></i>Android</summary>
+        <summary><i class="ph ph-android-logo" aria-hidden="true"></i>Android</summary>
         <ol>
           <li>Apri questo sito con <strong>Chrome</strong>.</li>
-          <li>Tocca il menu <span class="key"><i class="ph ph-dots-three-vertical"></i></span> in alto a destra.</li>
+          <li>Tocca il menu <span class="key"><i class="ph ph-dots-three-vertical" aria-hidden="true"></i></span> in alto a destra.</li>
           <li>Tocca <span class="key">Installa app</span> oppure <span class="key">Aggiungi a schermata Home</span>.</li>
           <li>Conferma con <strong>Installa</strong>.</li>
         </ol>
       </details>
       <details data-os="desktop">
-        <summary><i class="ph ph-desktop"></i>Computer (Chrome o Edge)</summary>
+        <summary><i class="ph ph-desktop" aria-hidden="true"></i>Computer (Chrome o Edge)</summary>
         <ol>
           <li>Apri questo sito con <strong>Chrome</strong> o <strong>Edge</strong>.</li>
-          <li>Clicca l'icona <span class="key"><i class="ph ph-download-simple"></i>Installa</span> a destra nella barra degli indirizzi, oppure cerca "Installa Salone PRO" nel menu del browser.</li>
+          <li>Clicca l'icona <span class="key"><i class="ph ph-download-simple" aria-hidden="true"></i>Installa</span> a destra nella barra degli indirizzi, oppure cerca "Installa Salone PRO" nel menu del browser.</li>
           <li>Conferma con <strong>Installa</strong>: l'app compare nel menu Start o nel Dock.</li>
         </ol>
       </details>
@@ -444,15 +444,15 @@
     <p class="muted small ob-count" id="ob-count"></p>
 
     <section class="ob-step" data-step="0">
-      <span class="brand-mark ob-mark" aria-hidden="true"><i class="ph ph-scissors"></i></span>
+      <span class="brand-mark ob-mark" aria-hidden="true"><i class="ph ph-scissors" aria-hidden="true"></i></span>
       <h2 id="ob-title">Benvenuto in Salone PRO</h2>
       <p class="ob-claim">Gestisci il tuo salone in un click.</p>
       <p class="muted">In un paio di minuti prepariamo tutto: dati del salone, orari, listino e il link di prenotazione per le clienti.</p>
       <ul class="ob-list">
-        <li><i class="ph ph-calendar-check"></i>Agenda a giorno, settimana e mese, con i promemoria delle clienti</li>
-        <li><i class="ph ph-globe-simple"></i>Prenotazioni online che arrivano da sole in agenda</li>
-        <li><i class="ph ph-whatsapp-logo"></i>Conferme e messaggi su WhatsApp con un tocco</li>
-        <li><i class="ph ph-wifi-slash"></i>Funziona anche quando manca internet</li>
+        <li><i class="ph ph-calendar-check" aria-hidden="true"></i>Agenda a giorno, settimana e mese, con i promemoria delle clienti</li>
+        <li><i class="ph ph-globe-simple" aria-hidden="true"></i>Prenotazioni online che arrivano da sole in agenda</li>
+        <li><i class="ph ph-whatsapp-logo" aria-hidden="true"></i>Conferme e messaggi su WhatsApp con un tocco</li>
+        <li><i class="ph ph-wifi-slash" aria-hidden="true"></i>Funziona anche quando manca internet</li>
       </ul>
     </section>
 
@@ -498,16 +498,16 @@
       <p class="muted">Condividi questo link con le clienti: vedono gli orari liberi e prenotano da sole.</p>
       <div class="link-row">
         <input id="ob-link" readonly aria-label="Link pagina di prenotazione" data-focus="select">
-        <button class="btn btn-primary" data-click="copyLink"><i class="ph ph-copy"></i>Copia link</button>
+        <button class="btn btn-primary" data-click="copyLink"><i class="ph ph-copy" aria-hidden="true"></i>Copia link</button>
       </div>
       <div class="row-wrap">
-        <a class="btn btn-outline" id="ob-share" target="_blank" rel="noopener"><i class="ph ph-whatsapp-logo"></i>Condividi su WhatsApp</a>
-        <button class="btn btn-outline" data-click="installApp"><i class="ph ph-download-simple"></i>Installa l'app</button>
+        <a class="btn btn-outline" id="ob-share" target="_blank" rel="noopener"><i class="ph ph-whatsapp-logo" aria-hidden="true"></i>Condividi su WhatsApp</a>
+        <button class="btn btn-outline" data-click="installApp"><i class="ph ph-download-simple" aria-hidden="true"></i>Installa l'app</button>
       </div>
     </section>
 
     <div class="modal-foot">
-      <button class="btn btn-ghost" id="ob-back" data-click="obGo" data-arg="-1"><i class="ph ph-caret-left"></i>Indietro</button>
+      <button class="btn btn-ghost" id="ob-back" data-click="obGo" data-arg="-1"><i class="ph ph-caret-left" aria-hidden="true"></i>Indietro</button>
       <button class="btn btn-primary" id="ob-next" data-click="obGo" data-arg="1"></button>
     </div>
     <button class="ob-skip" id="ob-skip" data-click="obSkip">Lo faccio dopo</button>
@@ -519,7 +519,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="news-title">
     <div class="modal-head">
       <h2 id="news-title">Novità di Salone PRO</h2>
-      <button class="btn-icon" data-click="closeModal" data-arg="news-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="news-modal" aria-label="Chiudi"><i class="ph ph-x" aria-hidden="true"></i></button>
     </div>
     <div class="news" id="news-list"></div>
     <div class="modal-foot"><button class="btn btn-primary" data-click="closeModal" data-arg="news-modal">Ho capito</button></div>
@@ -531,7 +531,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="appt-modal-title">
     <div class="modal-head">
       <h2 id="appt-modal-title">Nuovo appuntamento</h2>
-      <button class="btn-icon" data-click="closeModal" data-arg="appt-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="appt-modal" aria-label="Chiudi"><i class="ph ph-x" aria-hidden="true"></i></button>
     </div>
     <input type="hidden" id="modal-edit-id">
     <div class="form-grid">
@@ -552,7 +552,7 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-outline" data-click="closeModal" data-arg="appt-modal">Annulla</button>
-      <button class="btn btn-primary" data-click="saveAppointment"><i class="ph ph-check"></i>Salva in agenda</button>
+      <button class="btn btn-primary" data-click="saveAppointment"><i class="ph ph-check" aria-hidden="true"></i>Salva in agenda</button>
     </div>
   </div>
 </div>
@@ -562,7 +562,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="contact-title" style="max-width:540px">
     <div class="modal-head">
       <h2 id="contact-title">Avvisa o scrivi alla cliente</h2>
-      <button class="btn-icon" data-click="closeModal" data-arg="contact-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="contact-modal" aria-label="Chiudi"><i class="ph ph-x" aria-hidden="true"></i></button>
     </div>
     <p class="muted" id="contact-who"></p>
     <div class="field" style="margin-top:14px">
@@ -570,8 +570,8 @@
       <textarea id="contact-msg" rows="5"></textarea>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline" data-click="sendContact" data-arg="sms"><i class="ph ph-chat-text"></i>Invia SMS</button>
-      <button class="btn btn-primary" data-click="sendContact" data-arg="wa"><i class="ph ph-whatsapp-logo"></i>Invia su WhatsApp</button>
+      <button class="btn btn-outline" data-click="sendContact" data-arg="sms"><i class="ph ph-chat-text" aria-hidden="true"></i>Invia SMS</button>
+      <button class="btn btn-primary" data-click="sendContact" data-arg="wa"><i class="ph ph-whatsapp-logo" aria-hidden="true"></i>Invia su WhatsApp</button>
     </div>
   </div>
 </div>
@@ -581,7 +581,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cm-title">
     <div class="modal-head">
       <div class="card-who"><span class="avatar" id="cm-avatar" aria-hidden="true"></span><div><h2 id="cm-title"></h2><p class="muted small" id="cm-since"></p></div></div>
-      <button class="btn-icon" data-click="closeModal" data-arg="cli-modal" aria-label="Chiudi" data-autofocus><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="cli-modal" aria-label="Chiudi" data-autofocus><i class="ph ph-x" aria-hidden="true"></i></button>
     </div>
     <input type="hidden" id="cm-id">
     <div class="metrics card-stats" id="cm-stats"></div>
@@ -596,15 +596,15 @@
       <label><input type="checkbox" id="cm-gdpr"><span><strong>Consenso GDPR base:</strong> gestione appuntamenti e notifiche di servizio.</span></label>
       <label><input type="checkbox" id="cm-health"><span><strong>Consenso allergie/cute (art. 9 GDPR):</strong> necessario per annotare allergie e sensibilità.</span></label>
     </div>
-    <h3 class="card-h"><i class="ph ph-images"></i>Foto <span class="muted small" id="cm-photo-info"></span></h3>
+    <h3 class="card-h"><i class="ph ph-images" aria-hidden="true"></i>Foto <span class="muted small" id="cm-photo-info"></span></h3>
     <div class="photos" id="cm-photos"></div>
-    <h3 class="card-h"><i class="ph ph-clock-counter-clockwise"></i>Storico visite</h3>
+    <h3 class="card-h"><i class="ph ph-clock-counter-clockwise" aria-hidden="true"></i>Storico visite</h3>
     <div id="cm-history"></div>
     <div class="modal-foot">
-      <button class="btn btn-danger" data-click="deleteCardClient"><i class="ph ph-trash"></i>Elimina scheda</button>
+      <button class="btn btn-danger" data-click="deleteCardClient"><i class="ph ph-trash" aria-hidden="true"></i>Elimina scheda</button>
       <span class="foot-gap"></span>
       <button class="btn btn-outline" data-click="closeModal" data-arg="cli-modal">Annulla</button>
-      <button class="btn btn-primary" data-click="saveClientCard"><i class="ph ph-check"></i>Salva</button>
+      <button class="btn btn-primary" data-click="saveClientCard"><i class="ph ph-check" aria-hidden="true"></i>Salva</button>
     </div>
   </div>
 </div>
@@ -614,14 +614,14 @@
   <div class="modal photo-view" role="dialog" aria-modal="true" aria-labelledby="pv-date">
     <div class="modal-head">
       <h2 id="pv-date"></h2>
-      <button class="btn-icon" data-click="closePhoto" aria-label="Chiudi" data-autofocus><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closePhoto" aria-label="Chiudi" data-autofocus><i class="ph ph-x" aria-hidden="true"></i></button>
     </div>
     <img id="pv-img" alt="Foto della cliente">
     <div class="field" style="margin-top:14px"><label for="pv-note">Nota sulla foto</label><input type="text" id="pv-note" maxlength="120" placeholder="Es. prima del balayage" data-change="savePhotoNote"></div>
     <div class="modal-foot">
-      <button class="btn btn-danger" data-click="deletePhoto"><i class="ph ph-trash"></i>Elimina foto</button>
+      <button class="btn btn-danger" data-click="deletePhoto"><i class="ph ph-trash" aria-hidden="true"></i>Elimina foto</button>
       <span class="foot-gap"></span>
-      <button class="btn btn-primary" data-click="closePhoto"><i class="ph ph-check"></i>Fatto</button>
+      <button class="btn btn-primary" data-click="closePhoto"><i class="ph ph-check" aria-hidden="true"></i>Fatto</button>
     </div>
   </div>
 </div>
@@ -631,7 +631,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="srv-modal-title" style="max-width:540px">
     <div class="modal-head">
       <h2 id="srv-modal-title">Modifica servizio</h2>
-      <button class="btn-icon" data-click="closeModal" data-arg="srv-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="srv-modal" aria-label="Chiudi"><i class="ph ph-x" aria-hidden="true"></i></button>
     </div>
     <input type="hidden" id="srv-edit-id">
     <div class="form-grid">
@@ -642,7 +642,7 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-outline" data-click="closeModal" data-arg="srv-modal">Annulla</button>
-      <button class="btn btn-primary" data-click="saveServiceEdit"><i class="ph ph-check"></i>Salva</button>
+      <button class="btn btn-primary" data-click="saveServiceEdit"><i class="ph ph-check" aria-hidden="true"></i>Salva</button>
     </div>
   </div>
 </div>
@@ -652,7 +652,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
     <div class="modal-head">
       <h2 id="import-title">Inserisci da messaggio</h2>
-      <button class="btn-icon" data-click="closeModal" data-arg="import-modal" aria-label="Chiudi"><i class="ph ph-x"></i></button>
+      <button class="btn-icon" data-click="closeModal" data-arg="import-modal" aria-label="Chiudi"><i class="ph ph-x" aria-hidden="true"></i></button>
     </div>
     <div class="field">
       <label for="import-text">Incolla il messaggio di prenotazione ricevuto su WhatsApp</label>
@@ -660,7 +660,7 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-outline" data-click="closeModal" data-arg="import-modal">Annulla</button>
-      <button class="btn btn-primary" data-click="parseBookingString"><i class="ph ph-lightning"></i>Inserisci in agenda</button>
+      <button class="btn btn-primary" data-click="parseBookingString"><i class="ph ph-lightning" aria-hidden="true"></i>Inserisci in agenda</button>
     </div>
   </div>
 </div>
@@ -668,15 +668,15 @@
 <!-- Setup missing on Vercel (database or password): explains what to do instead of an error -->
 <div class="modal-backdrop" id="setup" data-locked="1">
   <div class="modal setup-card" role="dialog" aria-modal="true" aria-labelledby="setup-title">
-    <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors"></i></span>
+    <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors" aria-hidden="true"></i></span>
     <div>
       <h2 id="setup-title"></h2>
       <p class="muted" id="setup-text"></p>
     </div>
     <ol class="setup-steps" id="setup-steps"></ol>
     <div class="modal-foot">
-      <a class="btn btn-outline" href="https://vercel.com/dashboard" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Apri Vercel</a>
-      <button class="btn btn-primary" data-click="reloadPage"><i class="ph ph-arrow-clockwise"></i>Ho fatto, riprova</button>
+      <a class="btn btn-outline" href="https://vercel.com/dashboard" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out" aria-hidden="true"></i>Apri Vercel</a>
+      <button class="btn btn-primary" data-click="reloadPage"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i>Ho fatto, riprova</button>
     </div>
   </div>
 </div>
@@ -684,7 +684,7 @@
 <!-- Login -->
 <div class="modal-backdrop" id="login" data-locked="1">
   <form class="modal login-card" data-submit="login">
-    <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors"></i></span>
+    <span class="brand-mark" aria-hidden="true"><i class="ph ph-scissors" aria-hidden="true"></i></span>
     <div>
       <h2>Salone PRO</h2>
       <p class="muted">Area riservata al salone</p>

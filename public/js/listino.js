@@ -12,23 +12,25 @@ function renderServices() {
   $('services-list').innerHTML = list.map((f, i) => {
     const items = db.services.filter((s) => catOf(s) === f);
     return `
-    <details class="folder" data-f="${esc(f)}" ${openFolders[f] ?? true ? 'open' : ''} data-toggle="rememberFolder">
+    <div class="folder">
+    <span class="folder-actions">
+      <button class="btn-icon" data-click="renameFolder" data-id="${i}" aria-label="Rinomina cartella ${esc(f)}"><i class="ph ph-pencil-simple" aria-hidden="true"></i></button>
+      <button class="btn-icon danger" data-click="deleteFolder" data-id="${i}" aria-label="Elimina cartella ${esc(f)}"><i class="ph ph-trash" aria-hidden="true"></i></button>
+    </span>
+    <details data-f="${esc(f)}" ${openFolders[f] ?? true ? 'open' : ''} data-toggle="rememberFolder">
       <summary>
-        <i class="ph ph-caret-right folder-caret"></i><i class="ph ph-folder"></i><strong>${esc(f)}</strong>
+        <i class="ph ph-caret-right folder-caret" aria-hidden="true"></i><i class="ph ph-folder" aria-hidden="true"></i><strong>${esc(f)}</strong>
         <span class="badge badge-accent">${items.length}</span>
-        <span class="folder-actions">
-          <button class="btn-icon" data-click="renameFolder" data-id="${i}" aria-label="Rinomina cartella ${esc(f)}"><i class="ph ph-pencil-simple"></i></button>
-          <button class="btn-icon danger" data-click="deleteFolder" data-id="${i}" aria-label="Elimina cartella ${esc(f)}"><i class="ph ph-trash"></i></button>
-        </span>
       </summary>
       ${items.map((s) => `
         <div class="row">
-          <div class="row-main"><strong>${esc(s.name)}</strong><span class="row-sub"><i class="ph ph-clock"></i>${Number(s.duration) || 0} min</span></div>
+          <div class="row-main"><strong>${esc(s.name)}</strong><span class="row-sub"><i class="ph ph-clock" aria-hidden="true"></i>${Number(s.duration) || 0} min</span></div>
           <strong class="num">${euro(s.price)}</strong>
-          <button class="btn-icon" data-click="editService" data-id="${s.id}" aria-label="Modifica ${esc(s.name)}"><i class="ph ph-pencil-simple"></i></button>
-          <button class="btn-icon danger" data-click="deleteService" data-id="${s.id}" aria-label="Elimina ${esc(s.name)}"><i class="ph ph-trash"></i></button>
+          <button class="btn-icon" data-click="editService" data-id="${s.id}" aria-label="Modifica ${esc(s.name)}"><i class="ph ph-pencil-simple" aria-hidden="true"></i></button>
+          <button class="btn-icon danger" data-click="deleteService" data-id="${s.id}" aria-label="Elimina ${esc(s.name)}"><i class="ph ph-trash" aria-hidden="true"></i></button>
         </div>`).join('') || '<p class="muted small folder-empty">Cartella vuota: aggiungi un servizio con il modulo qui sopra.</p>'}
-    </details>`;
+    </details>
+    </div>`;
   }).join('') || empty('ph-folder-plus', 'Listino vuoto', 'Crea una cartella (es. PIEGA) e aggiungi i servizi: compariranno subito nella pagina di prenotazione.');
 }
 
@@ -123,9 +125,8 @@ function deleteService(id) {
 Object.assign(actions.click, {
   addService, addFolder, saveServiceEdit,
   toggleFolders: (el) => toggleFolders(el.dataset.arg === 'open'),
-  // preventDefault: the buttons sit in the folder's <summary>, a click must not open or close it
-  renameFolder: (el, e) => { e.preventDefault(); renameFolder(Number(el.dataset.id)); },
-  deleteFolder: (el, e) => { e.preventDefault(); deleteFolder(Number(el.dataset.id)); },
+  renameFolder: (el) => renameFolder(Number(el.dataset.id)),
+  deleteFolder: (el) => deleteFolder(Number(el.dataset.id)),
   editService: (el) => editService(Number(el.dataset.id)),
   deleteService: (el) => deleteService(Number(el.dataset.id)),
 });

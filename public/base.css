@@ -94,6 +94,7 @@ textarea { resize: vertical; min-height: 72px; }
 input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 input[type="checkbox"] { width: 18px; height: 18px; min-height: 0; accent-color: var(--accent); flex-shrink: 0; }
+input[type="checkbox"]:focus-visible { box-shadow: none; outline: 2px solid var(--accent); outline-offset: 2px; } /* the soft ring is too faint on a checkbox */
 
 /* Buttons */
 .btn {
@@ -141,6 +142,11 @@ input[type="checkbox"] { width: 18px; height: 18px; min-height: 0; accent-color:
 .btn-icon:hover { background: var(--surface-2); }
 .btn-icon:active { transform: scale(.96); }
 .btn-icon.danger { color: var(--danger); }
+/* Touch: at least 44px to tap without changing the look, the tap area grows outside the visible box
+   (insets start inside the 1px border: 36px + 2 x 4px, 40px + 2 x 2px) */
+.btn-sm, .btn-icon { position: relative; }
+.btn-sm::after, .btn-icon::after { content: ''; position: absolute; inset: -5px 0; }
+.btn-icon::after { inset: -3px; }
 
 /* Badges */
 .badge {
