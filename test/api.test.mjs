@@ -258,3 +258,15 @@ test('calendar feed: secret link, Italian time, escaped text, revoked by logout-
   assert.equal((await call(login, { method: 'DELETE', query: { all: '1' }, cookie: fresh })).status, 200);
   assert.equal((await call(calendar, { query: { k: token } })).status, 401, 'old link stops working');
 });
+
+test('booking page: calendar file for the client, built from the price list', async () => {
+  assert.equal((await call(pub, { query: { ics: '1', date: wed, time: '25:00', s: '4' } })).status, 400);
+  assert.equal((await call(pub, { query: { ics: '1', date: wed, time: '10:00', s: '999' } })).status, 400); // unknown service
+  const r = await call(pub, { query: { ics: '1', date: wed, time: '10:00', s: '1,999' } }); // the v9 restore left only "Piega Classica"
+  assert.equal(r.status, 200);
+  assert.match(r.headers['content-type'], /text\/calendar/);
+  const body = r.body.replace(/\r\n /g, '');
+  assert.ok(body.includes(`DTEND;TZID=Europe/Rome:${wed.replace(/-/g, '')}T103000`)); // 30 min from the price list
+  assert.ok(body.includes('SUMMARY:Piega Classica da '));
+  assert.ok(!body.includes('X-WR-CALNAME'), 'a single event, not a calendar to subscribe');
+});

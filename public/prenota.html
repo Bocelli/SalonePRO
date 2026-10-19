@@ -103,6 +103,7 @@
   .done { text-align: center; display: grid; gap: 10px; justify-items: center; }
   .done-icon { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 999px; background: var(--ok-soft); color: var(--ok); font-size: 2rem; }
   .done .summary { width: 100%; text-align: left; margin: 8px 0; }
+  .alt-link { font-size: .88rem; color: var(--muted); margin-bottom: 6px; }
   .down { padding: 48px 22px; text-align: center; display: grid; gap: 8px; justify-items: center; }
   .down .ph { font-size: 2rem; color: var(--muted); }
 
@@ -211,8 +212,10 @@
     <h2 id="done-title">Prenotazione confermata</h2>
     <p class="muted" id="done-text"></p>
     <div class="summary" id="done-summary"></div>
+    <a class="btn btn-primary btn-lg" id="done-cal" rel="noopener"><i class="ph ph-calendar-plus"></i>Aggiungi al calendario</a>
+    <a class="alt-link" id="done-cal-alt" rel="noopener"></a>
     <a class="btn btn-outline btn-lg" id="done-wa" target="_blank" rel="noopener" hidden><i class="ph ph-whatsapp-logo"></i>Avvisa il salone su WhatsApp</a>
-    <button class="btn btn-primary btn-lg" onclick="location.reload()">Fatto</button>
+    <button class="btn btn-outline btn-lg" onclick="location.reload()">Fatto</button>
   </div>
 </div>
 
@@ -439,6 +442,17 @@
       const note = `Ciao! Sono ${name}, ho appena prenotato online ${list.map((s) => s.name).join(' + ')} per ${dayLabel(selDate)} alle ${selTime}. A presto!`;
       $('done-wa').href = 'https://wa.me/' + waNumber(cfg.ownerPhone) + '?text=' + encodeURIComponent(note);
       $('done-wa').hidden = !cfg.ownerPhone;
+      // iPhone and Mac open the .ics file straight in Calendar; Android and the rest get Google Calendar, with the file as a fallback.
+      const names = list.map((s) => s.name).join(' + ');
+      const ics = `/api/public?ics=1&date=${selDate}&time=${selTime}&s=${list.map((s) => s.id).join(',')}`;
+      const at = (t) => `${selDate.replace(/-/g, '')}T${t.replace(':', '')}00`;
+      const google = 'https://calendar.google.com/calendar/render?' + new URLSearchParams({
+        action: 'TEMPLATE', text: `${names} da ${cfg.salonName}`, dates: `${at(selTime)}/${at(d.appointment.end)}`, ctz: 'Europe/Rome',
+        location: cfg.address || '', details: `Prenotazione da ${cfg.salonName}: ${names}.${cfg.ownerPhone ? ` Per spostarla o annullarla: ${cfg.ownerPhone}` : ''}`,
+      });
+      const apple = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
+      Object.assign($('done-cal'), { href: apple ? ics : google, target: apple ? '' : '_blank' });
+      Object.assign($('done-cal-alt'), { href: apple ? google : ics, target: apple ? '_blank' : '', textContent: apple ? 'Usi Google Calendar?' : 'Usi un altro calendario? Scarica il file' });
       openModal('done-modal');
     } catch {
       toast('Connessione assente, riprova', 'error');

@@ -78,7 +78,35 @@ export function withEnd(a, services = []) {
   return a;
 }
 
-const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+export const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+// Booking length: sum of the chosen services, or one slot.
+export const durationOf = (chosen, config) => chosen.reduce((s, x) => s + (Number(x.duration) || 0), 0) || Number(config.slotMinutes) || 30;
+
+// iCalendar file for calendar apps (iPhone, Google, Outlook), in Italian time.
+// events: [{ uid, date, time, end, summary, description?, location? }]
+const VTIMEZONE = [ // summer time from the last Sunday of March to the last Sunday of October
+  'BEGIN:VTIMEZONE', 'TZID:Europe/Rome',
+  'BEGIN:DAYLIGHT', 'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0200', 'TZNAME:CEST', 'DTSTART:19700329T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU', 'END:DAYLIGHT',
+  'BEGIN:STANDARD', 'TZOFFSETFROM:+0200', 'TZOFFSETTO:+0100', 'TZNAME:CET', 'DTSTART:19701025T030000', 'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU', 'END:STANDARD',
+  'END:VTIMEZONE',
+];
+const icsText = (s) => String(s || '').replace(/[\\;,]/g, (c) => '\\' + c).replace(/\r?\n/g, '\\n');
+const icsAt = (date, time) => `${date.replace(/-/g, '')}T${time.replace(':', '')}00`;
+export function icsFile(name, events) {
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
+  const lines = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Salone PRO//IT', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    ...(name ? [`X-WR-CALNAME:${icsText(name)}`, 'X-WR-TIMEZONE:Europe/Rome'] : []), ...VTIMEZONE,
+    ...events.flatMap((e) => [
+      'BEGIN:VEVENT', `UID:${e.uid}`, `DTSTAMP:${stamp}`,
+      `DTSTART;TZID=Europe/Rome:${icsAt(e.date, e.time)}`, `DTEND;TZID=Europe/Rome:${icsAt(e.date, e.end)}`,
+      `SUMMARY:${icsText(e.summary)}`, e.description && `DESCRIPTION:${icsText(e.description)}`, e.location && `LOCATION:${icsText(e.location)}`,
+      'END:VEVENT',
+    ].filter(Boolean)),
+    'END:VCALENDAR',
+  ];
+  return lines.map((l) => l.match(/.{1,74}/gu).join('\r\n ')).join('\r\n') + '\r\n'; // long lines continue after a space
+}
 export const DAY = /^\d{4}-\d{2}-\d{2}$/;
 // Closure covering a YYYY-MM-DD date, if any (string compare works on ISO dates).
 export const closureOn = (config, date) => (config.closures || []).find((x) => date >= x.from && date <= x.to);

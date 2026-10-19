@@ -1,4 +1,4 @@
-import { handle, fail, db, addMin, romeNow, limit, hit, clientIp, closureOn, DAY, DEFAULT_CONFIG } from './_lib.js';
+import { handle, fail, db, addMin, romeNow, limit, hit, clientIp, closureOn, durationOf, icsFile, DAY, HHMM, DEFAULT_CONFIG } from './_lib.js';
 
 const PUBLIC_CONFIG = ['salonName', 'ownerName', 'address', 'vat', 'email', 'ownerPhone', 'openTime', 'closeTime', 'slotMinutes', 'closedDays', 'serviceFolders', 'breaks', 'closures'];
 const pick = (o, keys) => Object.fromEntries(keys.map((k) => [k, o[k]]));
@@ -16,6 +16,23 @@ export default handle(async (req, res) => {
   const sql = await db();
   const { config, services } = await loadSalon(sql);
   const now = romeNow();
+
+  // "Aggiungi al calendario" after booking (iPhone opens it straight in Calendar). Only date, time and service ids
+  // travel in the link, never the client's name or phone; the event text is built here from the price list.
+  if (req.method === 'GET' && req.query.ics !== undefined) {
+    const { date, time } = req.query;
+    const ids = String(req.query.s || '').split(',').map(Number);
+    const chosen = services.filter((s) => ids.includes(s.id));
+    if (!DAY.test(date) || !HHMM.test(time) || !chosen.length) fail(400, 'Dati non validi');
+    const names = chosen.map((s) => s.name).join(' + ');
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', 'inline; filename="appuntamento.ics"');
+    return res.send(icsFile(null, [{
+      uid: `${date}T${time}-${chosen.map((s) => s.id).join('-')}@salone-pro`, date, time, end: addMin(time, durationOf(chosen, config)),
+      summary: `${names} da ${config.salonName}`, location: config.address,
+      description: `Prenotazione da ${config.salonName}: ${names}.${config.ownerPhone ? `\nPer spostarla o annullarla: ${config.ownerPhone}` : ''}`,
+    }]));
+  }
 
   if (req.method === 'GET') {
     const date = String(req.query.date || '');
@@ -59,7 +76,7 @@ export default handle(async (req, res) => {
   const closure = closureOn(config, date);
   if (closure) fail(400, `Il salone è chiuso in questo periodo${closure.note ? ` (${closure.note})` : ''}`);
 
-  const duration = chosen.reduce((s, x) => s + (Number(x.duration) || 0), 0) || Number(config.slotMinutes) || 30;
+  const duration = durationOf(chosen, config);
   const end = addMin(time, duration);
   if (time < config.openTime || end > config.closeTime) fail(400, "L'orario scelto è fuori dall'apertura del salone");
   if (config.breaks.some((x) => time < x.to && x.from < end)) fail(400, "L'orario scelto cade nella pausa del salone");
