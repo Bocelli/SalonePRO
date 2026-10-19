@@ -7,6 +7,7 @@ const endOf = (a) => addMin(a.time, Number(a.duration) || 30);
 const clashes = (list, a) => list.filter((b) => b.id !== a.id && b.date === a.date && a.time < endOf(b) && b.time < endOf(a));
 
 // Re-applies a queued change to a fresh data snapshot, so changes still waiting to be sent stay visible.
+// A change holds one `item`/`id` or many `items`/`ids` (CSV import, bulk delete).
 function applyOp(data, op) {
   if (op.col === 'config') {
     if (op.method === 'PUT') data.config = { ...data.config, ...op.item };
@@ -14,10 +15,15 @@ function applyOp(data, op) {
   }
   const list = data[op.col];
   if (!list) return data;
-  const i = list.findIndex((x) => x.id === (op.method === 'PUT' ? op.item.id : op.id));
   if (op.method === 'DELETE') {
-    if (i >= 0) list.splice(i, 1);
-  } else if (i >= 0) list[i] = op.item;
-  else list.push(op.item);
+    const gone = new Set(op.ids || [op.id]);
+    data[op.col] = list.filter((x) => !gone.has(x.id));
+    return data;
+  }
+  for (const item of op.items || [op.item]) {
+    const i = list.findIndex((x) => x.id === item.id);
+    if (i >= 0) list[i] = item;
+    else list.push(item);
+  }
   return data;
 }

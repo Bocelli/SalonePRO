@@ -55,6 +55,10 @@
 .ph.ph-user-plus:before { content: "\e4d0"; }
 .ph.ph-clock-counter-clockwise:before { content: "\e1a0"; }
 .ph.ph-magnifying-glass:before { content: "\e30c"; }
+.ph.ph-phone-x:before { content: "\e3c4"; }
+.ph.ph-upload-simple:before { content: "\e4c0"; }
+.ph.ph-download-simple:before { content: "\e20c"; }
+.ph.ph-trash:before { content: "\e4a6"; }
 .ph.ph-copy:before { content: "\e1ca"; }
 .ph.ph-whatsapp-logo:before { content: "\e5d0"; }
 .ph.ph-arrow-square-out:before { content: "\e5de"; }
@@ -63,8 +67,6 @@
 .ph.ph-floppy-disk:before { content: "\e248"; }
 .ph.ph-magic-wand:before { content: "\e6b6"; }
 .ph.ph-google-logo:before { content: "\e292"; }
-.ph.ph-download-simple:before { content: "\e20c"; }
-.ph.ph-upload-simple:before { content: "\e4c0"; }
 .ph.ph-question:before { content: "\e3e8"; }
 .ph.ph-sign-out:before { content: "\e42a"; }
 .ph.ph-devices:before { content: "\eba4"; }
@@ -79,9 +81,11 @@
 .ph.ph-calendar-check:before { content: "\e712"; }
 .ph.ph-chat-text:before { content: "\e17a"; }
 .ph.ph-images:before { content: "\e836"; }
-.ph.ph-trash:before { content: "\e4a6"; }
 .ph.ph-lightning:before { content: "\e2de"; }
 .ph.ph-cloud-slash:before { content: "\e1b6"; }
+.ph.ph-file-csv:before { content: "\eb1c"; }
+.ph.ph-check-square:before { content: "\e186"; }
+.ph.ph-bug:before { content: "\e5f4"; }
 .ph.ph-calendar-plus:before { content: "\e714"; }
 .ph.ph-clock:before { content: "\e19a"; }
 .ph.ph-wifi-high:before { content: "\e4ea"; }
@@ -103,6 +107,7 @@
 .ph.ph-note:before { content: "\e348"; }
 .ph.ph-palette:before { content: "\e6c8"; }
 .ph.ph-shield-warning:before { content: "\e412"; }
+.ph.ph-phone:before { content: "\e3b8"; }
 .ph.ph-minus:before { content: "\e32a"; }
 .ph.ph-map-pin:before { content: "\e316"; }
 .ph.ph-calendar-x:before { content: "\e10c"; }

@@ -21,6 +21,13 @@ test('applyOp replays queued changes on a fresh snapshot', () => {
   assert.equal(data.appointments.length, 2);
 });
 
+test('applyOp replays bulk changes (CSV import, bulk delete)', () => {
+  const data = { clients: [{ id: 1, name: 'A' }, { id: 2, name: 'B' }, { id: 3, name: 'C' }] };
+  applyOp(data, { method: 'PUT', col: 'clients', items: [{ id: 2, name: 'B2' }, { id: 4, name: 'D' }] });
+  applyOp(data, { method: 'DELETE', col: 'clients', ids: [1, 3, 99] });
+  assert.equal(JSON.stringify(data.clients.map((c) => c.name)), JSON.stringify(['B2', 'D']));
+});
+
 test('clashes finds overlaps on the same day only', () => {
   const list = [
     { id: 1, date: '2026-10-20', time: '10:00', duration: 90 }, // 10:00-11:30

@@ -46,6 +46,8 @@ Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel 
 **Clienti e listino**
 - Scheda cliente con formule colore, note, allergie (con consenso art. 9 GDPR), consenso privacy, spesa totale e storico delle visite.
 - Foto nella scheda (prima e dopo, colore), ridotte a 480p sul dispositivo: circa 50 KB l'una.
+- Importa ed esporta le clienti in CSV (Excel): riconosce il nostro formato, le liste "Nome; Cognome; Telefono" e i contatti Google, e salta le clienti già presenti.
+- Selezione multipla ed eliminazione in blocco, con il filtro "Senza telefono" per fare pulizia.
 - Lista "Da richiamare": chi non viene da N settimane e non ha appuntamenti, con messaggio WhatsApp già scritto.
 - Listino a cartelle (PIEGA, TAGLIO, COLORE...) da creare, rinominare ed eliminare; servizi modificabili.
 - Magazzino con soglia minima e avviso dei prodotti da riordinare.
@@ -110,6 +112,7 @@ public/            gestionale (index.html), prenotazione (prenota.html), stili, 
   common.js        funzioni condivise (date, euro, WhatsApp, informativa privacy)
   offline.js       logica offline: coda delle modifiche e sovrapposizioni
   history.js       storico visite e lista "Da richiamare"
+  csv.js           import ed export delle clienti in CSV
   sw.js            service worker: pagine dalla rete, cache come riserva
 api/               funzioni serverless (sessione, dati del gestionale, prenotazioni pubbliche, calendario)
 test/              test delle API, della logica offline e dello storico (npm test)
@@ -182,6 +185,7 @@ La versione originale (`legacy/salone_pro_v6.html`, e la successiva v9) salvava 
 - Offline, due dispositivi che modificano la stessa voce si sovrascrivono: vale l'ultima modifica inviata.
 - Le icone sono ridotte a quelle usate: aggiungendo una nuova icona (`ph-...`) va rigenerato `public/vendor/phosphor.*`.
 - Google Calendar rilegge il link del calendario quando vuole, di solito ogni qualche ora: non è in tempo reale.
+- Il registro errori (Impostazioni) è per dispositivo: ogni tablet o telefono vede i suoi. Gli errori del server completi sono nei log di Vercel.
 - Le foto non sono nel file di backup: restano solo nel database Neon (0,5 GB gratuiti, qualche migliaio di foto).
 - L'informativa privacy è un modello generico: va fatta verificare prima di affidarcisi.
 - Il piano Hobby di Vercel è per uso non commerciale: per un'attività serve il piano Pro.

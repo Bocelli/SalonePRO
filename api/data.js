@@ -49,26 +49,34 @@ export default handle(async (req, res) => {
   }
 
   if (req.method === 'PUT') {
-    const { col, item } = req.body || {};
-    if (![...COLS, 'photos'].includes(col) || typeof item !== 'object' || !Number.isSafeInteger(item?.id)) fail(400, 'Dati non validi');
+    const { col, item, items } = req.body || {};
+    const list = items === undefined ? [item] : items; // `items`: many at once (CSV import), never config or photos
+    if (![...COLS, 'photos'].includes(col) || !Array.isArray(list) || !list.length || list.length > 1000
+      || (items !== undefined && (col === 'config' || col === 'photos'))
+      || list.some((x) => typeof x !== 'object' || !Number.isSafeInteger(x?.id)) || new Set(list.map((x) => x.id)).size < list.length) {
+      fail(400, 'Dati non validi');
+    }
     if (col === 'photos') {
       const [{ n }] = await sql`SELECT count(*)::int AS n FROM docs WHERE col = 'photos' AND data->>'clientId' = ${String(item.clientId)} AND id <> ${item.id}`;
       if (n >= PHOTOS_PER_CLIENT) fail(400, `Massimo ${PHOTOS_PER_CLIENT} foto per cliente: eliminane qualcuna`);
     }
-    const data = col === 'config' ? checkConfig({ ...DEFAULT_CONFIG, ...item, id: 1 })
-      : col === 'appointments' ? withEnd(item) : col === 'photos' ? checkPhoto(item) : item;
-    await sql`INSERT INTO docs (col, id, data) VALUES (${col}, ${data.id}, ${JSON.stringify(data)}::jsonb)
+    const data = list.map((x) => (col === 'config' ? checkConfig({ ...DEFAULT_CONFIG, ...x, id: 1 })
+      : col === 'appointments' ? withEnd(x) : col === 'photos' ? checkPhoto(x) : x));
+    await sql`INSERT INTO docs (col, id, data)
+              SELECT ${col}, (r->>'id')::bigint, r FROM jsonb_array_elements(${JSON.stringify(data)}::jsonb) r
               ON CONFLICT (col, id) DO UPDATE SET data = EXCLUDED.data`;
-    return res.json({ ok: true, item: data });
+    return res.json({ ok: true, item: data[0], count: data.length });
   }
 
   if (req.method === 'DELETE') {
-    const { col, id } = req.query;
-    if (![...COLS, 'photos'].includes(col) || col === 'config' || !Number.isSafeInteger(Number(id))) fail(400, 'Dati non validi');
-    // Deleting a client card also deletes their photos (this also works for deletes queued offline).
+    const { col, id, ids } = req.query;
+    const raw = String(ids ?? id ?? ''), list = raw.split(',').map(Number); // `ids`: bulk delete, comma separated in the URL
+    if (![...COLS, 'photos'].includes(col) || col === 'config' || !/^\d+(,\d+)*$/.test(raw) || list.length > 500
+      || list.some((n) => !Number.isSafeInteger(n))) fail(400, 'Dati non validi');
+    // Deleting client cards also deletes their photos (this also works for deletes queued offline).
     await sql.transaction([
-      sql`DELETE FROM docs WHERE col = ${col} AND id = ${Number(id)}`,
-      sql`DELETE FROM docs WHERE ${col === 'clients'} AND col = 'photos' AND data->>'clientId' = ${String(Number(id))}`,
+      sql`DELETE FROM docs WHERE col = ${col} AND id = ANY(${list}::bigint[])`,
+      sql`DELETE FROM docs WHERE ${col === 'clients'} AND col = 'photos' AND (data->>'clientId')::bigint = ANY(${list}::bigint[])`,
     ]);
     return res.json({ ok: true });
   }

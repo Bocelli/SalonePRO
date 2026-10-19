@@ -232,6 +232,17 @@
   .consent label { display: flex; align-items: flex-start; gap: 10px; font-size: .9rem; cursor: pointer; }
 
   /* Install banner + guide */
+  /* Client list tools and bulk actions */
+  .err-log { display: grid; max-height: 300px; overflow-y: auto; margin-top: 14px; border: 1px solid var(--border); border-radius: var(--r-control); }
+  .err-log > p { padding: 12px 14px; }
+  .err-row { display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 10px 14px; font-size: .88rem; overflow-wrap: anywhere; }
+  .err-row + .err-row { border-top: 1px solid var(--border); }
+  .cli-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; padding: 10px 20px; border-bottom: 1px solid var(--border); }
+  .chk { display: inline-flex; align-items: center; gap: 10px; padding-right: 6px; font-size: .9rem; cursor: pointer; }
+  .btn.on { background: var(--accent-soft); color: var(--accent-text); }
+  .row.client.selected { background: var(--surface-2); }
+  .client .sel { align-self: flex-start; margin-top: 11px; } /* level with the avatar */
+  .bulk-bar { position: fixed; z-index: 40; left: 16px; right: 16px; bottom: 20px; max-width: 520px; margin-inline: auto; display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px; background: var(--surface); border: 1px solid var(--accent); border-radius: var(--r-surface); box-shadow: var(--shadow); animation: rise .2s var(--ease); }
   .install-banner { position: fixed; z-index: 30; left: 16px; right: 16px; bottom: 20px; max-width: 560px; margin-inline: auto; display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-surface); box-shadow: var(--shadow); animation: rise .3s var(--ease); }
   .install-banner .brand-mark { width: 40px; height: 40px; }
   .ib-text { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: .88rem; line-height: 1.4; }
@@ -342,7 +353,9 @@
     .appt { grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 14px 16px; }
     .appt-side { grid-column: 2; flex-direction: row; align-items: center; justify-content: space-between; }
     .row { flex-wrap: wrap; padding: 12px 16px; }
-    .client .row-actions { width: 100%; padding-left: 54px; }
+    .client .row-actions { width: 100%; padding-left: 86px; }
+    .cli-tools { padding: 10px 16px; }
+    .bulk-bar { bottom: calc(80px + env(safe-area-inset-bottom)); }
     .panel-head { padding: 12px 16px; }
     .panel.pad { padding: 18px 16px; }
     .add-panel summary { padding: 14px 16px; }
@@ -512,7 +525,21 @@
             <h3 id="cli-count">Archivio clienti</h3>
             <div class="search"><i class="ph ph-magnifying-glass"></i><input type="search" id="cli-search" placeholder="Cerca per nome o telefono" aria-label="Cerca cliente" oninput="renderClients()"></div>
           </div>
+          <div class="cli-tools">
+            <label class="chk"><input type="checkbox" id="cli-all" onchange="selectAllClients(this.checked)"><span>Seleziona tutte</span></label>
+            <button class="btn btn-ghost btn-sm" id="cli-nophone" aria-pressed="false" onclick="toggleNoPhone()"><i class="ph ph-phone-x"></i><span></span></button>
+            <span class="foot-gap"></span>
+            <button class="btn btn-ghost btn-sm" onclick="$('cli-csv').click()"><i class="ph ph-upload-simple"></i>Importa CSV</button>
+            <input type="file" id="cli-csv" accept=".csv,text/csv" hidden onchange="importClientsCsv(this)">
+            <button class="btn btn-ghost btn-sm" onclick="exportClientsCsv()"><i class="ph ph-download-simple"></i>Esporta CSV</button>
+          </div>
           <div id="clients-list"></div>
+        </div>
+        <div class="bulk-bar" id="cli-bulk" role="region" aria-label="Clienti selezionate" hidden>
+          <strong id="cli-bulk-n"></strong>
+          <span class="foot-gap"></span>
+          <button class="btn btn-ghost btn-sm" onclick="selectAllClients(false)">Annulla</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteSelectedClients()"><i class="ph ph-trash"></i>Elimina</button>
         </div>
       </section>
 
@@ -668,6 +695,16 @@
           <div class="row-wrap">
             <button class="btn btn-primary" data-install hidden onclick="installApp()"><i class="ph ph-download-simple"></i>Installa Salone PRO</button>
             <button class="btn btn-outline" onclick="openInstallGuide()"><i class="ph ph-question"></i>Come si installa</button>
+          </div>
+        </div>
+
+        <div class="panel pad">
+          <h3>Registro errori</h3>
+          <p class="muted">Gli ultimi problemi su questo dispositivo: salvataggi rifiutati, errori del server e della pagina. Se qualcosa non va, copialo e mandalo a chi ti assiste.</p>
+          <div class="err-log" id="err-log"></div>
+          <div class="row-wrap">
+            <button class="btn btn-outline btn-sm" onclick="copyErrorLog()"><i class="ph ph-copy"></i>Copia</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearErrorLog()"><i class="ph ph-trash"></i>Svuota</button>
           </div>
         </div>
 
@@ -1026,6 +1063,7 @@
 <script src="/common.js"></script>
 <script src="/offline.js"></script>
 <script src="/history.js"></script>
+<script src="/csv.js"></script>
 <script>
   let db = { config: {}, services: [], clients: [], inventory: [], appointments: [] };
   let loaded = false;
@@ -1054,7 +1092,11 @@
     offline = false;
     const data = await r.json().catch(() => ({}));
     if (r.status === 401) { openModal('login'); throw Object.assign(new Error('Sessione scaduta, accedi di nuovo'), { status: 401 }); }
-    if (!r.ok) throw Object.assign(new Error(data.error || 'Errore ' + r.status), { status: r.status, setup: data.setup });
+    if (!r.ok) {
+      logError(r.status >= 500 ? `Errore del server (${r.status})` : data.error || 'Errore ' + r.status,
+        `${method} ${url.slice(0, 100)}${r.status >= 500 ? ': i dettagli sono nei log di Vercel (Logs del progetto)' : ''}`);
+      throw Object.assign(new Error(data.error || 'Errore ' + r.status), { status: r.status, setup: data.setup });
+    }
     return data;
   }
 
@@ -1063,6 +1105,34 @@
   const readJSON = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
   const writeJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
   const forget = (k) => { try { localStorage.removeItem(k); } catch {} };
+
+  // ---------- Registro errori ----------
+  // shortcut: kept on each device (last 100, localStorage); move it to the database if several devices need one shared log.
+  function logError(msg, detail = '') {
+    const log = readJSON('sp_errors') || [];
+    log.unshift({ at: new Date().toISOString(), msg: String(msg).slice(0, 300), detail: String(detail).slice(0, 300) });
+    writeJSON('sp_errors', log.slice(0, 100));
+    if ($('tab-backup').classList.contains('active')) renderErrorLog();
+  }
+  // "Script error." comes from scripts of other sites or extensions, with no details to show.
+  window.addEventListener('error', (e) => e.message !== 'Script error.' && logError(e.message, `${(e.filename || 'pagina').split('/').pop() || 'pagina'}:${e.lineno}`));
+  window.addEventListener('unhandledrejection', (e) => logError(e.reason?.message || String(e.reason)));
+  function renderErrorLog() {
+    const when = (iso) => new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    $('err-log').innerHTML = (readJSON('sp_errors') || []).map((e) => `
+      <div class="err-row"><span class="num muted">${esc(when(e.at))}</span><span>${esc(e.msg)}${e.detail ? `<br><span class="muted small">${esc(e.detail)}</span>` : ''}</span></div>`).join('')
+      || '<p class="muted small">Nessun errore registrato su questo dispositivo.</p>';
+  }
+  function copyErrorLog() {
+    const lines = (readJSON('sp_errors') || []).map((e) => `${e.at}  ${e.msg}${e.detail ? '  |  ' + e.detail : ''}`);
+    navigator.clipboard.writeText([`Salone PRO v${NEWS[0].v}, ${navigator.userAgent}`, ...lines].join('\n'))
+      .then(() => toast(lines.length ? 'Registro copiato' : 'Registro vuoto copiato'))
+      .catch(() => toast('Copia non riuscita', 'error'));
+  }
+  function clearErrorLog() {
+    forget('sp_errors');
+    renderErrorLog();
+  }
   let outbox = readJSON('sp_outbox') || [];
   const saveCache = () => writeJSON('sp_cache', db);
 
@@ -1071,8 +1141,7 @@
   function send(op) {
     saveCache();
     if (outbox.length) return enqueue(op); // keep the order behind changes already waiting
-    const req = op.method === 'PUT' ? api('PUT', '/api/data', { col: op.col, item: op.item }) : api('DELETE', `/api/data?col=${op.col}&id=${op.id}`);
-    return req.catch((e) => (isNetwork(e) || e.status === 401 ? enqueue(op) : syncFail(e)));
+    return sendOp(op).catch((e) => (isNetwork(e) || e.status === 401 ? enqueue(op) : syncFail(e)));
   }
   function enqueue(op) {
     outbox.push(op);
@@ -1083,6 +1152,13 @@
   }
   const persist = (col, item) => send({ method: 'PUT', col, item });
   const drop = (col, id) => send({ method: 'DELETE', col, id });
+  // Many at once (CSV import, bulk delete), a few hundred per request: deleted ids travel in the URL.
+  const chunks = (a, n) => Array.from({ length: Math.ceil(a.length / n) }, (_, i) => a.slice(i * n, i * n + n));
+  const persistMany = (col, items) => Promise.all(chunks(items, 500).map((part) => send({ method: 'PUT', col, items: part })));
+  const dropMany = (col, ids) => Promise.all(chunks(ids, 300).map((part) => send({ method: 'DELETE', col, ids: part })));
+  const sendOp = (op) => (op.method === 'PUT'
+    ? api('PUT', '/api/data', { col: op.col, item: op.item, items: op.items })
+    : api('DELETE', `/api/data?col=${op.col}&${op.ids ? 'ids=' + op.ids.join(',') : 'id=' + op.id}`));
 
   // Sends queued changes in order and returns the ids of the appointments sent. Stops at the first connection or
   // login problem; a change the server refuses is dropped with a warning so it cannot block the queue forever.
@@ -1095,8 +1171,7 @@
       while (outbox.length) {
         const op = outbox[0];
         try {
-          if (op.method === 'PUT') await api('PUT', '/api/data', { col: op.col, item: op.item });
-          else await api('DELETE', `/api/data?col=${op.col}&id=${op.id}`);
+          await sendOp(op);
           if (op.method === 'PUT' && op.col === 'appointments') synced.push(op.item.id);
         } catch (e) {
           if (isNetwork(e) || e.status === 401) break;
@@ -1171,6 +1246,12 @@
   // ---------- Novità ----------
   // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
   const NEWS = [
+    { v: '1.10', date: '19 ottobre 2026', title: 'Clienti in blocco e registro errori', items: [
+      ['ph-file-csv', "In Schede clienti puoi importare ed esportare le clienti in CSV (si apre con Excel). All'import le clienti già presenti vengono saltate."],
+      ['ph-check-square', 'Seleziona più clienti con le caselle, o tutte insieme, ed eliminale in un colpo solo.'],
+      ['ph-phone-x', 'Il filtro "Senza telefono" mostra le clienti senza numero: selezionale tutte e fai pulizia.'],
+      ['ph-bug', 'In Impostazioni il "Registro errori" mostra gli ultimi problemi di questo dispositivo, da copiare e inviare a chi ti assiste.'],
+    ] },
     { v: '1.9', date: '19 ottobre 2026', title: 'Gli appuntamenti nel calendario del telefono', items: [
       ['ph-calendar-check', 'Dopo aver prenotato online, la cliente tocca "Aggiungi al calendario": su iPhone si apre il Calendario, su Android Google Calendar, con giorno, ora, servizi e indirizzo già scritti.'],
       ['ph-calendar-plus', 'In Impostazioni trovi "Calendario del telefono": aggiungi il link a Google Calendar e gli appuntamenti compaiono da soli nel calendario di Android.'],
@@ -1395,7 +1476,7 @@
     window.scrollTo(0, 0);
     if (tab === 'webbooking') $('preview-frame').src = '/prenota';
     if (tab === 'clienti') renderRecall(); // appointments may have changed since the last render
-    if (tab === 'backup') loadCalendarLink();
+    if (tab === 'backup') { loadCalendarLink(); renderErrorLog(); }
   }
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-tab]');
@@ -1903,14 +1984,90 @@
   }
 
   // ---------- Clienti ----------
-  function renderClients() {
+  // ---------- Selezione multipla e filtro "senza telefono" ----------
+  let selClients = new Set(), noPhoneOnly = false;
+  const noPhone = (c) => !(c.phone || '').replace(/\D/g, '');
+  function visibleClients() {
     const q = $('cli-search').value.trim().toLowerCase();
-    const list = sortedClients().filter((c) => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q));
+    return sortedClients().filter((c) => (c.name.toLowerCase().includes(q) || (c.phone || '').includes(q)) && (!noPhoneOnly || noPhone(c)));
+  }
+  function toggleNoPhone() {
+    noPhoneOnly = !noPhoneOnly;
+    renderClients();
+  }
+  function selectAllClients(on) {
+    if (on) visibleClients().forEach((c) => selClients.add(c.id));
+    else selClients.clear();
+    renderClients();
+  }
+  // Updates the row and the bar without redrawing the list, so the checkbox keeps keyboard focus.
+  function toggleClientSel(id, box) {
+    if (box.checked) selClients.add(id);
+    else selClients.delete(id);
+    box.closest('.row').classList.toggle('selected', box.checked);
+    updateClientBulk();
+  }
+  function updateClientBulk() {
+    const vis = visibleClients(), n = selClients.size, all = vis.length > 0 && vis.every((c) => selClients.has(c.id));
+    $('cli-bulk').hidden = !n;
+    $('cli-bulk-n').textContent = n === 1 ? '1 selezionata' : `${n} selezionate`;
+    $('cli-all').checked = all;
+    $('cli-all').indeterminate = !all && vis.some((c) => selClients.has(c.id));
+  }
+  function deleteSelectedClients() {
+    const list = db.clients.filter((c) => selClients.has(c.id));
+    if (!list.length) return;
+    // Names in the question: the selection can include clients hidden by the current search or filter.
+    const names = list.slice(0, 5).map((c) => c.name).join(', ') + (list.length > 5 ? ` e altre ${list.length - 5}` : '');
+    if (!confirm(`Eliminare ${list.length === 1 ? 'la scheda' : `${list.length} schede`} con le foto?\n${names}.\nGli appuntamenti restano in agenda.`)) return;
+    db.clients = db.clients.filter((c) => !selClients.has(c.id));
+    dropMany('clients', list.map((c) => c.id)).then((r) => r.every(Boolean) && toast(list.length === 1 ? 'Scheda eliminata' : `${list.length} schede eliminate`));
+    selClients.clear();
+    renderClients();
+    renderGdpr();
+    renderAgenda();
+  }
+
+  // ---------- CSV clienti ----------
+  function exportClientsCsv() {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([toCsv([CLIENT_CSV_HEAD, ...sortedClients().map(clientCsvRow)])], { type: 'text/csv;charset=utf-8' }));
+    a.download = `clienti_${todayStr()}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  async function importClientsCsv(input) {
+    const file = input.files[0];
+    input.value = '';
+    if (!file) return;
+    if (file.size > 5e6) return toast('File troppo grande (massimo 5 MB)', 'error');
+    const buf = await file.arrayBuffer();
+    let text, r;
+    try { text = new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch { text = new TextDecoder('windows-1252').decode(buf); } // Excel's plain "CSV" is not UTF-8
+    try { r = clientsFromCsv(text, db.clients); } catch (e) { return toast(e.message, 'error'); }
+    const skipped = [r.dup && `${r.dup} già in archivio`, r.noName && `${r.noName} senza nome`].filter(Boolean).join(', ');
+    if (!r.clients.length) return toast(`Nessuna cliente nuova nel file${skipped ? ` (${skipped})` : ''}`, 'error');
+    if (!confirm(`Importare ${r.clients.length === 1 ? '1 cliente' : `${r.clients.length} clienti`}?${skipped ? `\nSaltate: ${skipped}.` : ''}`)) return;
+    const base = newId(), list = r.clients.map((c, i) => ({ ...c, id: base + i }));
+    db.clients.push(...list);
+    persistMany('clients', list).then((res) => res.every(Boolean) && toast(list.length === 1 ? '1 cliente importata' : `${list.length} clienti importate`));
+    renderClients();
+    renderGdpr();
+  }
+
+  function renderClients() {
+    const q = $('cli-search').value.trim().toLowerCase(), list = visibleClients(), np = db.clients.filter(noPhone).length;
+    selClients = new Set(db.clients.filter((c) => selClients.has(c.id)).map((c) => c.id)); // forget clients deleted meanwhile
     $('cli-count').textContent = db.clients.length === 1 ? '1 cliente' : `${db.clients.length} clienti`;
+    $('cli-nophone').hidden = !np && !noPhoneOnly;
+    $('cli-nophone').classList.toggle('on', noPhoneOnly);
+    $('cli-nophone').setAttribute('aria-pressed', noPhoneOnly);
+    $('cli-nophone').lastChild.textContent = `Senza telefono (${np})`;
     $('clients-list').innerHTML = list.map((c) => {
-      const allergy = c.allergy && c.allergy.toLowerCase() !== 'nessuna';
+      const allergy = c.allergy && c.allergy.toLowerCase() !== 'nessuna', sel = selClients.has(c.id);
       return `
-      <div class="row client">
+      <div class="row client${sel ? ' selected' : ''}">
+        <input type="checkbox" class="sel" ${sel ? 'checked' : ''} onchange="toggleClientSel(${c.id}, this)" aria-label="Seleziona ${esc(c.name)}">
         <span class="avatar" aria-hidden="true">${esc(initials(c.name))}</span>
         <div class="row-main">
           <div class="row-title"><button class="link" onclick="openClientCard(${c.id})">${esc(c.name)}</button>${c.phone ? `<a class="muted num" href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : ''}</div>
@@ -1927,7 +2084,9 @@
         </div>
       </div>`;
     }).join('') || (q ? empty('ph-magnifying-glass', 'Nessun risultato', `Nessuna cliente corrisponde a "${esc(q)}".`)
-                      : empty('ph-users', 'Archivio vuoto', 'Registra la prima cliente qui sopra. Le clienti che prenotano online vengono aggiunte da sole.'));
+                      : noPhoneOnly ? empty('ph-phone', 'Nessuna cliente senza telefono', 'Tutte le clienti in archivio hanno un numero.')
+                      : empty('ph-users', 'Archivio vuoto', 'Registra la prima cliente qui sopra, o importa un file CSV. Le clienti che prenotano online vengono aggiunte da sole.'));
+    updateClientBulk();
     renderRecall();
   }
 

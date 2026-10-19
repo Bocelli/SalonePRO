@@ -259,6 +259,25 @@ test('calendar feed: secret link, Italian time, escaped text, revoked by logout-
   assert.equal((await call(calendar, { query: { k: token } })).status, 401, 'old link stops working');
 });
 
+test('bulk save and bulk delete (CSV import, multiple selection)', async () => {
+  const fresh = (await call(login, { method: 'POST', ip: '9.9.9.3', body: { password: process.env.ADMIN_PASSWORD } })).headers['set-cookie'].split(';')[0];
+  const put = (body) => call(data, { method: 'PUT', cookie: fresh, body });
+  const items = [1, 2, 3].map((i) => ({ id: 5000 + i, name: 'Import ' + i, phone: '' }));
+  assert.equal((await put({ col: 'clients', items: [...items, items[0]] })).status, 400); // same id twice
+  assert.equal((await put({ col: 'config', items: [{ id: 1 }] })).status, 400);
+  assert.equal((await put({ col: 'clients', items: [] })).status, 400);
+  assert.equal((await put({ col: 'clients', items })).body.count, 3);
+  await put({ col: 'photos', item: { id: 9, clientId: 5001, date: wed, img: 'data:image/jpeg;base64,AAAA' } });
+
+  const del = (query) => call(data, { method: 'DELETE', cookie: fresh, query: { col: 'clients', ...query } });
+  assert.equal((await del({})).status, 400, 'no id: nothing deleted');
+  assert.equal((await del({ ids: '5001,x' })).status, 400);
+  assert.equal((await del({ ids: '5001,5002' })).status, 200);
+  const names = (await call(data, { cookie: fresh })).body.clients.map((c) => c.name);
+  assert.ok(names.includes('Import 3') && !names.includes('Import 1') && !names.includes('Import 2'));
+  assert.equal((await call(data, { cookie: fresh, query: { photos: '5001' } })).body.photos.length, 0, 'their photos go too');
+});
+
 test('booking page: calendar file for the client, built from the price list', async () => {
   assert.equal((await call(pub, { query: { ics: '1', date: wed, time: '25:00', s: '4' } })).status, 400);
   assert.equal((await call(pub, { query: { ics: '1', date: wed, time: '10:00', s: '999' } })).status, 400); // unknown service
