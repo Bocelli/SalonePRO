@@ -171,7 +171,7 @@ async function reload() {
   saveCache();
   const first = !loaded;
   if (first) { loaded = true; loadConfigUI(); }
-  if (first && $('tab-backup').classList.contains('active')) loadCalendarLink();
+  if (first && $('tab-backup').classList.contains('active')) { loadCalendarLink(); loadNotify(); }
   renderAll();
   // createdAt check: a restored backup full of old web bookings must not ring
   if (known) announce(db.appointments.filter((a) => a.source === 'web' && !known.has(a.id) && Date.now() - Date.parse(a.createdAt) < 864e5));

@@ -1,4 +1,5 @@
 import { handle, fail, db, addMin, romeNow, limit, hit, clientIp, closureOn, durationOf, icsFile, DAY, HHMM, DEFAULT_CONFIG } from './_lib.js';
+import { afterNewAppointment } from './_notify.js';
 
 const PUBLIC_CONFIG = ['salonName', 'ownerName', 'address', 'vat', 'email', 'ownerPhone', 'openTime', 'closeTime', 'slotMinutes', 'closedDays', 'serviceFolders', 'breaks', 'closures'];
 const pick = (o, keys) => Object.fromEntries(keys.map((k) => [k, o[k]]));
@@ -112,5 +113,6 @@ export default handle(async (req, res) => {
         SELECT (SELECT count(*) FROM a)::int AS booked`,
   ]);
   if (!result.booked) fail(409, 'Questo orario è appena stato occupato, scegline un altro');
+  await afterNewAppointment(sql, appt, { push: true }); // confirmation SMS to the client, push to the salon's phones
   res.json({ ok: true, appointment: { date, time, end, services: appt.services, price: appt.price } });
 });

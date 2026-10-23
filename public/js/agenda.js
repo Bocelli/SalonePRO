@@ -128,6 +128,7 @@ function renderAgenda() {
           <h3>${c ? `<button class="link" data-click="openClientCard" data-id="${c.id}">${esc(a.clientName)}</button>` : esc(a.clientName)}</h3>
           ${a.source === 'web' ? '<span class="badge badge-accent"><i class="ph ph-globe-simple" aria-hidden="true"></i>Web</span>' : ''}
           ${a.reminderSent ? '<span class="badge badge-ok"><i class="ph ph-bell" aria-hidden="true"></i>Avvisata</span>' : ''}
+          ${a.smsConfirmAt || a.smsReminderAt ? `<span class="badge badge-ok" title="${a.smsReminderAt ? 'Promemoria' : 'Conferma'} via SMS automatico"><i class="ph ph-chat-text" aria-hidden="true"></i>SMS</span>` : ''}
           ${clashes(list, a).length ? '<span class="badge badge-danger"><i class="ph ph-warning-octagon" aria-hidden="true"></i>Sovrapposto</span>' : ''}
           ${allergy}
         </div>

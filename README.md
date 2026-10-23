@@ -58,6 +58,10 @@ Salone PRO nasce da un gestionale in un singolo file HTML che salvava tutto nel 
 - Nella conferma la cliente aggiunge l'appuntamento al suo calendario: Calendario Google (link ufficiale "aggiungi a Google Calendar") oppure il file .ics, che si apre nel Calendario su iPhone, nel Calendario Samsung su Android e in Outlook su computer; promemoria 2 ore prima. L'app Google Calendar per Android non importa file .ics, per questo il pulsante Google resta.
 - Ogni prenotazione arriva in agenda con il badge "Web" e, con il gestionale aperto, entro 20 secondi suona un bip con un avviso; due clienti non possono prendere lo stesso orario.
 
+**SMS automatici e notifiche**
+- SMS di conferma appena l'appuntamento è preso (anche online) e promemoria il giorno prima, dal telefono del salone con la sua SIM: su Android con l'app gratuita SMS Gateway (sms-gate.app, modalità Cloud server), su iPhone con un'automazione di Comandi Rapidi. Testi personalizzabili, stato di ogni SMS in Impostazioni, mai inviato due volte.
+- Notifiche push sul telefono del salone anche ad app chiusa: nuove prenotazioni online e riepilogo del mattino (su iPhone serve l'app installata sulla schermata Home).
+
 **WhatsApp senza API**
 - Conferme, promemoria e messaggi liberi con un tocco tramite link `wa.me` (anche via SMS).
 - La cliente può mandare la richiesta su WhatsApp e il salone la inserisce in agenda incollando il messaggio.
@@ -103,7 +107,7 @@ flowchart LR
 ```
 
 - **Frontend:** HTML, CSS e JavaScript senza framework né build. Font Geist e icone Phosphor ospitati sul sito e ridotti ai caratteri usati.
-- **Backend:** quattro funzioni serverless Node su Vercel (`login`, `data`, `public`, `calendar`) nella regione `fra1`.
+- **Backend:** funzioni serverless Node su Vercel (`login`, `data`, `public`, `calendar`, `notify`, `cron`) nella regione `fra1`; `cron` gira ogni mattina (promemoria SMS, riepilogo push, pulizia).
 - **Database:** Neon Postgres (piano gratuito), una sola tabella `docs (col, id, data jsonb)` creata da sola alla prima richiesta.
 - **Test:** le API girano davvero su un Postgres in memoria (PGlite), senza account né rete.
 
@@ -117,7 +121,7 @@ public/            gestionale (index.html), prenotazione (prenota.html): solo ma
   js/              il gestionale diviso per sezione (app, api-sync, novita, agenda, listino, clienti,
                    magazzino, impostazioni, avvio) e la pagina di prenotazione (prenota.js)
   sw.js            service worker: pagine dalla rete, cache come riserva
-api/               funzioni serverless (sessione, dati del gestionale, prenotazioni pubbliche, calendario)
+api/               funzioni serverless (sessione, dati del gestionale, prenotazioni pubbliche, calendario, SMS e notifiche, lavoro del mattino)
 test/              test delle API, della logica offline e dello storico, test nel browser (npm test)
 docs/screenshots/  immagini di questo README
 legacy/            la versione originale in un solo file HTML (v6)
@@ -131,6 +135,8 @@ legacy/            la versione originale in un solo file HTML (v6)
 2. **Password:** nella stessa schermata ti chiede `ADMIN_PASSWORD` (almeno 10 caratteri, meglio una frase lunga).
 3. **Senza pulsante:** importa il repository su [vercel.com/new](https://vercel.com/new) con Framework Preset **Other**, aggiungi `ADMIN_PASSWORD`, poi **Storage > Create Database > Neon** (oppure da terminale `npx vercel integration add neon --plan free_v3 -m region=fra1 -m auth=false`) e fai **Redeploy**.
 4. **Primo accesso:** entra nel gestionale con la password (se manca qualcosa, una schermata spiega cosa fare): parte la **configurazione guidata** (nome del salone, WhatsApp, orari, giorni di chiusura, listino e link per le clienti). Si può saltare e riaprire da **Impostazioni & dati**.
+
+5. **SMS e notifiche (facoltativo):** in Vercel aggiungi la variabile `CRON_SECRET` (una frase casuale lunga): senza, il lavoro del mattino (promemoria SMS e riepilogo) non parte. Poi attiva tutto da **Impostazioni & dati**.
 
 Le funzioni girano a Francoforte (`vercel.json`) e il database va creato a Francoforte, così i dati restano in Unione Europea.
 
@@ -155,7 +161,8 @@ Per provare il sito in locale senza account: `node test/server.mjs`, poi apri `h
 - **Esci da tutti i dispositivi:** invalida subito ogni sessione aperta, per un tablet perso o rubato.
 - **Prenotazioni online:** massimo 10 tentativi all'ora per IP, più un campo nascosto anti-bot.
 - **API pubblica:** non restituisce mai nomi o telefoni, solo gli orari occupati.
-- **Link del calendario:** contiene una chiave segreta firmata HMAC (i calendari non possono fare login); "Esci da tutti i dispositivi" lo cambia.
+- **Link segreti (calendario, Comandi Rapidi per gli SMS):** contengono una chiave firmata HMAC, perché quelle app non possono fare login; "Esci da tutti i dispositivi" li cambia.
+- **SMS e push:** la password del gateway SMS e le chiavi delle notifiche restano nel database, non arrivano mai al browser né nei backup; gli SMS inviati si cancellano da soli dopo 30 giorni. Il lavoro del mattino risponde solo a Vercel Cron (`CRON_SECRET`).
 - **Header:** Content-Security-Policy (nessuno script dentro le pagine né verso altri siti, nessuna connessione esterna), anti-clickjacking, HSTS.
 - **Dati in UE:** funzioni e database a Francoforte.
 
@@ -188,7 +195,8 @@ La versione originale (`legacy/salone_pro_v6.html`, e la successiva v9) salvava 
 
 ## Limiti noti
 
-- Le prenotazioni web arrivano entro 20 secondi solo con il gestionale aperto sullo schermo; in standby o in una scheda nascosta non suona nulla e l'avviso compare quando lo riapri. Le modifiche fatte da altri dispositivi arrivano entro 2 minuti.
+- SMS: su Android il telefono del salone deve restare acceso e online, e gli SMS passano dal servizio gratuito sms-gate.app (che vede numero e testo). Su iPhone partono solo all'ora dell'automazione, quindi le conferme non sono immediate. Il promemoria del giorno prima parte verso le 8 (il piano Hobby di Vercel esegue il lavoro una volta al giorno, entro l'ora indicata).
+- Le prenotazioni web arrivano entro 20 secondi solo con il gestionale aperto sullo schermo (o subito con le notifiche push attive); in standby o in una scheda nascosta non suona nulla e l'avviso compare quando lo riapri. Le modifiche fatte da altri dispositivi arrivano entro 2 minuti.
 - Offline, due dispositivi che modificano la stessa voce si sovrascrivono: vale l'ultima modifica inviata.
 - Le icone sono ridotte a quelle usate: aggiungendo una nuova icona (`ph-...`) va rigenerato `public/vendor/phosphor.*`.
 - Google Calendar rilegge il link del calendario quando vuole, di solito ogni qualche ora: non è in tempo reale.

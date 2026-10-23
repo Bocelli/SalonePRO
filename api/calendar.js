@@ -1,9 +1,9 @@
-import { handle, fail, db, sessionEpoch, checkCalendarToken, romeNow, addMin, icsFile, DAY, HHMM } from './_lib.js';
+import { handle, fail, db, sessionEpoch, checkLinkToken, romeNow, addMin, icsFile, DAY, HHMM } from './_lib.js';
 
 // Read-only feed of the agenda for Google Calendar and other calendar apps: from 30 days ago onwards.
 export default handle(async (req, res) => {
   const sql = await db();
-  if (!checkCalendarToken(req.query.k, await sessionEpoch(sql))) fail(401, 'Link del calendario non valido: copialo di nuovo dalle Impostazioni');
+  if (!checkLinkToken('ics', req.query.k, await sessionEpoch(sql))) fail(401, 'Link del calendario non valido: copialo di nuovo dalle Impostazioni');
   const d = new Date(romeNow().date + 'T12:00:00Z');
   d.setUTCDate(d.getUTCDate() - 30);
   const rows = await sql`SELECT col, data FROM docs

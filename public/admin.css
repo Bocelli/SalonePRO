@@ -290,6 +290,15 @@ details[open] > summary .folder-caret { transform: rotate(90deg); }
 
 /* Web booking */
 .web-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
+/* Settings: phone notifications and automatic SMS */
+.panel-title { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.field-gap { margin-top: 16px; }
+.chips-free { max-height: none; overflow: visible; }
+.panel .note { margin-top: 14px; }
+.sub-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sms-log { margin-top: 8px; }
+.sms-log .err-row { border-left: 0; }
+.sms-log .err-row > .ph { color: var(--muted); }
 .link-row { display: flex; gap: 8px; margin-top: 18px; }
 .link-row input { font-size: .92rem; }
 .steps { display: grid; gap: 8px; padding-left: 22px; margin-top: 14px; font-size: .92rem; }

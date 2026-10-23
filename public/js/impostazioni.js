@@ -79,6 +79,7 @@ function loadConfigUI() {
   $('cfg-closures').innerHTML = (c.closures || []).filter((x) => x.to >= todayStr()).map(rangeRow.closures).join(''); // past closures drop out
   $('cfg-closed').innerHTML = DAYS.map(([d, l]) => `<label class="chip"><input type="checkbox" value="${d}" ${(c.closedDays || []).includes(d) ? 'checked' : ''}>${l}</label>`).join('');
   $('brand-salon').textContent = c.salonName || '';
+  loadNotifyForm();
 }
 
 function saveConfig() {
@@ -292,9 +293,167 @@ function openInstallGuide() {
 }
 if (isStandalone) $('install-status').textContent = "L'app è già installata su questo dispositivo.";
 
+// ---------- Notifiche sul telefono (push) e SMS automatici alle clienti ----------
+// The server keeps the gateway password, the SMS sent and the push devices (api/notify.js); here only what it shows.
+let notifyInfo = null, smsChannel = 'android';
+const shortWhen = (iso) => new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+const pushSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const pushSubscription = async () => (pushSupported ? (await navigator.serviceWorker.ready).pushManager.getSubscription() : null);
+
+// Form values come from the config once, at load: a background reload must not overwrite what is being typed.
+function loadNotifyForm() {
+  const s = db.config.sms || {}, n = db.config.notifications || {};
+  $('sms-enabled').checked = Boolean(s.enabled);
+  $('sms-confirm').checked = s.confirm !== false;
+  $('sms-reminder').checked = s.reminder !== false;
+  $('sms-tpl-confirm').value = s.confirmMsg || '';
+  $('sms-tpl-reminder').value = s.reminderMsg || '';
+  $('nt-bookings').checked = n.bookings !== false;
+  $('nt-morning').checked = n.morning !== false;
+  setSmsChannel(s.channel || 'android');
+}
+
+async function loadNotify() {
+  if (!loaded) return; // opened straight on /impostazioni: reload() calls it after login
+  try {
+    notifyInfo = await api('GET', '/api/notify');
+  } catch (e) {
+    notifyInfo = null;
+    $('sms-log').innerHTML = `<p class="muted small">${esc(isNetwork(e) ? 'Serve la connessione per vedere SMS e notifiche' : e.message)}</p>`;
+  }
+  renderNotify();
+}
+
+async function renderNotify() {
+  const s = db.config.sms || {}, info = notifyInfo;
+  // SMS: badge, gateway, Shortcut link, last messages
+  const ready = s.enabled && (smsChannel === 'iphone' || info?.gateway);
+  $('sms-badge').textContent = !s.enabled ? 'Spenti' : ready ? 'Attivi' : 'Da collegare';
+  $('sms-badge').className = 'badge ' + (!s.enabled ? '' : ready ? 'badge-ok' : 'badge-warn');
+  $('gw-off').hidden = !info?.gateway;
+  $('gw-user').placeholder = info?.gateway ? 'Collegato: scrivi qui per cambiarlo' : 'Es. A1B2C3';
+  $('sms-link').value = info?.shortcutUrl || 'Serve la connessione per vedere il link';
+  const status = { sent: ['Inviato', 'badge-ok'], pending: ['In attesa', 'badge-warn'], failed: ['Non partito', 'badge-danger'] };
+  const kind = { confirm: 'Conferma', reminder: 'Promemoria', test: 'Prova' };
+  const recent = info?.recent || [];
+  if (info) {
+    $('sms-log').innerHTML = recent.map((m) => `
+      <div class="err-row">
+        <i class="ph ph-chat-text" aria-hidden="true"></i>
+        <div><div class="err-head"><strong>${m.kind === 'test' ? 'Prova al salone' : `${esc(kind[m.kind] || 'SMS')} a ${esc(m.name || m.to)}`}</strong><span class="badge ${status[m.status]?.[1] || ''}">${status[m.status]?.[0] || esc(m.status)}</span></div>
+        <span class="muted small num">${esc(shortWhen(m.sentAt || m.createdAt))}, ${esc(m.to)}</span>${m.error ? `<span class="err-detail">${esc(m.error)}</span>` : ''}</div>
+      </div>`).join('') || '<p class="muted small">Ancora nessun SMS inviato.</p>';
+  }
+  $('sms-retry').hidden = !recent.some((m) => m.status === 'failed');
+
+  // Push on this device
+  const iosNeedsInstall = isIOS && !isStandalone;
+  const sub = await pushSubscription().catch(() => null);
+  const state = !pushSupported ? (iosNeedsInstall ? 'install' : 'unsupported') : Notification.permission === 'denied' ? 'denied' : sub ? 'on' : 'off';
+  const [label, cls] = { on: ['Attive qui', 'badge-ok'], off: ['Non attive qui', 'badge-warn'], denied: ['Bloccate', 'badge-danger'], install: ['Da installare', 'badge-warn'], unsupported: ['Non disponibili', ''] }[state];
+  $('push-badge').textContent = label;
+  $('push-badge').className = 'badge ' + cls;
+  $('push-ios-hint').hidden = state !== 'install';
+  $('push-on').hidden = state === 'on' || state === 'install' || state === 'unsupported';
+  $('push-test').hidden = state !== 'on';
+  $('push-off').hidden = state !== 'on';
+  const n = info?.pushDevices || 0;
+  $('push-devices').textContent = state === 'denied' ? 'Hai negato il permesso: riattivalo dalle impostazioni del telefono (Notifiche, sito o app Salone PRO) e torna qui.'
+    : state === 'unsupported' ? 'Questo browser non riceve notifiche: usa Chrome su Android o computer, oppure l\'app installata su iPhone.'
+    : n ? `Dispositivi che ricevono le notifiche: ${n}.` : '';
+}
+
+async function enablePush() {
+  const permission = await Notification.requestPermission(); // first thing: browsers allow the question only right after a tap
+  if (permission !== 'granted') return renderNotify();
+  if (!notifyInfo?.pushKey) return toast('Serve la connessione per attivare le notifiche', 'error');
+  try {
+    const key = Uint8Array.from(atob(notifyInfo.pushKey.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+    const sub = await (await navigator.serviceWorker.ready).pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+    await api('POST', '/api/notify', { action: 'subscribe', subscription: sub.toJSON(), device: { ios: 'iPhone o iPad', android: 'Android' }[deviceOs] || 'Computer' });
+    toast('Notifiche attive su questo dispositivo: tocca "Invia una prova"');
+  } catch (e) {
+    toast('Notifiche non attivate: ' + e.message, 'error');
+  }
+  loadNotify();
+}
+async function disablePush() {
+  const sub = await pushSubscription();
+  if (sub) {
+    await api('POST', '/api/notify', { action: 'unsubscribe', endpoint: sub.endpoint }).catch(() => {});
+    await sub.unsubscribe();
+  }
+  toast('Notifiche disattivate su questo dispositivo');
+  loadNotify();
+}
+function testPush() {
+  api('POST', '/api/notify', { action: 'test-push' })
+    .then((r) => toast(`Prova inviata a ${r.devices === 1 ? '1 dispositivo' : `${r.devices} dispositivi`}: arriva tra pochi secondi`))
+    .catch((e) => toast(e.message, 'error'));
+}
+function saveNotifPrefs() {
+  db.config.notifications = { bookings: $('nt-bookings').checked, morning: $('nt-morning').checked };
+  persist('config', { ...db.config, id: 1 }).then((r) => r && toast('Preferenze notifiche salvate'));
+}
+
+function setSmsChannel(ch) {
+  smsChannel = ch;
+  document.querySelectorAll('[data-sms-channel]').forEach((b) => {
+    b.classList.toggle('active', b.dataset.smsChannel === ch);
+    b.setAttribute('aria-pressed', b.dataset.smsChannel === ch);
+  });
+  $('sms-android').hidden = ch !== 'android';
+  $('sms-iphone').hidden = ch !== 'iphone';
+  if (loaded) renderNotify();
+}
+function saveSms() {
+  // An emptied text falls back to the standard one (the server fills in missing fields).
+  const tpl = (id) => $(id).value.trim() || undefined;
+  db.config.sms = {
+    enabled: $('sms-enabled').checked, channel: smsChannel, confirm: $('sms-confirm').checked, reminder: $('sms-reminder').checked,
+    confirmMsg: tpl('sms-tpl-confirm'), reminderMsg: tpl('sms-tpl-reminder'),
+  };
+  if (db.config.sms.enabled && smsChannel === 'android' && notifyInfo && !notifyInfo.gateway) toast('Salvato. Per partire gli SMS aspettano che colleghi il telefono Android qui sopra');
+  renderNotify();
+  return persist('config', { ...db.config, id: 1 }).then((r) => {
+    if (r) toast('Impostazioni SMS salvate');
+    return r;
+  });
+}
+async function saveGateway(username = $('gw-user').value.trim(), password = $('gw-pass').value) {
+  try {
+    await api('POST', '/api/notify', { action: 'gateway', username, password });
+    $('gw-user').value = '';
+    $('gw-pass').value = '';
+    toast(username ? 'Telefono Android collegato: prova con "Invia una prova al salone"' : 'Telefono Android scollegato');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  loadNotify();
+}
+async function testSms() {
+  if (!(await saveSms())) return; // the test uses the settings on screen
+  try {
+    const { sms } = await api('POST', '/api/notify', { action: 'test-sms' });
+    if (sms.status === 'sent') toast(`SMS di prova inviato al telefono del salone, che lo spedisce a ${sms.to}`);
+    else if (sms.status === 'pending') toast(smsChannel === 'iphone' ? 'SMS di prova pronto: parte al prossimo giro del Comando Rapido sull\'iPhone' : 'SMS di prova in attesa: collega prima il telefono Android');
+    else toast('SMS di prova non partito: ' + sms.error, 'error');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  loadNotify();
+}
+function retrySms() {
+  api('POST', '/api/notify', { action: 'retry' }).then(() => loadNotify()).catch((e) => toast(e.message, 'error'));
+}
+
 // ---------- Actions (data-click & co. in index.html and in the templates above, see common.js) ----------
 Object.assign(actions.click, {
   signClientGdprInSalon, printPaperGdprForm, saveConfig, openOnboarding, saveClosures, exportBackup, installApp, openInstallGuide, dismissInstall,
+  enablePush, disablePush, testPush, saveSms, testSms, retrySms,
+  saveGateway: () => saveGateway(),
+  disconnectGateway: () => confirm('Scollegare il telefono Android? Gli SMS non partiranno finché non lo ricolleghi.') && saveGateway('', ''),
+  setSmsChannel: (el) => setSmsChannel(el.dataset.arg),
   copyLink: (el) => copyLink(el.dataset.arg), // no data-arg: the booking page link
   addRange: (el) => addRange(el.dataset.arg),
   removeRange: (el) => el.closest('.range').remove(),
@@ -302,3 +461,4 @@ Object.assign(actions.click, {
   obSkip: () => obFinish(true),
 });
 actions.change.importBackup = (el, e) => importBackup(e);
+actions.change.saveNotifPrefs = saveNotifPrefs;

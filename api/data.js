@@ -1,4 +1,5 @@
-import { handle, fail, db, requireAdmin, withEnd, checkConfig, sessionEpoch, calendarToken, COLS, DAY, DEFAULT_CONFIG } from './_lib.js';
+import { handle, fail, db, requireAdmin, withEnd, checkConfig, sessionEpoch, linkToken, COLS, DAY, DEFAULT_CONFIG } from './_lib.js';
+import { afterNewAppointment } from './_notify.js';
 
 // Client photos are shrunk to 480p JPEG in the browser; they live in their own collection, outside the main load and the backup.
 const PHOTO_MAX_CHARS = 220_000; // about 160 KB of JPEG: a 480p photo is usually 40-80 KB
@@ -27,7 +28,7 @@ export default handle(async (req, res) => {
   }
 
   if (req.method === 'GET' && req.query.calendar !== undefined) {
-    return res.json({ token: calendarToken(await sessionEpoch(sql)) });
+    return res.json({ token: linkToken('ics', await sessionEpoch(sql)) });
   }
 
   if (req.method === 'GET' && req.query.photos) {
@@ -38,7 +39,8 @@ export default handle(async (req, res) => {
 
   if (req.method === 'GET') {
     // shortcut: loads every appointment ever, fine for a few thousand rows; filter by date range when it grows.
-    const rows = await sql`SELECT col, data FROM docs WHERE col <> 'photos' ORDER BY id`;
+    // Only the app's own data: photos, SMS, push devices and secrets stay on the server.
+    const rows = await sql`SELECT col, data FROM docs WHERE col = ANY(${COLS}::text[]) ORDER BY id`;
     const out = { config: { ...DEFAULT_CONFIG }, services: [], clients: [], inventory: [], appointments: [] };
     for (const r of rows) {
       if (r.col === 'config') Object.assign(out.config, r.data);
@@ -60,11 +62,17 @@ export default handle(async (req, res) => {
       const [{ n }] = await sql`SELECT count(*)::int AS n FROM docs WHERE col = 'photos' AND data->>'clientId' = ${String(item.clientId)} AND id <> ${item.id}`;
       if (n >= PHOTOS_PER_CLIENT) fail(400, `Massimo ${PHOTOS_PER_CLIENT} foto per cliente: eliminane qualcuna`);
     }
+    // A single appointment the server has never seen (also one created offline) gets the confirmation SMS.
+    const isNew = col === 'appointments' && items === undefined
+      && !(await sql`SELECT 1 FROM docs WHERE col = 'appointments' AND id = ${item.id}`).length;
     const data = list.map((x) => (col === 'config' ? checkConfig({ ...DEFAULT_CONFIG, ...x, id: 1 })
       : col === 'appointments' ? withEnd(x) : col === 'photos' ? checkPhoto(x) : x));
     await sql`INSERT INTO docs (col, id, data)
               SELECT ${col}, (r->>'id')::bigint, r FROM jsonb_array_elements(${JSON.stringify(data)}::jsonb) r
-              ON CONFLICT (col, id) DO UPDATE SET data = EXCLUDED.data`;
+              ON CONFLICT (col, id) DO UPDATE SET data = EXCLUDED.data
+                || jsonb_strip_nulls(jsonb_build_object('smsConfirmAt', docs.data->'smsConfirmAt', 'smsReminderAt', docs.data->'smsReminderAt'))`;
+    // ^ SMS times are written only by the server: a device saving an older copy of the appointment cannot wipe them.
+    if (isNew) await afterNewAppointment(sql, data[0]);
     return res.json({ ok: true, item: data[0], count: data.length });
   }
 
@@ -73,10 +81,13 @@ export default handle(async (req, res) => {
     const raw = String(ids ?? id ?? ''), list = raw.split(',').map(Number); // `ids`: bulk delete, comma separated in the URL
     if (![...COLS, 'photos'].includes(col) || col === 'config' || !/^\d+(,\d+)*$/.test(raw) || list.length > 500
       || list.some((n) => !Number.isSafeInteger(n))) fail(400, 'Dati non validi');
-    // Deleting client cards also deletes their photos (this also works for deletes queued offline).
+    // Deleting client cards also deletes their photos, deleting appointments their SMS not sent yet
+    // (this also works for deletes queued offline).
     await sql.transaction([
       sql`DELETE FROM docs WHERE col = ${col} AND id = ANY(${list}::bigint[])`,
       sql`DELETE FROM docs WHERE ${col === 'clients'} AND col = 'photos' AND (data->>'clientId')::bigint = ANY(${list}::bigint[])`,
+      sql`DELETE FROM docs WHERE ${col === 'appointments'} AND col = 'sms' AND data->>'status' <> 'sent'
+          AND (data->>'apptId')::bigint = ANY(${list}::bigint[])`,
     ]);
     return res.json({ ok: true });
   }
@@ -94,9 +105,10 @@ export default handle(async (req, res) => {
         rows.push({ col, id: item.id, data: col === 'appointments' ? withEnd(item, b.services) : item });
       }
     }
-    // One transaction: if any row is bad nothing is deleted. The session epoch ('auth') and the photos survive a restore.
+    // One transaction: if any row is bad nothing is deleted. Only the app's data is replaced: session epoch, photos,
+    // SMS, push devices and secrets survive a restore.
     await sql.transaction([
-      sql`DELETE FROM docs WHERE col <> 'auth' AND col <> 'photos'`,
+      sql`DELETE FROM docs WHERE col = ANY(${COLS}::text[])`,
       sql`INSERT INTO docs (col, id, data)
           SELECT r->>'col', (r->>'id')::bigint, r->'data' FROM jsonb_array_elements(${JSON.stringify(rows)}::jsonb) r`,
     ]);

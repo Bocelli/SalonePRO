@@ -318,6 +318,80 @@
         </div>
 
         <div class="panel pad">
+          <div class="panel-title"><h3>Notifiche sul telefono</h3><span class="badge" id="push-badge"></span></div>
+          <p class="muted">Il telefono ti avvisa anche con l'app chiusa e lo schermo bloccato: nuove prenotazioni online e, ogni mattina, il riepilogo della giornata. Va attivato su ogni telefono o tablet che vuoi far suonare.</p>
+          <p class="note" id="push-ios-hint" hidden><i class="ph ph-device-mobile" aria-hidden="true"></i><span>Su iPhone e iPad le notifiche arrivano solo all'app installata: tocca Condividi, poi "Aggiungi alla schermata Home", apri Salone PRO da lì e torna in questa pagina.</span></p>
+          <div class="row-wrap">
+            <button class="btn btn-primary" id="push-on" data-click="enablePush"><i class="ph ph-bell-ringing" aria-hidden="true"></i>Attiva su questo dispositivo</button>
+            <button class="btn btn-outline" id="push-test" data-click="testPush" hidden><i class="ph ph-paper-plane-tilt" aria-hidden="true"></i>Invia una prova</button>
+            <button class="btn btn-ghost" id="push-off" data-click="disablePush" hidden>Disattiva qui</button>
+          </div>
+          <div class="field field-gap">
+            <span class="label">Cosa ricevere (vale per tutti i dispositivi)</span>
+            <div class="chips chips-free">
+              <label class="chip"><input type="checkbox" id="nt-bookings" data-change="saveNotifPrefs">Nuove prenotazioni online</label>
+              <label class="chip"><input type="checkbox" id="nt-morning" data-change="saveNotifPrefs">Riepilogo del mattino</label>
+            </div>
+          </div>
+          <p class="hint" id="push-devices"></p>
+        </div>
+
+        <div class="panel pad">
+          <div class="panel-title"><h3>SMS automatici alle clienti</h3><span class="badge" id="sms-badge"></span></div>
+          <p class="muted">Partono dal telefono del salone con la sua SIM, quindi non costano nulla oltre al tuo piano: una conferma appena l'appuntamento è preso (anche online) e un promemoria il giorno prima, verso le 8.</p>
+          <div class="chips chips-free field-gap">
+            <label class="chip"><input type="checkbox" id="sms-enabled">SMS automatici attivi</label>
+            <label class="chip"><input type="checkbox" id="sms-confirm">Conferma dell'appuntamento</label>
+            <label class="chip"><input type="checkbox" id="sms-reminder">Promemoria il giorno prima</label>
+          </div>
+          <div class="field field-gap">
+            <span class="label">Il telefono del salone che invia gli SMS</span>
+            <div class="seg" role="group" aria-label="Telefono del salone">
+              <button data-sms-channel="android" data-click="setSmsChannel" data-arg="android">Android</button>
+              <button data-sms-channel="iphone" data-click="setSmsChannel" data-arg="iphone">iPhone</button>
+            </div>
+          </div>
+          <div id="sms-android">
+            <ol class="steps">
+              <li>Sul telefono Android del salone installa dal Play Store l'app gratuita <strong>SMS Gateway for Android</strong> (sms-gate.app).</li>
+              <li>Nell'app attiva <strong>Cloud server</strong> e tocca <strong>Online</strong>: compaiono un nome utente e una password.</li>
+              <li>Scrivili qui sotto e tocca <strong>Collega</strong>. Il telefono deve restare acceso e connesso a internet.</li>
+            </ol>
+            <div class="form-grid field-gap">
+              <div class="field"><label for="gw-user">Nome utente del gateway</label><input type="text" id="gw-user" autocomplete="off" spellcheck="false"></div>
+              <div class="field"><label for="gw-pass">Password del gateway</label><input type="password" id="gw-pass" autocomplete="new-password"></div>
+            </div>
+            <div class="row-wrap">
+              <button class="btn btn-outline" data-click="saveGateway"><i class="ph ph-link" aria-hidden="true"></i>Collega</button>
+              <button class="btn btn-ghost" id="gw-off" data-click="disconnectGateway" hidden>Scollega</button>
+            </div>
+            <p class="hint">Gli SMS passano dal servizio gratuito di sms-gate.app, che li inoltra al telefono: riceve il numero e il testo del messaggio.</p>
+          </div>
+          <div id="sms-iphone" hidden>
+            <p class="muted field-gap">L'iPhone non permette alle app di mandare SMS da sole: lo fa un'automazione di Comandi Rapidi, all'ora che scegli. Le conferme partono quindi al giro successivo, non subito.</p>
+            <ol class="steps">
+              <li>Apri <strong>Comandi Rapidi</strong>, scheda <strong>Automazione</strong>, nuova automazione <strong>Ora del giorno</strong> (per esempio alle 9:00, ogni giorno) con <strong>Esegui subito</strong>.</li>
+              <li>Aggiungi <strong>Ottieni contenuti dell'URL</strong> con il link qui sotto, poi <strong>Ottieni valore del dizionario</strong> per la chiave "messages".</li>
+              <li>Aggiungi <strong>Ripeti con ogni elemento</strong> e, dentro: <strong>Invia messaggio</strong> con testo = valore "text" e destinatario = valore "to" (disattiva "Mostra quando viene eseguito"), poi <strong>Ottieni contenuti dell'URL</strong> con il link seguito da <strong>&amp;ack=</strong> e il valore "id".</li>
+            </ol>
+            <div class="link-row">
+              <input id="sms-link" readonly aria-label="Link per Comandi Rapidi" data-focus="select">
+              <button class="btn btn-primary" data-click="copyLink" data-arg="sms-link"><i class="ph ph-copy" aria-hidden="true"></i>Copia link</button>
+            </div>
+            <p class="hint">Il link è segreto: contiene numeri e messaggi delle clienti. "Esci da tutti i dispositivi" lo cambia.</p>
+          </div>
+          <div class="field field-gap"><label for="sms-tpl-confirm">Testo della conferma</label><textarea id="sms-tpl-confirm" rows="2" maxlength="480"></textarea></div>
+          <div class="field field-gap"><label for="sms-tpl-reminder">Testo del promemoria</label><textarea id="sms-tpl-reminder" rows="2" maxlength="480"></textarea>
+            <span class="hint">Si compilano da soli: {cliente} (il nome), {salone}, {giorno}, {ora}, {servizi}, {telefono} (il WhatsApp del salone).</span></div>
+          <div class="row-wrap">
+            <button class="btn btn-primary" data-click="saveSms"><i class="ph ph-floppy-disk" aria-hidden="true"></i>Salva SMS</button>
+            <button class="btn btn-outline" data-click="testSms"><i class="ph ph-paper-plane-tilt" aria-hidden="true"></i>Invia una prova al salone</button>
+          </div>
+          <div class="sub-head field-gap"><span class="label">Ultimi SMS</span><button class="btn btn-ghost btn-sm" id="sms-retry" data-click="retrySms" hidden><i class="ph ph-arrow-clockwise" aria-hidden="true"></i>Riprova quelli non partiti</button></div>
+          <div class="err-log sms-log" id="sms-log"></div>
+        </div>
+
+        <div class="panel pad">
           <h3>Backup dei dati</h3>
           <p class="muted">I dati sono nel database online. Scarica comunque un backup ogni tanto.</p>
           <div class="row-wrap">

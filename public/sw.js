@@ -1,6 +1,6 @@
 // Offline support: pages and assets are network-first with a cache fallback, so updates arrive at once when online.
 // The API is never cached here: the admin app keeps its own data copy and change queue (see offline.js).
-const CACHE = 'salone-pro-v5';
+const CACHE = 'salone-pro-v6';
 // Admin sections share one page (see vercel.json rewrites): offline they all open the cached "/".
 const SECTIONS = /^\/(agenda|listino|clienti|magazzino|prenotazione-web|privacy|impostazioni)\/?$/;
 const SHELL = ['/', '/base.css', '/common.js', '/offline.js', '/history.js', '/csv.js', '/admin.css', '/js/app.js', '/js/api-sync.js', '/js/novita.js', '/js/agenda.js', '/js/listino.js', '/js/clienti.js', '/js/magazzino.js', '/js/impostazioni.js', '/js/avvio.js', '/vendor/phosphor.css', '/vendor/phosphor.woff2', '/vendor/geist.woff2', '/manifest.webmanifest', '/favicon.svg', '/icons/icon-192.png'];
@@ -27,4 +27,22 @@ self.addEventListener('fetch', (e) => {
       return res;
     })
     .catch(() => caches.match(SECTIONS.test(url.pathname) ? '/' : e.request, { ignoreSearch: true }).then((hit) => hit || Response.error())));
+});
+
+// Push from the server (new online booking, morning summary): shown even when the app is closed or the phone locked.
+self.addEventListener('push', (e) => {
+  const d = e.data ? e.data.json() : {};
+  e.waitUntil(self.registration.showNotification(d.title || 'Salone PRO', {
+    body: d.body || '', tag: d.tag, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', data: { url: d.url || '/' },
+  }));
+});
+
+// Tapping the notification opens the app on the right page, reusing a window that is already open.
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = new URL(e.notification.data?.url || '/', self.location.origin).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+    const win = wins.find((w) => w.url.startsWith(self.location.origin));
+    return win ? win.navigate(url).then((w) => (w || win).focus()) : self.clients.openWindow(url);
+  }));
 });

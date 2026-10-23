@@ -3,6 +3,7 @@
   "outputDirectory": "public",
   "cleanUrls": true,
   "regions": ["fra1"],
+  "crons": [{ "path": "/api/cron", "schedule": "0 6 * * *" }],
   "rewrites": [
     { "source": "/:section(agenda|listino|clienti|magazzino|prenotazione-web|privacy|impostazioni)", "destination": "/" }
   ],

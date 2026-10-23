@@ -7,7 +7,17 @@ export const DEFAULT_CONFIG = {
   salonName: 'Il Mio Salone', ownerName: 'Titolare', address: '', vat: '', email: '', ownerPhone: '',
   openTime: '09:00', closeTime: '19:00', slotMinutes: 30, closedDays: [0, 1],
   breaks: [], closures: [], recallWeeks: 6,
+  // Automatic SMS to clients, sent by the salon's own phone (see _notify.js). Tags: {cliente} {salone} {giorno} {ora} {servizi} {telefono}
+  sms: {
+    enabled: false, channel: 'android', confirm: true, reminder: true,
+    confirmMsg: "Ciao {cliente}! Ti confermiamo l'appuntamento da {salone} per {giorno} alle {ora} ({servizi}). A presto!",
+    reminderMsg: "Ciao {cliente}! Ti ricordiamo l'appuntamento di domani da {salone} alle {ora} ({servizi}). Per spostarlo o annullarlo: {telefono}",
+  },
+  // Push notifications on the salon's own devices.
+  notifications: { bookings: true, morning: true },
 };
+// Older configs saved before a section existed get its defaults, field by field.
+export const smsConfig = (config) => ({ ...DEFAULT_CONFIG.sms, ...config.sms });
 
 // Starting price list for a new salon (same folders as salone_pro_v9).
 const DEFAULT_FOLDERS = ['PIEGA', 'TAGLIO', 'COLORE & TECNICI', 'TRATTAMENTI'];
@@ -128,6 +138,14 @@ export function checkConfig(c) {
     || (c.recallWeeks !== undefined && (!Number.isInteger(c.recallWeeks) || c.recallWeeks < 0 || c.recallWeeks > 52))) {
     fail(400, 'Impostazioni non valide (pause, chiusure o richiami)');
   }
+  const bools = (o, keys) => keys.every((k) => o[k] === undefined || typeof o[k] === 'boolean');
+  const s = c.sms, n = c.notifications;
+  if ((s !== undefined && (typeof s !== 'object' || !s || !['android', 'iphone'].includes(s.channel ?? 'android')
+      || !bools(s, ['enabled', 'confirm', 'reminder'])
+      || ['confirmMsg', 'reminderMsg'].some((k) => s[k] !== undefined && (typeof s[k] !== 'string' || s[k].length > 480))))
+    || (n !== undefined && (typeof n !== 'object' || !n || !bools(n, ['bookings', 'morning'])))) {
+    fail(400, 'Impostazioni non valide (SMS o notifiche)');
+  }
   return c;
 }
 
@@ -164,9 +182,10 @@ export const sessionEpoch = async (sql) => Number((await sql`SELECT data->>'epoc
 export const bumpEpoch = (sql) => sql`INSERT INTO docs (col, id, data) VALUES ('auth', 1, '{"epoch":1}')
   ON CONFLICT (col, id) DO UPDATE SET data = jsonb_build_object('epoch', (docs.data->>'epoch')::int + 1)`;
 
-// Secret link for calendar apps, which cannot log in. "Esci da tutti i dispositivi" (new epoch) changes it too.
-export const calendarToken = (epoch) => { requirePasswordSet(); return sign('ics:' + epoch); };
-export const checkCalendarToken = (k, epoch) => typeof k === 'string' && same(k, calendarToken(epoch));
+// Secret links for apps that cannot log in. "Esci da tutti i dispositivi" (new epoch) changes them too.
+// `purpose` keeps the links apart: 'ics' = calendar feed, 'sms' = the iPhone Shortcut that sends the SMS.
+export const linkToken = (purpose, epoch) => { requirePasswordSet(); return sign(`${purpose}:${epoch}`); };
+export const checkLinkToken = (purpose, k, epoch) => typeof k === 'string' && same(k, linkToken(purpose, epoch));
 
 export function sessionCookie(epoch) {
   const payload = `${Date.now() + MAX_AGE * 1000}.${epoch}`;

@@ -88,7 +88,7 @@ function legalHtml(c) {
     <h4>2. Dati trattati e finalità</h4>
     <p>Nome, telefono e servizi scelti sono trattati per prenotare e gestire gli appuntamenti e per inviarti comunicazioni di servizio (art. 6.1.b GDPR). Le eventuali note su allergie o sensibilità della cute sono annotate in salone solo con il tuo consenso esplicito, per la sicurezza dei trattamenti (art. 9.2.a GDPR). Le foto del lavoro (per esempio prima e dopo un colore) sono scattate solo con il tuo consenso, servono a ricordare i trattamenti eseguiti e non vengono pubblicate. Dopo qualche settimana dall'ultima visita potremmo scriverti per proporti un nuovo appuntamento: basta dirci che non vuoi e non lo faremo più.</p>
     <h4>3. Conservazione e fornitori</h4>
-    <p>I dati sono conservati per il tempo necessario alla gestione del rapporto e agli obblighi di legge. Sono custoditi su server cloud nell'Unione Europea da fornitori che agiscono come responsabili del trattamento. Non sono venduti né ceduti a terzi per marketing.</p>
+    <p>I dati sono conservati per il tempo necessario alla gestione del rapporto e agli obblighi di legge. Sono custoditi su server cloud nell'Unione Europea da fornitori che agiscono come responsabili del trattamento. Se il salone usa gli SMS automatici, conferme e promemoria partono dal telefono del salone e il servizio che li inoltra al telefono riceve il tuo numero e il testo del messaggio. Non sono venduti né ceduti a terzi per marketing.</p>
     <h4>4. I tuoi diritti</h4>
     <p>Puoi chiedere in qualsiasi momento accesso, rettifica, cancellazione, limitazione o portabilità dei tuoi dati e revocare il consenso, contattando il Titolare. Puoi anche presentare reclamo al Garante per la protezione dei dati personali.</p>
     <h4>5. Cookie</h4>

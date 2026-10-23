@@ -33,7 +33,7 @@ function showTab(tab, push = true) {
   window.scrollTo(0, 0);
   if (tab === 'webbooking') $('preview-frame').src = '/prenota';
   if (tab === 'clienti') renderRecall(); // appointments may have changed since the last render
-  if (tab === 'backup') { loadCalendarLink(); renderErrorLog(); }
+  if (tab === 'backup') { loadCalendarLink(); renderErrorLog(); loadNotify(); }
 }
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-tab]');

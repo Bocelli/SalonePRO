@@ -1,6 +1,11 @@
 // ---------- Novità ----------
 // Newest first. Add an entry at every update: it pops up once on each device, then stays under "Novità".
 const NEWS = [
+  { v: '1.12', date: '23 ottobre 2026', title: 'SMS automatici e notifiche sul telefono', items: [
+    ['ph-chat-text', "Le clienti ricevono un SMS di conferma appena prendi l'appuntamento (anche online) e un promemoria il giorno prima. Partono dal telefono del salone con la sua SIM: si attivano in Impostazioni."],
+    ['ph-bell-ringing', 'Il telefono ti avvisa delle nuove prenotazioni online anche con l\'app chiusa, e ogni mattina ti manda il riepilogo della giornata. Attivale in Impostazioni su ogni telefono.'],
+    ['ph-list-checks', 'In Impostazioni vedi gli ultimi SMS: inviati, in attesa o non partiti, con il motivo. In agenda il badge "SMS" segna le clienti già avvisate.'],
+  ] },
   { v: '1.11', date: '19 ottobre 2026', title: 'Import più furbo e registro più chiaro', items: [
     ['ph-file-csv', "L'import CSV esclude le persone senza numero di telefono e aggiorna le clienti già in archivio invece di saltarle. Due persone con lo stesso numero ma nomi diversi (mamma e figlia) restano due schede."],
     ['ph-calendar-plus', "Dopo la prenotazione online la cliente aggiunge l'appuntamento al calendario: Google Calendar, Apple su iPhone, Samsung o altro su Android, file da scaricare su computer. Il calendario la avvisa 2 ore prima."],
